@@ -1,6 +1,6 @@
 // ITM Service Worker — offline-first
 // Change la version à chaque mise à jour du code pour forcer le re-téléchargement
-const CACHE_VERSION = 'itm-v2';
+const CACHE_VERSION = 'itm-v3';
 const CACHE_NAME = `itm-cache-${CACHE_VERSION}`;
 
 // Ressources à mettre en cache dès l'installation
@@ -9,7 +9,9 @@ const CORE_ASSETS = [
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './catalogue.json',
+  './mascot.png'
 ];
 
 // Installation : met en cache les ressources essentielles
@@ -41,6 +43,20 @@ self.addEventListener('fetch', (event) => {
 
   // Ne pas intercepter les requêtes vers d'autres domaines (ex: API Anthropic)
   if (url.origin !== location.origin) {
+    return;
+  }
+
+  // Pour catalogue.json : network-first (pour que les màj arrivent vite)
+  if (url.pathname.endsWith('/catalogue.json') || url.pathname === '/catalogue.json') {
+    event.respondWith(
+      fetch(event.request, { cache: 'no-cache' })
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
     return;
   }
 

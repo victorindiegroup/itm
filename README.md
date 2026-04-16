@@ -1,105 +1,106 @@
-# ITM — Déploiement sur GitHub Pages
+# ITM — Guide complet
 
-Guide pas à pas pour mettre ITM en ligne sur ton téléphone via GitHub Pages.
+Application d'inventaire PWA pour Indie Group.
 
 ## Contenu du dossier
 
 ```
 itm-pwa/
-├── index.html              ← l'app (385 produits Indie Beach, mascotte intégrée)
-├── manifest.json           ← déclare l'app à iOS/Android
-├── sw.js                   ← service worker (fonctionne hors ligne)
-├── icon-192.png            ← icône app (mascotte sur fond crème)
+├── index.html              ← l'app (chargée par les chefs de bar)
+├── catalogue.json          ← le catalogue produits (à mettre à jour quand tu veux)
+├── convertisseur.html      ← OUTIL ADMIN : pour convertir ton CSV Yokitup en catalogue.json
+├── manifest.json           ← déclaration PWA
+├── sw.js                   ← service worker (mode hors ligne)
+├── icon-192.png            ← icône app
 ├── icon-512.png            ← idem, plus grande
-├── icon-192-maskable.png   ← version "maskable" pour Android (fond vert)
+├── icon-192-maskable.png   ← pour Android
 ├── icon-512-maskable.png   ← idem
-├── mascot.png              ← mascotte utilisée dans l'app (bouton + chat)
+├── mascot.png              ← mascotte utilisée dans l'app
 └── README.md               ← ce fichier
 ```
 
-Les icônes et la mascotte sont déjà générées avec le bon personnage. Rien à remplacer.
+---
 
-## Étape 1 — Créer un compte GitHub
+## Installation initiale (première fois)
 
-Si tu n'en as pas :
+### Étape 1 — GitHub
 
-1. Va sur https://github.com
-2. Clique sur "Sign up" (en haut à droite)
-3. Crée ton compte (email + mot de passe + username)
+1. Crée un compte sur https://github.com si tu n'en as pas
+2. Crée un nouveau repo : `+` en haut à droite → "New repository" → nom : `itm` → Public → Create repository
+3. Upload les 10 fichiers de ce dossier : "Add file" → "Upload files" → glisser-déposer → "Commit changes"
 
-## Étape 2 — Créer un nouveau repository
+### Étape 2 — Activer GitHub Pages
 
-1. Une fois connecté, clique sur le "+" en haut à droite → "New repository"
-2. Nom du repo : `itm` (ou ce que tu veux, c'est ce qui apparaîtra dans l'URL)
-3. Laisse **Public** coché
-4. Coche **"Add a README file"**
-5. Clique sur "Create repository"
+1. Onglet "Settings" du repo → menu de gauche "Pages"
+2. Source : "Deploy from a branch", Branch : `main`, dossier `/` (root) → Save
+3. Attendre 1-2 min, l'URL de ton app apparaît : `https://TON-USERNAME.github.io/itm/`
 
-## Étape 3 — Uploader les fichiers
+### Étape 3 — Installation sur téléphone
 
-1. Sur la page du repo fraîchement créé, clique sur "Add file" → "Upload files"
-2. Glisse-dépose les 8 fichiers de ce dossier
-3. En bas, clique sur "Commit changes"
+**iPhone** (Safari obligatoire) : URL → icône Partager → "Sur l'écran d'accueil"
 
-## Étape 4 — Activer GitHub Pages
+**Android** (Chrome) : URL → 3 points → "Installer l'application"
 
-1. Sur le repo, va dans l'onglet **"Settings"** (en haut)
-2. Dans le menu de gauche, clique sur **"Pages"**
-3. Sous "Build and deployment" :
-   - **Source** : "Deploy from a branch"
-   - **Branch** : sélectionne `main` (ou `master`), dossier `/` (root)
-4. Clique sur "Save"
-5. Attends 1-2 minutes, puis recharge la page
+---
 
-Tu verras alors une URL du type :
-```
-https://TON-USERNAME.github.io/itm/
-```
+## Mettre à jour le catalogue produits
 
-C'est l'URL de ton app en ligne.
+C'est la partie qui te concerne en tant qu'admin. Les chefs de bar n'ont **jamais** besoin de toucher à ça.
 
-## Étape 5 — Installer l'app sur ton téléphone
+### Workflow complet
 
-### Sur iPhone (Safari obligatoire, pas Chrome)
-1. Ouvre Safari
-2. Va sur l'URL de ton app
-3. Appuie sur l'icône "Partager" (carré avec flèche vers le haut)
-4. Fais défiler vers le bas et choisis **"Sur l'écran d'accueil"**
-5. Valide — l'icône ITM (avec ta mascotte) apparaît sur l'écran d'accueil
+1. **Exporter depuis Yokitup** — tu exportes le CSV du catalogue complet (celui avec les colonnes `Produit identifiant Yokitup`, `Produit nom`, `Tags`, etc.)
 
-### Sur Android (Chrome)
-1. Ouvre Chrome
-2. Va sur l'URL de ton app
-3. Appuie sur les 3 points en haut à droite
-4. Choisis **"Installer l'application"** (ou "Ajouter à l'écran d'accueil")
-5. L'icône apparaît sur l'écran d'accueil
+2. **Convertir en JSON** — tu ouvres `convertisseur.html` dans ton navigateur (double-clic sur le fichier). La page te guide :
+   - Tu uploades ton CSV
+   - Elle analyse automatiquement et t'affiche les stats (nb produits par type, par établissement, overrides appliqués)
+   - Tu cliques sur "Télécharger catalogue.json"
 
-## Étape 6 — Tester le hors-ligne
+3. **Uploader sur GitHub** — dans ton repo ITM :
+   - Clique sur le fichier `catalogue.json` existant
+   - Icône crayon en haut à droite ("Edit this file")
+   - Supprime tout → colle le nouveau contenu → Commit
+   
+   **OU plus simple** (recommandé pour gros fichiers) :
+   - Dans le repo, "Add file" → "Upload files"
+   - Glisse le nouveau `catalogue.json` (ça écrase l'ancien)
+   - Commit
 
-Une fois l'app installée :
-1. Active le mode avion sur ton téléphone
-2. Ouvre l'app ITM
-3. Elle doit fonctionner (le catalogue et tes saisies restent en mémoire locale)
+4. **C'est déployé** — les téléphones récupèrent la nouvelle version au prochain lancement avec réseau. Pas besoin de toucher à l'index.html ni de demander aux chefs de bar de réinstaller.
 
-## Limite connue : le chat IA
+### Points importants
 
-Le bouton mascotte ouvre un chat IA qui appelle directement l'API Anthropic. Dans la config actuelle, il ne fonctionnera pas en production parce que la clé API n'est pas fournie. Pour l'activer il faudra soit héberger un petit backend (pour cacher la clé API), soit désactiver cette feature pour l'instant.
+- Le convertisseur tourne **localement dans ton navigateur**, rien n'est envoyé en ligne
+- Les règles appliquées (préfixes B./M./J./etc. → type bouteille, catégorisation par tags, overrides CORONA/GINGER BEER VERSE) sont **identiques** à celles de l'app
+- Les overrides sont mémorisés dans `convertisseur.html` — si tu veux en ajouter/supprimer, éditer le fichier manuellement dans la section `OVERRIDES = { ... }`
+- Les produits **sans tag d'établissement** sont conservés dans le catalogue mais ne s'affichent dans aucun inventaire (considérés comme archives)
 
-Ce n'est pas bloquant pour utiliser ITM : toute la partie saisie / zones / export CSV marche à 100% sans backend.
+---
 
-## Pour mettre à jour l'app plus tard
+## Mettre à jour l'app elle-même
 
-Quand on modifie le code (nouveau catalogue, nouvelle fonctionnalité) :
+Si on modifie `index.html` (nouvelle fonctionnalité, correction de bug) :
 
-1. Sur le repo GitHub, va dans les fichiers
-2. Clique sur le fichier à modifier (ex: `index.html`)
-3. Clique sur le crayon "Edit" (en haut à droite du fichier)
-4. Colle le nouveau contenu
-5. Commit les changements
-6. Important : pour forcer les téléphones à télécharger la nouvelle version, dans `sw.js`, change `const CACHE_VERSION = 'itm-v1';` en `'itm-v2'`, `'itm-v3'`, etc.
+1. Upload le nouveau `index.html` sur GitHub (écrase l'ancien)
+2. **Important** : dans `sw.js`, change `CACHE_VERSION = 'itm-v3'` en `'itm-v4'`, `'itm-v5'`, etc. Uploade aussi le sw.js modifié.
+3. Les téléphones récupèrent la mise à jour automatiquement au prochain lancement avec réseau (peut prendre 1-2 lancements pour que le service worker détecte la nouvelle version)
 
-Les téléphones recevront la mise à jour au prochain lancement avec réseau.
+---
 
-## Besoin d'aide ?
+## Troubleshooting
 
-Si ça coince à une étape, dis-moi à quelle étape précise et ce que tu vois à l'écran — je débugue avec toi.
+**L'app affiche "Chargement du catalogue..." indéfiniment**
+→ Vérifie que `catalogue.json` est bien présent à la racine du repo GitHub.
+→ Regarde la console du navigateur (F12) : tu verras un message d'erreur explicite en cas de souci de fetch.
+
+**Un produit a disparu de l'app après mise à jour catalogue**
+→ Vérifie qu'il a bien un tag d'établissement dans Yokitup (INDIE BEACH, ORMEAU, etc.)
+
+**Un préfixe nouveau que le convertisseur ne reconnaît pas**
+→ Éditer `convertisseur.html`, section `PREFIXES = [ ... ]`, ajouter ta ligne.
+
+**Le chat IA ne répond pas**
+→ Normal : il faudrait un backend pour cacher la clé API Anthropic. Feature non-bloquante pour les inventaires.
+
+**Besoin d'aide ?**
+→ Dis-moi précisément à quelle étape ça coince et ce que tu vois.
