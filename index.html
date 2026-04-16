@@ -205,6 +205,59 @@
   /* MODAL CONFIRM */
   .confirm-sheet .sheet-body { padding: 20px; }
   .confirm-sheet p { margin: 0 0 16px; font-size: 15px; }
+
+  /* ÉCRAN DE LOGIN */
+  .login-screen {
+    position: fixed; inset: 0; z-index: 1000;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .login-screen.hidden { display: none; }
+  .login-box {
+    width: 100%; max-width: 340px;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 20px 32px;
+  }
+  .login-mascot { width: 96px; height: auto; margin-bottom: 12px; }
+  .login-title { font-size: 32px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+  .login-sub { color: var(--ink-2); font-size: 14px; margin: 4px 0 28px; }
+  .login-pin-display { display: flex; gap: 14px; margin-bottom: 10px; }
+  .login-pin-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: transparent; border: 2px solid var(--border-strong);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .login-pin-dot.filled { background: var(--ink); border-color: var(--ink); }
+  .login-pin-dot.err { background: var(--danger); border-color: var(--danger); animation: shake 0.4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+  .login-err { min-height: 20px; font-size: 13px; color: var(--danger); margin: 8px 0 18px; }
+  .login-keypad {
+    display: grid; grid-template-columns: repeat(3, 72px); gap: 10px;
+    margin-top: 4px;
+  }
+  .login-keypad button {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    font-size: 26px; font-weight: 500; color: var(--ink);
+    cursor: pointer; transition: background 0.1s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .login-keypad button:active:not(:disabled) { background: var(--accent-soft); transform: scale(0.95); }
+  .login-keypad button.login-k-empty { visibility: hidden; }
+  .login-keypad button.login-k-del { font-size: 22px; color: var(--ink-2); background: transparent; border: none; }
+  /* Petit bouton "Se déconnecter" en bas de l'app (visible quand loggé) */
+  .logout-btn {
+    background: transparent; border: none; color: var(--ink-2);
+    font-size: 11px; cursor: pointer; padding: 4px 8px;
+    opacity: 0.6;
+  }
+  .logout-btn:active { opacity: 1; }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -217,6 +270,36 @@
 <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
 </head>
 <body>
+
+<!-- ÉCRAN DE LOGIN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <img src="./mascot.png" alt="ITM" class="login-mascot">
+    <div class="login-title">ITM</div>
+    <div class="login-sub">Entre ton code d'accès</div>
+    <div class="login-pin-display">
+      <span class="login-pin-dot" data-i="0"></span>
+      <span class="login-pin-dot" data-i="1"></span>
+      <span class="login-pin-dot" data-i="2"></span>
+      <span class="login-pin-dot" data-i="3"></span>
+    </div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-keypad">
+      <button type="button" data-k="1">1</button>
+      <button type="button" data-k="2">2</button>
+      <button type="button" data-k="3">3</button>
+      <button type="button" data-k="4">4</button>
+      <button type="button" data-k="5">5</button>
+      <button type="button" data-k="6">6</button>
+      <button type="button" data-k="7">7</button>
+      <button type="button" data-k="8">8</button>
+      <button type="button" data-k="9">9</button>
+      <button type="button" data-k="" class="login-k-empty" disabled></button>
+      <button type="button" data-k="0">0</button>
+      <button type="button" data-k="del" class="login-k-del" aria-label="Effacer">⌫</button>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="logo">ITM</div>
@@ -364,6 +447,117 @@
 (function(){
 'use strict';
 
+/* ---------- AUTH (PINs) ---------- */
+/* Pour modifier les PINs : éditez les valeurs ci-dessous et committez */
+const PINS = {
+  '1304': { role: 'admin', etab: null,                            label: 'Admin' },
+  '6827': { role: 'user',  etab: 'Indie Beach',                   label: 'Indie Beach' },
+  '9623': { role: 'user',  etab: "Café de l'Ormeau",              label: 'Ormeau' },
+  '3241': { role: 'user',  etab: 'La Sauvageonne (Ramatuelle)',   label: 'Sauvageonne Ramatuelle' },
+  '4921': { role: 'user',  etab: 'Playamigos',                    label: 'Playamigos' },
+  '1193': { role: 'user',  etab: 'Pablo (Saint-Tropez)',          label: 'Pablo ST' },
+  '6491': { role: 'user',  etab: 'Cherry (Saint-Tropez)',         label: 'Cherry ST' },
+  '6624': { role: 'user',  etab: 'Cat Club (Courchevel)',         label: 'Cat Club' },
+  '0719': { role: 'user',  etab: 'La Sauvageonne (Megève)',       label: 'Sauvageonne Megève' },
+  '7696': { role: 'user',  etab: 'Cherry (Paris)',                label: 'Cherry Paris' },
+  '2780': { role: 'user',  etab: 'Pablo (Saint-Barthélemy)',      label: 'Pablo SBH' },
+};
+
+const AUTH_KEY = 'itm_auth_v1';
+let currentAuth = null;  // { role, etab, label } une fois loggé
+
+function loadAuth() {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    // Revalider contre PINS (au cas où on a supprimé un compte)
+    if (saved && saved.pin && PINS[saved.pin]) {
+      return { pin: saved.pin, ...PINS[saved.pin] };
+    }
+  } catch(e){}
+  return null;
+}
+
+function saveAuth(pin) {
+  const info = PINS[pin];
+  if (!info) return false;
+  localStorage.setItem(AUTH_KEY, JSON.stringify({ pin }));
+  currentAuth = { pin, ...info };
+  return true;
+}
+
+function logout() {
+  localStorage.removeItem(AUTH_KEY);
+  currentAuth = null;
+  // Reset session aussi ? on garde les lignes, juste on demande à se reconnecter
+  location.reload();
+}
+
+/* Écran de login : saisie PIN */
+let pinBuffer = '';
+function setupLogin() {
+  const screen = document.getElementById('loginScreen');
+  const dots = screen.querySelectorAll('.login-pin-dot');
+  const err = document.getElementById('loginErr');
+
+  function refresh() {
+    dots.forEach((d, i) => {
+      d.classList.toggle('filled', i < pinBuffer.length);
+      d.classList.remove('err');
+    });
+    err.textContent = '';
+  }
+
+  function submit() {
+    const info = PINS[pinBuffer];
+    if (info) {
+      saveAuth(pinBuffer);
+      pinBuffer = '';
+      onLoginSuccess();
+    } else {
+      dots.forEach(d => d.classList.add('err'));
+      err.textContent = 'Code incorrect';
+      setTimeout(() => { pinBuffer = ''; refresh(); }, 700);
+    }
+  }
+
+  screen.querySelectorAll('.login-keypad button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const k = btn.dataset.k;
+      if (k === 'del') {
+        pinBuffer = pinBuffer.slice(0, -1);
+        refresh();
+      } else if (k && pinBuffer.length < 4) {
+        pinBuffer += k;
+        refresh();
+        if (pinBuffer.length === 4) setTimeout(submit, 150);
+      }
+    });
+  });
+}
+
+function onLoginSuccess() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  // Si user, forcer son établissement
+  if (currentAuth.role === 'user') {
+    state.estab = currentAuth.etab;
+    saveState();
+  }
+  // Relancer le rendu
+  if (typeof renderHeader === 'function') renderHeader();
+  if (typeof renderCatalogue === 'function') renderCatalogue();
+}
+
+/* Init auth au démarrage : si déjà loggé, skip l'écran */
+currentAuth = loadAuth();
+if (currentAuth) {
+  document.getElementById('loginScreen').classList.add('hidden');
+}
+setupLogin();
+
+
+
 /* ---------- Catalogue (chargement asynchrone) ---------- */
 let RAW = [];
 let CATALOGUE = [];
@@ -478,7 +672,18 @@ function closeAllSheets(){
 
 /* ---------- Header ---------- */
 function renderHeader(){
-  document.getElementById('hSubDate').textContent = state.estab + ' · ' + fmtDate(state.date);
+  const sub = document.getElementById('hSubDate');
+  sub.textContent = state.estab + ' · ' + fmtDate(state.date);
+  // Admin : cliquable. User : non cliquable.
+  if (currentAuth && currentAuth.role === 'admin') {
+    sub.style.cursor = 'pointer';
+    sub.style.textDecoration = 'underline';
+    sub.style.textDecorationStyle = 'dotted';
+    sub.style.textUnderlineOffset = '3px';
+  } else {
+    sub.style.cursor = 'default';
+    sub.style.textDecoration = 'none';
+  }
   document.getElementById('zoneLabel').textContent = state.currentZone;
 }
 
@@ -1039,6 +1244,10 @@ function renderExport(){
       <button class="btn-sec" id="btnResetSession" style="flex:1" type="button">Terminer & réinitialiser</button>
     </div>
 
+    <div style="text-align:center; margin-bottom: 16px;">
+      <button class="logout-btn" id="btnLogout" type="button">Se déconnecter (<span id="logoutLabel">—</span>)</button>
+    </div>
+
     <div class="prod-cat-title" style="padding-left:0">Aperçu des lignes exportées</div>
   `;
 
@@ -1208,6 +1417,10 @@ Réponds en français, tutoie, maximum 2-3 phrases, ton direct et terrain. Pas d
 /* ---------- Init ---------- */
 
 function openEstabSheet(){
+  // Seul l'admin peut changer d'établissement
+  if (!currentAuth || currentAuth.role !== 'admin') {
+    return; // silencieux, ne rien faire
+  }
   const list = document.getElementById('estabList');
   const allEtabs = Object.keys(ETAB_TO_TAG);
   let html = '';
@@ -1254,6 +1467,16 @@ function selectEstab(nom){
 }
 
 function init(){
+  // Si utilisateur connecté et pas admin, forcer son établissement
+  if (currentAuth && currentAuth.role === 'user' && currentAuth.etab) {
+    if (state.estab !== currentAuth.etab) {
+      state.estab = currentAuth.etab;
+      // Reset les lignes si changement (pour éviter les mélanges)
+      state.lines = [];
+      saveState();
+    }
+  }
+
   renderHeader();
   renderCatalogue();
   updateBadge();
@@ -1328,6 +1551,21 @@ function init(){
 
   // Établissement
   document.getElementById('hSubDate').addEventListener('click', openEstabSheet);
+
+  // Bouton déconnexion (si présent dans la session view)
+  const btnLogout = document.getElementById('btnLogout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      if (confirm('Se déconnecter ? Les saisies en cours seront conservées.')) {
+        logout();
+      }
+    });
+  }
+  // Afficher le label du compte connecté
+  const logoutLabel = document.getElementById('logoutLabel');
+  if (logoutLabel && currentAuth) {
+    logoutLabel.textContent = currentAuth.label;
+  }
   document.getElementById('ovEstab').addEventListener('click', () => closeSheet('shEstab','ovEstab'));
 
   // Mascotte
