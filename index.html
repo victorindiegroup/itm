@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1D9E75">
+<title>ITM — Indie Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface-2: #FBFAF5;
+    --ink: #1B1B18;
+    --ink-2: #5A5A52;
+    --ink-3: #8F8E85;
+    --border: #E5E3DA;
+    --border-strong: #D4D2C6;
+    --accent: #1D9E75;
+    --accent-dark: #0F6E56;
+    --accent-soft: #E1F5EE;
+    --btl: #D4A017;
+    --btl-soft: #FAEEDA;
+    --lit: #378ADD;
+    --lit-soft: #E6F1FB;
+    --danger: #C04343;
+    --radius-s: 8px;
+    --radius: 12px;
+    --radius-l: 18px;
+    --shadow-1: 0 1px 2px rgba(27,27,24,.04), 0 2px 8px rgba(27,27,24,.04);
+    --shadow-2: 0 4px 16px rgba(27,27,24,.08), 0 12px 40px rgba(27,27,24,.08);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.4; height: 100%; overscroll-behavior: none; }
+  body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; overflow: hidden; }
+  .mono { font-family: 'DM Mono', ui-monospace, monospace; }
+  button { font-family: inherit; font-size: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, select { font-family: inherit; font-size: inherit; color: inherit; }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* HEADER */
+  header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .logo { width: 36px; height: 36px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 15px; letter-spacing: .5px; }
+  .h-main { flex: 1; min-width: 0; }
+  .h-title { font-weight: 700; font-size: 16px; line-height: 1.1; }
+  .h-sub { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
+  .estab-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 20px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; font-weight: 500; }
+  .estab-pill:active { background: var(--surface-2); }
+  .zone-pill { padding: 6px 12px; border-radius: 20px; background: var(--accent-soft); color: var(--accent-dark); font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+  .zone-pill:active { opacity: .7; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; padding: 0 16px; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .tab { padding: 12px 14px; font-size: 14px; font-weight: 500; color: var(--ink-2); border-bottom: 2px solid transparent; margin-bottom: -1px; position: relative; }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab .badge { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 11px; font-weight: 500; background: var(--accent); color: #fff; border-radius: 10px; min-width: 20px; text-align: center; }
+  .tab:not(.active) .badge { background: var(--border-strong); color: var(--ink-2); }
+
+  /* MAIN */
+  main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* SEARCH */
+  .search-wrap { padding: 12px 16px 8px; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .search { width: 100%; padding: 12px 14px 12px 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); font-size: 15px; box-shadow: var(--shadow-1); }
+  .search:focus { border-color: var(--accent); outline: none; }
+  .search-ico { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); color: var(--ink-3); font-size: 16px; pointer-events: none; }
+  .search-wrap { position: sticky; }
+
+  /* PRODUIT LIST */
+  .prod-list { padding: 4px 16px 16px; }
+  .prod-empty { padding: 40px 20px; text-align: center; color: var(--ink-2); font-size: 14px; }
+  .prod-cat-title { font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase; padding: 12px 4px 6px; }
+  .prod { padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .prod:active { background: var(--surface-2); transform: scale(.995); }
+  .prod-name { flex: 1; font-size: 14px; font-weight: 500; line-height: 1.3; min-width: 0; word-break: break-word; }
+  .prod-tag { font-size: 10px; font-weight: 700; letter-spacing: .5px; padding: 2px 7px; border-radius: 10px; flex-shrink: 0; }
+  .tag-btl { background: var(--btl-soft); color: #854F0B; }
+  .tag-lit { background: var(--lit-soft); color: #0C447C; }
+  .prod-saisi { position: relative; }
+  .prod-saisi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); border-radius: 3px 0 0 3px; }
+
+  /* SESSION LIST */
+  .sess-list { padding: 12px 16px 16px; }
+  .sess-zone { font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase; padding: 16px 4px 8px; display: flex; align-items: center; gap: 8px; }
+  .sess-zone-count { background: var(--border); color: var(--ink-2); font-size: 11px; padding: 1px 8px; border-radius: 10px; font-weight: 500; letter-spacing: 0; }
+  .sess-item { padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .sess-item:active { background: var(--surface-2); }
+  .sess-body { flex: 1; min-width: 0; }
+  .sess-name { font-size: 14px; font-weight: 500; line-height: 1.3; margin-bottom: 2px; word-break: break-word; }
+  .sess-detail { font-size: 12px; color: var(--ink-2); }
+  .sess-detail .mono { font-size: 12px; }
+  .sess-del { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); font-size: 18px; flex-shrink: 0; }
+  .sess-del:active { background: #FCEBEB; color: var(--danger); }
+
+  /* FAB ZONE */
+  .fab-zone { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 20; }
+  .btn-primary { padding: 13px 22px; background: var(--accent); color: #fff; border-radius: 100px; font-weight: 500; font-size: 15px; box-shadow: var(--shadow-2); display: inline-flex; align-items: center; gap: 8px; }
+  .btn-primary:active { background: var(--accent-dark); transform: scale(.97); }
+  .btn-sec { padding: 13px 18px; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 100px; font-weight: 500; font-size: 14px; box-shadow: var(--shadow-1); }
+  .btn-sec:active { background: var(--surface-2); }
+
+  /* BOTTOM SHEET */
+  .overlay { position: fixed; inset: 0; background: rgba(27,27,24,.45); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .overlay.open { opacity: 1; pointer-events: auto; }
+  .sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: var(--radius-l) var(--radius-l) 0 0; z-index: 51; transform: translateY(100%); transition: transform .25s cubic-bezier(.3,0,.2,1); max-height: 92vh; max-height: 92dvh; display: flex; flex-direction: column; }
+  .sheet.open { transform: translateY(0); }
+  .sheet-handle { width: 44px; height: 4px; background: var(--border-strong); border-radius: 2px; margin: 10px auto 6px; flex-shrink: 0; }
+  .sheet-head { padding: 4px 20px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .sheet-title { font-size: 17px; font-weight: 700; line-height: 1.25; }
+  .sheet-sub { font-size: 12px; color: var(--ink-2); margin-top: 4px; display: flex; align-items: center; gap: 8px; }
+  .sheet-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  .sheet-foot { padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); display: flex; gap: 10px; flex-shrink: 0; background: var(--surface); }
+
+  /* FORM */
+  .field { margin-bottom: 18px; }
+  .field-lbl { font-size: 12px; font-weight: 500; color: var(--ink-2); margin-bottom: 6px; display: block; }
+  .field-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-s); }
+  .field-row input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; font-size: 16px; font-weight: 500; font-family: 'DM Mono', monospace; }
+  .field-row input::-webkit-outer-spin-button, .field-row input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .field-row input[type=number] { -moz-appearance: textfield; }
+  .field-label-inline { font-size: 13px; color: var(--ink-2); white-space: nowrap; }
+  .field-label-inline strong { color: var(--ink); font-weight: 500; }
+  .qty-format-row { display: grid; grid-template-columns: 60px 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; padding: 10px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-s); }
+  .qty-format-label { font-size: 13px; font-weight: 500; color: var(--ink); }
+  .qty-format-row input { background: transparent; border: none; outline: none; font-size: 16px; font-weight: 500; font-family: 'DM Mono', monospace; width: 100%; }
+  .qty-format-sub { font-size: 11px; color: var(--ink-3); font-family: 'DM Mono', monospace; text-align: right; min-width: 50px; }
+
+  .check { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-s); cursor: pointer; }
+  .check input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
+  .check-lbl { font-size: 14px; font-weight: 500; }
+  .check.on { background: var(--accent-soft); border-color: var(--accent); }
+
+  .carton-box { margin-top: 10px; padding: 12px 14px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--radius-s); }
+  .carton-box .field { margin-bottom: 10px; }
+  .carton-box .field:last-child { margin-bottom: 0; }
+  .carton-box .field-row { background: #fff; }
+
+  .result-box { padding: 14px 16px; background: var(--accent); color: #fff; border-radius: var(--radius); display: flex; align-items: center; justify-content: space-between; }
+  .result-lbl { font-size: 12px; opacity: .85; }
+  .result-val { font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; }
+
+  .btn-valid { flex: 1; padding: 14px; background: var(--accent); color: #fff; border-radius: var(--radius); font-weight: 500; font-size: 15px; }
+  .btn-valid:active { background: var(--accent-dark); }
+  .btn-valid:disabled { background: var(--border-strong); color: var(--ink-3); }
+  .btn-cancel { padding: 14px 18px; background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--border); border-radius: var(--radius); font-weight: 500; }
+  .btn-delete { padding: 14px 18px; background: #fff; color: var(--danger); border: 1px solid #F4C0C0; border-radius: var(--radius); font-weight: 500; }
+
+  /* CHIP edit */
+  .edit-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background: var(--btl-soft); color: #854F0B; border-radius: 12px; font-size: 11px; font-weight: 700; letter-spacing: .5px; }
+
+  /* ZONE PICKER */
+  .zone-list { display: grid; gap: 8px; }
+  .zone-option { padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; align-items: center; gap: 10px; font-weight: 500; }
+  .zone-option.current { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-dark); }
+  .zone-option:active { background: var(--surface-2); }
+  .zone-add { padding: 12px; background: transparent; border: 1px dashed var(--border-strong); border-radius: var(--radius); color: var(--ink-2); font-weight: 500; }
+
+  /* EXPORT SUMMARY */
+  .summary-card { padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; }
+  .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px; }
+  .summary-row + .summary-row { border-top: 1px solid var(--border); }
+  .summary-row .mono { font-weight: 500; }
+  .summary-label { color: var(--ink-2); }
+  .summary-strong { color: var(--ink); font-weight: 500; }
+
+  /* MASCOTTE */
+  .mascot-btn { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); right: 16px; width: 60px; height: 60px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-2); z-index: 30; display: grid; place-items: center; overflow: hidden; }
+  .mascot-btn:active { transform: scale(.95); }
+  .mascot-bubble { position: fixed; bottom: calc(86px + env(safe-area-inset-bottom)); right: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow-2); z-index: 29; font-size: 13px; max-width: 220px; display: none; }
+  .mascot-bubble.open { display: block; animation: pop .25s; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px);} to {opacity: 1; transform: translateY(0);} }
+  .chat-panel { position: fixed; bottom: calc(86px + env(safe-area-inset-bottom)); right: 16px; width: min(360px, calc(100vw - 32px)); height: 60vh; max-height: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-l); box-shadow: var(--shadow-2); z-index: 31; display: none; flex-direction: column; overflow: hidden; }
+  .chat-panel.open { display: flex; }
+  .chat-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .chat-head-av { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); overflow: hidden; display: grid; place-items: center; }
+  .chat-head-t { flex: 1; }
+  .chat-head-t b { display: block; font-size: 14px; font-weight: 500; }
+  .chat-head-t span { font-size: 11px; color: var(--accent-dark); }
+  .chat-close { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-2); font-size: 18px; }
+  .chat-close:active { background: var(--surface-2); }
+  .chat-msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .msg { max-width: 82%; padding: 8px 12px; border-radius: 14px; font-size: 14px; line-height: 1.35; }
+  .msg-u { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+  .msg-a { align-self: flex-start; background: var(--surface-2); color: var(--ink); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+  .msg-a.typing { display: inline-flex; gap: 4px; padding: 12px; }
+  .msg-a.typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); animation: dot 1.2s infinite; }
+  .msg-a.typing span:nth-child(2) { animation-delay: .2s; }
+  .msg-a.typing span:nth-child(3) { animation-delay: .4s; }
+  @keyframes dot { 0%, 60%, 100% {opacity: .3;} 30% {opacity: 1;} }
+  .chat-foot { padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+  .chat-foot input { flex: 1; padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; font-size: 14px; outline: none; }
+  .chat-foot input:focus { border-color: var(--accent); }
+  .chat-send { width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 16px; flex-shrink: 0; }
+  .chat-send:disabled { background: var(--border-strong); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: calc(90px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 100px; font-size: 13px; font-weight: 500; z-index: 100; opacity: 0; transition: all .25s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* MODAL CONFIRM */
+  .confirm-sheet .sheet-body { padding: 20px; }
+  .confirm-sheet p { margin: 0 0 16px; font-size: 15px; }
+</style>
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ITM">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+</head>
+<body>
+
+<header>
+  <div class="logo">ITM</div>
+  <div class="h-main">
+    <div class="h-title">Inventaire</div>
+    <div class="h-sub" id="hSubDate"></div>
+  </div>
+  <button class="zone-pill" id="btnZone" type="button">
+    <span id="zoneLabel">Zone</span>
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-tab="catalogue">Catalogue</button>
+  <button class="tab" data-tab="session">Session <span class="badge" id="badgeSess">0</span></button>
+  <button class="tab" data-tab="export">Export</button>
+</div>
+
+<main>
+  <div class="view active" id="vCatalogue">
+    <div class="search-wrap" style="position: relative;">
+      <span class="search-ico">⌕</span>
+      <input class="search" id="searchInput" type="search" placeholder="Rechercher un produit…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="prod-list" id="prodList"></div>
+  </div>
+
+  <div class="view" id="vSession">
+    <div class="sess-list" id="sessList">
+      <div class="prod-empty">Aucune saisie pour l'instant.<br>Retourne au catalogue pour commencer.</div>
+    </div>
+  </div>
+
+  <div class="view" id="vExport">
+    <div class="sess-list" id="exportView"></div>
+  </div>
+</main>
+
+<!-- Sheet saisie produit -->
+<div class="overlay" id="ovProd"></div>
+<div class="sheet" id="shProd">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title" id="shProdName">—</div>
+    <div class="sheet-sub" id="shProdSub">—</div>
+  </div>
+  <div class="sheet-body" id="shProdBody"></div>
+  <div class="sheet-foot" id="shProdFoot"></div>
+</div>
+
+<!-- Sheet zones -->
+<div class="overlay" id="ovZone"></div>
+<div class="sheet" id="shZone">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title">Zone de comptage</div>
+    <div class="sheet-sub">Sert à organiser la saisie. N'apparaît pas dans l'export.</div>
+  </div>
+  <div class="sheet-body">
+    <div class="zone-list" id="zoneList"></div>
+    <div style="margin-top: 14px;">
+      <button class="zone-add" id="btnAddZone" style="width: 100%;" type="button">+ Ajouter une zone</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sheet nouvelle zone -->
+<div class="overlay" id="ovNewZone"></div>
+<div class="sheet" id="shNewZone">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title">Nouvelle zone</div>
+  </div>
+  <div class="sheet-body">
+    <div class="field">
+      <label class="field-lbl">Nom de la zone</label>
+      <div class="field-row">
+        <input id="newZoneInput" type="text" placeholder="ex: Cave, Terrasse, Cuisine…" autocomplete="off">
+      </div>
+    </div>
+  </div>
+  <div class="sheet-foot">
+    <button class="btn-cancel" id="newZoneCancel" type="button">Annuler</button>
+    <button class="btn-valid" id="newZoneOk" type="button">Créer</button>
+  </div>
+</div>
+
+<!-- Sheet confirm -->
+<div class="overlay" id="ovConfirm"></div>
+<div class="sheet confirm-sheet" id="shConfirm">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title" id="confirmTitle">Confirmer</div>
+  </div>
+  <div class="sheet-body">
+    <p id="confirmMsg">—</p>
+  </div>
+  <div class="sheet-foot">
+    <button class="btn-cancel" id="confirmNo" type="button">Annuler</button>
+    <button class="btn-valid" id="confirmYes" type="button">Confirmer</button>
+  </div>
+</div>
+
+<!-- Mascotte -->
+<button class="mascot-btn" id="mascotBtn" type="button" aria-label="Assistant">
+  <img src="./mascot.png" alt="Assistant" style="width:100%;height:100%;object-fit:cover;object-position:center top;">
+</button>
+
+<div class="mascot-bubble" id="mascotBubble">Besoin d'un coup de main ?</div>
+
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head">
+    <div class="chat-head-av">
+        <img src="./mascot.png" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center top;">
+      </div>
+    <div class="chat-head-t">
+      <b>Assistant ITM</b>
+      <span>• en ligne</span>
+    </div>
+    <button class="chat-close" id="chatClose" type="button">✕</button>
+  </div>
+  <div class="chat-msgs" id="chatMsgs"></div>
+  <div class="chat-foot">
+    <input id="chatInput" type="text" placeholder="Pose ta question…" autocomplete="off">
+    <button class="chat-send" id="chatSend" type="button">↑</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="appData" style="display:none"></div>
+<script id="CATDATA" type="application/json">[{"y":"M._ Chassagne Montrachet 1Er Cru_ \"Morgeot-Clos Pitois\", Domaine Roger Belland_BLC_150CL","s":"Chassagne Montrachet 1Er Cru \"Morgeot-Clos Pitois\", Domaine Roger Belland","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._Ventoux_\"Château de Bacchus\", Claret Tournier_RSE_75CL","s":"Ventoux \"Château de Bacchus\", Claret Tournier","c":"LIQUIDE - ALCOOL - VIN - ROSE RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"MATHU._ Armand de Brignac \"Rosé\" 600CL","s":"Armand de Brignac \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"B._ Morey-Saint-Denis_Domaine Kuheiji_RGE_75CL","s":"Morey-Saint-Denis Domaine Kuheiji","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Champagne_ Louis Roederer Collection Brut_75CL","s":"Champagne Louis Roederer Collection Brut","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"JUS DE FRUIT VERSE","s":"JUS DE FRUIT VERSE","c":"LIQUIDE - SOFT - JUS DE FRUIT","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"CODIGO REPOSADO 40°","s":"CODIGO REPOSADO 40°","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA REPOSADO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Veuve Clicquot \"Rosé\"_75CL","s":"Veuve Clicquot \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Provence_\"Cuvée Osé Blanc\", Domaine des Campaux_BLC_75CL","s":"Provence \"Cuvée Osé Blanc\", Domaine des Campaux","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Limoux_ \"Aigle  Royal Chardonnay\", Gérard Bertrand_BLC_75CL","s":"Limoux \"Aigle Royal Chardonnay\", Gérard Bertrand","c":"LIQUIDE - ALCOOL - VIN - BLANC LANGUEDOC","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Côtes-de-Provence_ \"Bois de Rose\", Domaine Rinaudo_RSE_75CL","s":"Côtes-de-Provence \"Bois de Rose\", Domaine Rinaudo","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. TONIC WATER VP 20cl","s":"TONIC WATER VP","c":"LIQUIDE - SOFT - SODAS","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"DECA DOSETTES","s":"DECA DOSETTES","c":"LIQUIDE - SOFT - CAFETERIE","q":1.0,"u":"unit","n":"Dosette","e":"litre"},{"y":"J._ Corse Calvi_ \"Pumonte\", Domaine Alzipratu_BLC_300CL","s":"Corse Calvi \"Pumonte\", Domaine Alzipratu","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"M. BELVEDERE TEN VODKA 175CL","s":"BELVEDERE TEN VODKA","c":"LIQUIDE - ALCOOL - VODKA","q":175.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._ Corton-Charlemagne Grand Cru_Domaine Jean-Claude Ramonet_BLC_75CL","s":"Corton-Charlemagne Grand Cru Domaine Jean-Claude Ramonet","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"PISCO 40°","s":"PISCO 40°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._ Corton-Charlemagne Grand Cru_ Domaine Jean-Claure Ramonet_BLC_150CL","s":"Corton-Charlemagne Grand Cru Domaine Jean-Claure Ramonet","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._ Armand de Brignac \"Rosé\" 75CL","s":"Armand de Brignac \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"SUZE 15°","s":"SUZE 15°","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"J._ Limoux_ \"Aigle Royal Chardonnay\", Gérard Bertrand_BLC_300CL","s":"Limoux \"Aigle Royal Chardonnay\", Gérard Bertrand","c":"LIQUIDE - ALCOOL - VIN - BLANC LANGUEDOC","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._ Côtes-de-Provence_ \"2S\", Château des Marres_RSE_75CL","s":"Côtes-de-Provence \"2S\", Château des Marres","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"71 - SEVENTY ONE GIN","s":"71 - SEVENTY ONE GIN","c":"LIQUIDE - ALCOOL - GIN","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"VODKA VERSE","s":"VODKA VERSE","c":"LIQUIDE - ALCOOL - VODKA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Bolgheri_ Domaine Sassicaia_RGE_75CL","s":"Bolgheri Domaine Sassicaia","c":"LIQUIDE - ALCOOL - VIN - ROUGE ITALIE BOLGHERI","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. SPRITE VC 25CL","s":"SPRITE VC","c":"LIQUIDE - SOFT - SODAS","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"B. FUZE TEA PECHE 25CL VC","s":"FUZE TEA PECHE 25CL VC","c":"LIQUIDE - SOFT - SODAS","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"MATHU. Dom Perignon Brut 600CL","s":"Dom Perignon Brut","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"B. JUS DE FRUIT 20CL","s":"JUS DE FRUIT","c":"LIQUIDE - SOFT - JUS DE FRUIT","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"B._Sainte-Foy Côtes de Bordeaux_Réserve de Famille, Château Martet_RGE_75CL","s":"Sainte-Foy Côtes de Bordeaux Réserve de Famille, Château Martet","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Corton Charlemagne Grand Cru_Domaine Georges Joillot_BLC_75CL","s":"Corton Charlemagne Grand Cru Domaine Georges Joillot","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Vin de France_ \"Etoile\", Domaine Ott Cru Classé_ RSE_150CL","s":"Vin de France \"Etoile\", Domaine Ott Cru Classé","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B. GRAPPA SARPA DI POLI 70CL","s":"GRAPPA SARPA DI POLI","c":"LIQUIDE - ALCOOL - DIGESTIF","q":70.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Saint-Julien_Château Léoville Poyferré_RGE_75CL","s":"Saint-Julien Château Léoville Poyferré","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"MATHU._ Côtes-De-Provence_ \"Rose et Or\", Château Minuty_RSE_600CL","s":"Côtes-De-Provence \"Rose et Or\", Château Minuty","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"B. COCA COLA VERRE BOUTEILLE","s":"COCA COLA VERRE BOUTEILLE","c":"LIQUIDE - SOFT - SODAS","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"B._ Luberon_  \"Rouge Marie\", Domaine De Marie, Famille Sibuet_RGE_75CL","s":"Luberon \"Rouge Marie\", Domaine De Marie, Famille Sibuet","c":"LIQUIDE - ALCOOL - VIN - ROUGE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"PAILLES","s":"PAILLES","c":"","q":1.0,"u":"unit","n":"Carton","e":"litre"},{"y":"B._ Sartène_ \"Rosumarinu\", Domaine Sant'Armettu_RGE_75CL","s":"Sartène \"Rosumarinu\", Domaine Sant'Armettu","c":"LIQUIDE - ALCOOL - VIN - ROUGE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"VERMOUTH DRY","s":"VERMOUTH DRY","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B. BADOIT VERTE VP 75cl","s":"BADOIT VERTE VP","c":"LIQUIDE - SOFT - EAU","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"M._ Krug, \"Grande Cuvée Rosé\"_150CL","s":"Krug, \"Grande Cuvée Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._La Grande Rue Grand Cru_Domaine François Lamarche_RGE_75CL","s":"La Grande Rue Grand Cru Domaine François Lamarche","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"ITALICUS 20°","s":"ITALICUS 20°","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"VERMOUTH ROUGE","s":"VERMOUTH ROUGE","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"BAILEYS 17°","s":"BAILEYS 17°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"J._ Chassagne Montrachet 1Er Cru_ \"Morgeot-Clos Pitois\", Domaine Roger Belland_BLC_300CL","s":"Chassagne Montrachet 1Er Cru \"Morgeot-Clos Pitois\", Domaine Roger Belland","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"M._Vin de France, Loire_\"Barre à Mine\", Michel Redde & Fils_BLC_150CL","s":"Vin de France, Loire \"Barre à Mine\", Michel Redde & Fils","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"CREME PECHES 15°","s":"CREME PECHES 15°","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"COINTREAU 40°","s":"COINTREAU 40°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._ Côtes-De-Provence_ \"Garrus\", Château D'Esclans_RSE_150CL","s":"Côtes-De-Provence \"Garrus\", Château D'Esclans","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"M._Bourgogne_ \"Côte d'Or\", Domaine Yvon Clerget_BLC_150CL","s":"Bourgogne \"Côte d'Or\", Domaine Yvon Clerget","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._Pauillac_Château Mouton Rothschild_RGE_75CL","s":"Pauillac Château Mouton Rothschild","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. Dom Perignon \"Plénitude 2\" 75CL","s":"Dom Perignon \"Plénitude 2\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"EIGHT RESERVE","s":"EIGHT RESERVE","c":"LIQUIDE - ALCOOL - TEQUILA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"LIQUEUR DE SUREAU","s":"LIQUEUR DE SUREAU","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Clos des Lambrays Grand Cru_Domaine des Lambrays_RGE_75CL","s":"Clos des Lambrays Grand Cru Domaine des Lambrays","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Champagne_ \"MV20 Aÿ Grand Cru\", Henri Giraud_75CL","s":"Champagne \"MV20 Aÿ Grand Cru\", Henri Giraud","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"CORONA 33 CL VP 4,5°","s":"CORONA 33 CL VP 4,5°","c":"LIQUIDE - ALCOOL - BIERE","q":1.0,"u":"unit","n":"Bouteille","e":"litre"},{"y":"B._I.G.P. Pays d'Hérault_Domaine de la Grange des Pères_RGE_75CL","s":"I.G.P. Pays d'Hérault Domaine de la Grange des Pères","c":"LIQUIDE - ALCOOL - VIN - ROUGE LANGUEDOC","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Côtes-de-Provence_ \"Blanc et Or\", Château Minuty_BLC_75CL","s":"Côtes-de-Provence \"Blanc et Or\", Château Minuty","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Puligny Montrachet 1er Cru_ \"Clos du Cailleret\", Domaine des Lambrays_BLC_75CL","s":"Puligny Montrachet 1er Cru \"Clos du Cailleret\", Domaine des Lambrays","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Côtes-De-Provence_ Domaine des Grands Pins_RSE_75CL","s":"Côtes-De-Provence Domaine des Grands Pins","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Criots-Bâtard-Montrachet Grand Cru_ Domaine Roger Belland_BLC_150CL","s":"Criots-Bâtard-Montrachet Grand Cru Domaine Roger Belland","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._Pauillac_Château Latour_RGE_75CL","s":"Pauillac Château Latour","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"MATHU._Côtes-De-Provence_\"281\", Château Minuty_RSE_600CL","s":"Côtes-De-Provence \"281\", Château Minuty","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"B._Sancerre_\"Les Monts Damnés\", Domaine Pierre Prieur & Fils_BLC_75CL","s":"Sancerre \"Les Monts Damnés\", Domaine Pierre Prieur & Fils","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Hermitage_  \"La Chapelle\", Paul Jaboulet-Aîné_RGE_75CL","s":"Hermitage \"La Chapelle\", Paul Jaboulet-Aîné","c":"LIQUIDE - ALCOOL - VIN - BLANC RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Côte de Nuits Villages_\"Version Nord\", Domaine Jean-Marc Millot_RGE_75CL","s":"Côte de Nuits Villages \"Version Nord\", Domaine Jean-Marc Millot","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Morgon_ \"Corcelette\", Domaine Louis Claude Desvignes_RGE_75CL","s":"Morgon \"Corcelette\", Domaine Louis Claude Desvignes","c":"LIQUIDE - ALCOOL - VIN - ROUGE BEAUJOLAIS","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Côtes De Provence_\"Whispering Angel\", Château d'Esclans_RSE_75CL","s":"Côtes De Provence \"Whispering Angel\", Château d'Esclans","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"CHARTREUSE VERTE","s":"CHARTREUSE VERTE","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"DON JULIO 1942","s":"DON JULIO 1942","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA ANEJO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Pomerol_ \"Duluc\", Château Branaire-Ducru _RGE_75CL","s":"Pomerol \"Duluc\", Château Branaire-Ducru","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._Corton-Charlemagne Grand Cru_Domaine Georges Joillot_BLC_150CL","s":"Corton-Charlemagne Grand Cru Domaine Georges Joillot","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"CREME FRAMBOISE 15°","s":"CREME FRAMBOISE 15°","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._ Côtes De Provence_ \"Clos Peyrassol\", Château Peyrassol_RSE_150CL","s":"Côtes De Provence \"Clos Peyrassol\", Château Peyrassol","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"MEZCAL DEL MAGUEY VIDA 42°","s":"MEZCAL DEL MAGUEY VIDA 42°","c":"LIQUIDE - ALCOOL - TEQUILA - MEZCAL","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"LIQUEUR DE MENTHE","s":"LIQUEUR DE MENTHE","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Saint-Estèphe_Château Cos d'Estournel_RGE_75CL","s":"Saint-Estèphe Château Cos d'Estournel","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Krug, \"Grande Cuvée Brut\"_150CL","s":"Krug, \"Grande Cuvée Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"CAFE DOSETTE","s":"CAFE DOSETTE","c":"LIQUIDE - SOFT - CAFETERIE","q":1.0,"u":"unit","n":"Dosette","e":"litre"},{"y":"LIQUEUR CITRON","s":"LIQUEUR CITRON","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._ Puligny-Montrachet 1er Cru_ \"Les Folatières\", Domaine Xavier Monnot_BLC_150CL","s":"Puligny-Montrachet 1er Cru \"Les Folatières\", Domaine Xavier Monnot","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._ Crozes-Hermitage_ \"Clos des Grives\", Domaine Combier_RGE_75CL","s":"Crozes-Hermitage \"Clos des Grives\", Domaine Combier","c":"LIQUIDE - ALCOOL - VIN - ROUGE RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. GRAPPA CRISTIANI CON RUTA 40° 70CL","s":"GRAPPA CRISTIANI CON RUTA 40°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":70.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Saumur_\"Brézé\", Domaine Guiberteau_BLC_75CL","s":"Saumur \"Brézé\", Domaine Guiberteau","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M. CLASE AZUL ULTRA EXTRA ANEJO 175CL","s":"CLASE AZUL ULTRA EXTRA ANEJO","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA EXTRA ANEJO","q":175.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._Saumur-Champigny_ \"Le Bourg\",  Clos Rougeard_RGE_75CL","s":"Saumur-Champigny \"Le Bourg\", Clos Rougeard","c":"LIQUIDE - ALCOOL - VIN - ROUGE LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Montagny 1er Cru_ \"Les Vignes de Françoise\", Domaine Feuillat-Juillot_BLC_75CL","s":"Montagny 1er Cru \"Les Vignes de Françoise\", Domaine Feuillat-Juillot","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"DON JULIO ROSADO","s":"DON JULIO ROSADO","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA REPOSADO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B. RED BULL","s":"RED BULL","c":"LIQUIDE - SOFT - SODAS","q":25.0,"u":"cL","n":"Canette","e":"btl"},{"y":"M._ Armand de Brignac \"Brut\" 150CL","s":"Armand de Brignac \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"EAU D'OR LIQUEUR ELIXIR D'AGRUME PEGASUS DISTILLERIE","s":"EAU D'OR LIQUEUR ELIXIR D'AGRUME PEGASUS DISTILLERIE","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Perrier Jouet_\"Blanc de Blancs\"_75CL","s":"Perrier Jouet \"Blanc de Blancs\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"CACHACA 40°","s":"CACHACA 40°","c":"LIQUIDE - ALCOOL - RHUM","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Pomerol_Château Beauregard_RGE_75CL","s":"Pomerol Château Beauregard","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Chablis Grand Cru_ \"Les Clos\", Domaine François Raveneau_BLC_75CL","s":"Chablis Grand Cru \"Les Clos\", Domaine François Raveneau","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Sauternes_Château D'Yquem_BLC_75CL","s":"Sauternes Château D'Yquem","c":"LIQUIDE - ALCOOL - VIN - BLANC BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Perrier Jouet_ Belle Epoque, \"Rosé\"_300CL","s":"Perrier Jouet Belle Epoque, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"J._ Criots-Bâtard-Montrachet Grand Cru_ Domaine Roger Belland_BLC_300CL","s":"Criots-Bâtard-Montrachet Grand Cru Domaine Roger Belland","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"MATHU._ Cristal Roederer, \"Brut\"_600CL","s":"Cristal Roederer, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"B._Napa Valley _ Harlan Estate_RGE_75CL","s":"Napa Valley Harlan Estate","c":"LIQUIDE - ALCOOL - VIN - ROUGE DU MONDE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"CLASE AZUL MEZCAL","s":"CLASE AZUL MEZCAL","c":"LIQUIDE - ALCOOL - TEQUILA - MEZCAL","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"LIQUEUR PRUNELLE DE BOURGOGNE MAISON JACOULOT 40°","s":"LIQUEUR PRUNELLE DE BOURGOGNE MAISON JACOULOT 40°","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Meursault 1er Cru_\"Les Perrières\", Domaine Yvon Clerget_BLC_75CL","s":"Meursault 1er Cru \"Les Perrières\", Domaine Yvon Clerget","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. HONEST GIN COASTAL LIGHT 40° 70CL","s":"HONEST GIN COASTAL LIGHT 40°","c":"LIQUIDE - ALCOOL - GIN","q":70.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"MARC DE BOURGOGNE \"Hospice de Beaune 1999\" MAISON JACOULOT 43°","s":"MARC DE BOURGOGNE \"Hospice de Beaune 1999\" MAISON JACOULOT 43°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"CASA DEL SOL 11:11 EXTRA ANEJO 40°","s":"CASA DEL SOL 11:11 EXTRA ANEJO 40°","c":"LIQUIDE - ALCOOL - TEQUILA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Cristal Roederer, \"Rosé\"_75CL","s":"Cristal Roederer, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Côteaux d'Aix-en-Provence_ Château La Coste_RSE_75CL","s":"Côteaux d'Aix-en-Provence Château La Coste","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Gevrey-Chambertin_\"Mes 3 Fils\", Domaine Jean Michel Guillon & Fils_RGE_75CL","s":"Gevrey-Chambertin \"Mes 3 Fils\", Domaine Jean Michel Guillon & Fils","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Côtes-de-Provence_ \"Nuit Intense\", Domaine Rinaudo_BLC_75CL","s":"Côtes-de-Provence \"Nuit Intense\", Domaine Rinaudo","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"BOBINE STANDARD 80x80x12 (ROULEAU CAISSE)","s":"BOBINE STANDARD 80x80x12 (ROULEAU CAISSE)","c":"","q":1.0,"u":"unit","n":"Rouleau","e":"litre"},{"y":"B._Chambolle-Musigny_Domaine Jean-Jacques Confuron_RGE_75CL","s":"Chambolle-Musigny Domaine Jean-Jacques Confuron","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Chablis 1er Cru_ \"Fourneaux\", Domaine Gautheron_BLC_150CL","s":"Chablis 1er Cru \"Fourneaux\", Domaine Gautheron","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"CALVADOS 40°","s":"CALVADOS 40°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Corse Calvi_ \"Storia Di Corni Mozzi\", Clos Culombo_RGE_75CL","s":"Corse Calvi \"Storia Di Corni Mozzi\", Clos Culombo","c":"LIQUIDE - ALCOOL - VIN - ROUGE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Côtes-De-Provence_ \"Garrus\", Château D'Esclans_RSE_75CL","s":"Côtes-De-Provence \"Garrus\", Château D'Esclans","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Maranges 1er Cru_ \"Clos de la Fussière\", Domaine Xavier Monnot_RGE_75CL","s":"Maranges 1er Cru \"Clos de la Fussière\", Domaine Xavier Monnot","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"CLASE AZUL AHUMADO BLANCO","s":"CLASE AZUL AHUMADO BLANCO","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA BLANCO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"LIQUEUR ROYALE \"Nectar d'Agrumes\" DISTILLERIE PEGASUS 44°","s":"LIQUEUR ROYALE \"Nectar d'Agrumes\" DISTILLERIE PEGASUS 44°","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"MATHU._ Cristal Roederer, \"Rosé\"_600CL","s":"Cristal Roederer, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"J._ Chassagne-Montrachet 1er cru_ \"Morgeot\", Domaine Jean-Claude Ramonet_BLC_300CL","s":"Chassagne-Montrachet 1er cru \"Morgeot\", Domaine Jean-Claude Ramonet","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B. HEAVENSAKE JUNMAI 12- KONISHI 72CL","s":"HEAVENSAKE JUNMAI 12- KONISHI","c":"LIQUIDE - ALCOOL - VIN - SAKE","q":72.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. Krug - \"Clos D'Ambonnay\", Blanc de Noirs 75CL","s":"Krug - \"Clos D'Ambonnay\", Blanc de Noirs","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Japon - Yamaguchi_ DASSAI Beyond Junmai Daiginjo _ 230CL","s":"Japon - Yamaguchi DASSAI Beyond Junmai Daiginjo","c":"LIQUIDE - ALCOOL - VIN - SAKE","q":230.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"J._ Puligny-Montrachet 1er cru_ \"Les Perrières\", Domaine Yvon Clerget_BLC_300CL","s":"Puligny-Montrachet 1er cru \"Les Perrières\", Domaine Yvon Clerget","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._Vin de France, Loire_\"Veritas\", Domaine de l'Ecu_RGE_75CL","s":"Vin de France, Loire \"Veritas\", Domaine de l'Ecu","c":"LIQUIDE - ALCOOL - VIN - ROUGE LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"CASA DEL SOL REPOSADO 40°","s":"CASA DEL SOL REPOSADO 40°","c":"LIQUIDE - ALCOOL - TEQUILA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Rioja - Espagne_\"Gran Reserva 904\", La Rioja Alta_RGE_75CL","s":"Rioja - Espagne \"Gran Reserva 904\", La Rioja Alta","c":"LIQUIDE - ALCOOL - VIN - ROUGE DU MONDE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"LIQUEUR VERVEINE","s":"LIQUEUR VERVEINE","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Montrachet Grand Cru_ Domaine Olivier Leflaive_BLC_75CL","s":"Montrachet Grand Cru Domaine Olivier Leflaive","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Chiroubles_ \"Vieilles Vignes\", Domaine Jules Métras_RGE_75CL","s":"Chiroubles \"Vieilles Vignes\", Domaine Jules Métras","c":"LIQUIDE - ALCOOL - VIN - ROUGE BEAUJOLAIS","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Châteauneuf-du-Pape_ \"Hommage à Jacques Perrin\", Château De Beaucastel_RGE_75CL","s":"Châteauneuf-du-Pape \"Hommage à Jacques Perrin\", Château De Beaucastel","c":"LIQUIDE - ALCOOL - VIN - ROUGE RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"KOMOS ANEJO CRISTALINO TEQUILA","s":"KOMOS ANEJO CRISTALINO TEQUILA","c":"LIQUIDE - ALCOOL - TEQUILA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Côtes de Provence_\"Fantastique\", Château Sainte Marguerite_BLC_75CL","s":"Côtes de Provence \"Fantastique\", Château Sainte Marguerite","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Vin de France_ \"Lys des Sables\", Fondugues Pradugues_BLC_150CL","s":"Vin de France \"Lys des Sables\", Fondugues Pradugues","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"TANQUERAY TEN 47.3°","s":"TANQUERAY TEN 47.3°","c":"LIQUIDE - ALCOOL - GIN","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"CLASE AZUL GOLD","s":"CLASE AZUL GOLD","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA JOVEN","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Japon - Yamaguchi_ DASSAI Beyond Junmai Daiginjo _ 72CL","s":"Japon - Yamaguchi DASSAI Beyond Junmai Daiginjo","c":"LIQUIDE - ALCOOL - VIN - SAKE","q":72.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Provence_\"Roseblood\", Estoublon_RSE_75CL","s":"Provence \"Roseblood\", Estoublon","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Corbières_ \"La Bégou\", Maxime Magnon_BLC_75Cl","s":"Corbières \"La Bégou\", Maxime Magnon","c":"LIQUIDE - ALCOOL - VIN - BLANC LANGUEDOC","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Bâtard-Montrachet Grand Cru_ Domaine Alvina Pernot_BLC_75Cl","s":"Bâtard-Montrachet Grand Cru Domaine Alvina Pernot","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Perrier Jouet_ Belle Epoque, \"Rosé\"_150CL","s":"Perrier Jouet Belle Epoque, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"J._ Perrier Jouet_ Belle Epoque, \"Blanc de Blancs\"_300CL","s":"Perrier Jouet Belle Epoque, \"Blanc de Blancs\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._ Perrier Jouet_ Belle Epoque, \"Blanc de Blancs\"_75CL","s":"Perrier Jouet Belle Epoque, \"Blanc de Blancs\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Pauillac_Château Lafite Rothschild_RGE_75CL","s":"Pauillac Château Lafite Rothschild","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"DON JULIO 70TH 38°","s":"DON JULIO 70TH 38°","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA CRISTALINO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B. HEAVENSAKE JUNMAI DAIGINJO LABEL NOIR- TATENOKAWA 72CL","s":"HEAVENSAKE JUNMAI DAIGINJO LABEL NOIR- TATENOKAWA","c":"LIQUIDE - ALCOOL - VIN - SAKE","q":72.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Cristal Roederer, \"Rosé\"_300CL","s":"Cristal Roederer, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._ Jacques Selosse_ \"Initial\", Grand Cru Blanc de Blancs, Brut_75CL","s":"Jacques Selosse \"Initial\", Grand Cru Blanc de Blancs, Brut","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"APEROL 12,5°","s":"APEROL 12,5°","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Côte-Rôtie_ \"Le Champon\", Domaine Stéphane Ogier_RGE_75CL","s":"Côte-Rôtie \"Le Champon\", Domaine Stéphane Ogier","c":"LIQUIDE - ALCOOL - VIN - ROUGE RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Savigny-Les-Beaunes_\"Dessus les Gollardes\", Domaine Prieuré-Roch_RGE_75CL","s":"Savigny-Les-Beaunes \"Dessus les Gollardes\", Domaine Prieuré-Roch","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"NABU. ARMAND DE BRIGNAC BRUT 1500CL","s":"ARMAND DE BRIGNAC BRUT","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":1500.0,"u":"cL","n":"Nabuchodonosor","e":"btl"},{"y":"BIB CUBI RGE 1000CL","s":"BIB CUBI","c":"LIQUIDE - ALCOOL - VIN - ROUGE PROVENCE","q":1000.0,"u":"cL","n":"BIB","e":"litre"},{"y":"B._ Hermitage_  \"La Chapelle\", Paul Jaboulet-Aîné_BLC_75CL","s":"Hermitage \"La Chapelle\", Paul Jaboulet-Aîné","c":"LIQUIDE - ALCOOL - VIN - BLANC RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Saint-Aubin 1er cru_ \"En Remily\", Domaine Henri Prudhon & Fils_BLC_75CL","s":"Saint-Aubin 1er cru \"En Remily\", Domaine Henri Prudhon & Fils","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M. BELVEDERE PURE VODKA 175CL","s":"BELVEDERE PURE VODKA","c":"LIQUIDE - ALCOOL - VODKA","q":175.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"J._ Cristal Roederer, \"Brut\"_300CL","s":"Cristal Roederer, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"M._ Ribera Del Duero - Espagne_ \"Unico\", Vega Sicilia_RGE_150CL","s":"Ribera Del Duero - Espagne \"Unico\", Vega Sicilia","c":"LIQUIDE - ALCOOL - VIN - ROUGE DU MONDE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"M._ Pomerol_ Château Petrus_RGE_150CL","s":"Pomerol Château Petrus","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._Pomerol_Château Petrus_RGE_75CL","s":"Pomerol Château Petrus","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Charmes Chambertin Grand Cru_ Domaine Perrot Minot_RGE_75CL","s":"Charmes Chambertin Grand Cru Domaine Perrot Minot","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M. DON JULIO 1942 175CL","s":"DON JULIO 1942","c":"LIQUIDE - ALCOOL - TEQUILA","q":175.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._I.G.P. Pays d'Hérault_Domaines de la Grange des Pères_BLC_75CL","s":"I.G.P. Pays d'Hérault Domaines de la Grange des Pères","c":"LIQUIDE - ALCOOL - VIN - BLANC LANGUEDOC","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Cristal Roederer, \"Brut\"_75CL","s":"Cristal Roederer, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"LIQUEUR DE CAFE 16°","s":"LIQUEUR DE CAFE 16°","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"J._Côtes-De-Provence_\"281\", Château Minuty_RSE_300CL","s":"Côtes-De-Provence \"281\", Château Minuty","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._Languedoc-Cabrières_\"Clos du Temple\", Gérard Bertrand_RSE_75CL","s":"Languedoc-Cabrières \"Clos du Temple\", Gérard Bertrand","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"MATHU._ Limoux_ \"Aigle Royal Chardonnay\", Gérard Bertrand_BLC_600CL","s":"Limoux \"Aigle Royal Chardonnay\", Gérard Bertrand","c":"LIQUIDE - ALCOOL - VIN - BLANC LANGUEDOC","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"SIR DAVIES RYE WHISKY 44°","s":"SIR DAVIES RYE WHISKY 44°","c":"LIQUIDE - ALCOOL - WHISKY","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"GET 31 24°","s":"GET 31 24°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Côtes-de-Provence_\"Grande Reserve\", Domaine La Rouillère _RSE_75CL","s":"Côtes-de-Provence \"Grande Reserve\", Domaine La Rouillère","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Côtes de Provence_\"281\", Château Minuty_RSE_75CL","s":"Côtes de Provence \"281\", Château Minuty","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Perrier Jouet_ Belle Epoque, \"Blanc de Blancs\"_150CL","s":"Perrier Jouet Belle Epoque, \"Blanc de Blancs\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._ Ulysse Colin_\"Les Pierrieres\", Blanc de Blancs Extra Brut_75CL","s":"Ulysse Colin \"Les Pierrieres\", Blanc de Blancs Extra Brut","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Cotes de Provence_ \"Rose et Or\", Château Minuty_RSE_300CL","s":"Cotes de Provence \"Rose et Or\", Château Minuty","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._ Vin de France, Provence_ \"Eau de Rosée\", Fondugues-Pradugues_ RSE_75CL","s":"Vin de France, Provence \"Eau de Rosée\", Fondugues-Pradugues","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"JOHNNIE WALKER BLUE LABEL 40°","s":"JOHNNIE WALKER BLUE LABEL 40°","c":"LIQUIDE - ALCOOL - WHISKY","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"RHUM 3ANS VERSE","s":"RHUM 3ANS VERSE","c":"LIQUIDE - ALCOOL - RHUM","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Saumur-Champigny_\"Les Arboises\", Domaine Guiberteau_RGE_75CL","s":"Saumur-Champigny \"Les Arboises\", Domaine Guiberteau","c":"LIQUIDE - ALCOOL - VIN - ROUGE LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Perrier Jouet_ Belle Epoque, \"Rosé\"_75CL","s":"Perrier Jouet Belle Epoque, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"BRANDY 40° 70CL","s":"BRANDY 40°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":70.0,"u":"cL","n":"Bouteille","e":"litre"},{"y":"LIQUEUR YUZU","s":"LIQUEUR YUZU","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Pauillac_\"Les Forts de Latour\", Château Latour_RGE_75CL","s":"Pauillac \"Les Forts de Latour\", Château Latour","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Pouilly-Fumé_\"Pur Sang\", Domaine Dagueneau_BLC_75CL","s":"Pouilly-Fumé \"Pur Sang\", Domaine Dagueneau","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"ALTAMURA 40°","s":"ALTAMURA 40°","c":"LIQUIDE - ALCOOL - VODKA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._ Sancerre_ \"Les Monts Damnés\", Domaine Pierre Prieur & Fils_BLC_150CL","s":"Sancerre \"Les Monts Damnés\", Domaine Pierre Prieur & Fils","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"OLMECA ALTOS REPOSADO 38°","s":"OLMECA ALTOS REPOSADO 38°","c":"LIQUIDE - ALCOOL - TEQUILA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"SAMBUCA 40°","s":"SAMBUCA 40°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Chassagne-Montrachet 1er Cru_\"La Boudriotte\", Domaine Jean-Claude Ramonet_BLC_75CL","s":"Chassagne-Montrachet 1er Cru \"La Boudriotte\", Domaine Jean-Claude Ramonet","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Vin de France, Rhône_ \"Terre d'Ombre\", Domaine de l'Anglore_RGE_75CL","s":"Vin de France, Rhône \"Terre d'Ombre\", Domaine de l'Anglore","c":"LIQUIDE - ALCOOL - VIN - ROUGE RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Chassagne-Montrachet_ Domaine Fontaine-Gagnard_BLC_75CL","s":"Chassagne-Montrachet Domaine Fontaine-Gagnard","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Bâtard-Montrachet Grand Cru_ Domaine Fontaine-Gagnard_BLC_75CL","s":"Bâtard-Montrachet Grand Cru Domaine Fontaine-Gagnard","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Pauillac_Château Pontet Canet_RGE_75CL","s":"Pauillac Château Pontet Canet","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Chablis_  \"Vaucoupin\",  Domaine Gautheron_BLC_75CL","s":"Chablis \"Vaucoupin\", Domaine Gautheron","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Krug, \"Grande Cuvée Brut\"_75CL","s":"Krug, \"Grande Cuvée Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Côtes-de-Provence_ \"Bois de Rose\", Domaine Rinaudo_RSE_150CL","s":"Côtes-de-Provence \"Bois de Rose\", Domaine Rinaudo","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._Puligny-Montrachet 1er Cru_\"Les Folatières\", Domaine Xavier Monnot_BLC_75CL","s":"Puligny-Montrachet 1er Cru \"Les Folatières\", Domaine Xavier Monnot","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Côtes-De-Provence_ Rumor_RSE_150CL","s":"Côtes-De-Provence Rumor","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"BELVEDERE TEN VODKA","s":"BELVEDERE TEN VODKA","c":"LIQUIDE - ALCOOL - VODKA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Veuve Clicquot \"Brut\"_75CL","s":"Veuve Clicquot \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Volnay 1er Cru_\"Clos des Chênes\", Domaine Georges Joillot_RGE_75CL","s":"Volnay 1er Cru \"Clos des Chênes\", Domaine Georges Joillot","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. BADOIT ROUGE VP 33CL","s":"BADOIT ROUGE VP","c":"LIQUIDE - SOFT - EAU","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"M._ Dom Perignon, \"Brut\"_150CL","s":"Dom Perignon, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._ IGP Ile de Beauté_ \"Biancu Gentille\", Domaine Sant Armettu_BLC_75CL","s":"IGP Ile de Beauté \"Biancu Gentille\", Domaine Sant Armettu","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"VOLCAN XA","s":"VOLCAN XA","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA EXTRA ANEJO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"THE","s":"THE","c":"LIQUIDE - SOFT - CAFETERIE","q":1.0,"u":"unit","n":"","e":"litre"},{"y":"B._Côtes de Provence_Domaine Rumor_75CL","s":"Côtes de Provence Domaine Rumor","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"SIROP","s":"SIROP","c":"LIQUIDE - SOFT - SIROP","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"J._ Armand de Brignac \"Brut\" 300CL","s":"Armand de Brignac \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"M._ Toscane - Italie_ Tignanello_RGE_150CL","s":"Toscane - Italie Tignanello","c":"LIQUIDE - ALCOOL - VIN - ROUGE ITALIE TOSCANE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"M._ S de Salon, \"Salon le Mesnil\", Blanc de Blancs_150CL","s":"S de Salon, \"Salon le Mesnil\", Blanc de Blancs","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._ Krug, \"Grande Cuvée Rosé\"_75CL","s":"Krug, \"Grande Cuvée Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Bellet_ \"Vino di Gio\", Clos Saint Vincent_BLC_75CL","s":"Bellet \"Vino di Gio\", Clos Saint Vincent","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. NOAM 34CL VC","s":"NOAM 34CL VC","c":"LIQUIDE - ALCOOL - BIERE","q":34.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"ADICCION MEZCAL","s":"ADICCION MEZCAL","c":"LIQUIDE - ALCOOL - TEQUILA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B. DIVERS SODA 20CL","s":"DIVERS SODA","c":"LIQUIDE - SOFT - SODAS","q":20.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. Dom Perignon \"Plénitude 3\" 75CL","s":"Dom Perignon \"Plénitude 3\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"JOHNNIE WALKER BLACK LABEL 40°","s":"JOHNNIE WALKER BLACK LABEL 40°","c":"LIQUIDE - ALCOOL - WHISKY","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._Côtes-De-Provence_\"281\", Château Minuty_RSE_150CL","s":"Côtes-De-Provence \"281\", Château Minuty","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"ADICCION EXTRA ANEJO","s":"ADICCION EXTRA ANEJO","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA EXTRA ANEJO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"GIN MONKEY 47 OF 47°","s":"GIN MONKEY 47 OF 47°","c":"LIQUIDE - ALCOOL - GIN","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._IGP Pays de Cucugnan_\"Monthana\", Peter Sichel_RGE_75CL","s":"IGP Pays de Cucugnan \"Monthana\", Peter Sichel","c":"LIQUIDE - ALCOOL - VIN - ROUGE LANGUEDOC","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Pouilly-Fumé_\"Barre à Mine\", Michel Redde & Fils_BLC _75CL","s":"Pouilly-Fumé \"Barre à Mine\", Michel Redde & Fils","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Perrier Jouet_ Belle Epoque, \"Brut\"_300CL","s":"Perrier Jouet Belle Epoque, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"CREME CASSIS 15°","s":"CREME CASSIS 15°","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Hautes-Côtes de Beaune_\"Jardin du Calvaire\", Etienne Sauzet_BLC_75CL","s":"Hautes-Côtes de Beaune \"Jardin du Calvaire\", Etienne Sauzet","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Bourgogne Aligoté_ Domaine Y.Clerget_BLC_75CL","s":"Bourgogne Aligoté Domaine Y.Clerget","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Chablis Grand Cru_ \"Vaudésir\", Domaine Droin_BLC_75CL","s":"Chablis Grand Cru \"Vaudésir\", Domaine Droin","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Cotes de Provence_\"Rose & Or\", Château Minuty_RSE_75CL","s":"Cotes de Provence \"Rose & Or\", Château Minuty","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"ABSINTHE","s":"ABSINTHE","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Ventoux_\"La Légende de Bacchus\", Claret-Tournier_RSE_75CL","s":"Ventoux \"La Légende de Bacchus\", Claret-Tournier","c":"LIQUIDE - ALCOOL - VIN - ROSE RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Morey Saint Denis 1er Cru_ \"Les Loups\", Domaine des Lambrays_RGE_75CL","s":"Morey Saint Denis 1er Cru \"Les Loups\", Domaine des Lambrays","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Krug, \"Clos Du Mesnil\", Blanc de Blancs_75CL","s":"Krug, \"Clos Du Mesnil\", Blanc de Blancs","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Meursault 1er Cru_ \"Les Bouchères\", Domaine Yvon Clerget_BLC_150CL","s":"Meursault 1er Cru \"Les Bouchères\", Domaine Yvon Clerget","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"M._ Limoux_ \"Aigle  Royal Chardonnay\", Gérard Bertrand_BLC_150CL","s":"Limoux \"Aigle Royal Chardonnay\", Gérard Bertrand","c":"LIQUIDE - ALCOOL - VIN - BLANC LANGUEDOC","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"MATHU._ Chablis 1er Cru_ \"Fourneaux\", Domaine Gautheron_BLC_600CL","s":"Chablis 1er Cru \"Fourneaux\", Domaine Gautheron","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"B._Côtes de Provence_\"Clos Mireille\", Domaine Ott_BLC_75CL","s":"Côtes de Provence \"Clos Mireille\", Domaine Ott","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"CO2 TUBE GAZ 10KG","s":"CO2 TUBE GAZ 10KG","c":"LIQUIDE - ALCOOL - BIERE","q":1.0,"u":"unit","n":"","e":"litre"},{"y":"CASAMIGOS REPOSADO 40°","s":"CASAMIGOS REPOSADO 40°","c":"LIQUIDE - ALCOOL - TEQUILA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"J._ Dom Perignon, \"Rosé\"_300CL","s":"Dom Perignon, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"TONIC VERSE","s":"TONIC VERSE","c":"LIQUIDE - SOFT - SODAS","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"FERNET BRANCA 39°","s":"FERNET BRANCA 39°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._Côtes De Provence_\"Whispering Angel\", Château d'Esclans_RSE_150CL","s":"Côtes De Provence \"Whispering Angel\", Château d'Esclans","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"BAS ARMAGNAC","s":"BAS ARMAGNAC","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"MATHU. Dom Perignon Rosé 600CL","s":"Dom Perignon Rosé","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"DON JULIO BLANCO","s":"DON JULIO BLANCO","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA BLANCO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"J._ Vin de France_ \"Étoile\", Domaine Ott_RSE_300CL","s":"Vin de France \"Étoile\", Domaine Ott","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._ Japon - Toyama_ MASUIZUMI HENRI GIRAUD 2019 Junmai Daiginjo_75CL","s":"Japon - Toyama MASUIZUMI HENRI GIRAUD 2019 Junmai Daiginjo","c":"LIQUIDE - ALCOOL - VIN - SAKE","q":72.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Cristal Roederer, \"Brut\"_150CL","s":"Cristal Roederer, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"LIMONADE VERSE","s":"LIMONADE VERSE","c":"LIQUIDE - SOFT - SODAS","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"RHUM 7ANS VERSE","s":"RHUM 7ANS VERSE","c":"LIQUIDE - ALCOOL - RHUM","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"CHIVAS REGAL XV 15 ANS GOLD 40°","s":"CHIVAS REGAL XV 15 ANS GOLD 40°","c":"LIQUIDE - ALCOOL - WHISKY","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Dom Perignon, \"Rosé\"_75CL","s":"Dom Perignon, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Chassagne Montrachet 1er Cru_\"Abbaye De Morgeot\", Domaine Olivier. Leflaive_BLC_75CL","s":"Chassagne Montrachet 1er Cru \"Abbaye De Morgeot\", Domaine Olivier. Leflaive","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Perrier Jouet_\"Blanc de Blancs\"_150CL","s":"Perrier Jouet \"Blanc de Blancs\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"J._ Dom Perignon, \"Brut\"_300CL","s":"Dom Perignon, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B. EVIAN VP 75CL","s":"EVIAN VP","c":"LIQUIDE - SOFT - EAU","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"B._Chambolle-Musigny 1er Cru_\"Les Charmes\",  Domaine Patrice Rion_RGE_75CL","s":"Chambolle-Musigny 1er Cru \"Les Charmes\", Domaine Patrice Rion","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Rully 1er Cru_\"Vauvry\", P&M Jacquesson_BLC_75CL","s":"Rully 1er Cru \"Vauvry\", P&M Jacquesson","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Pommard 1er Cru_ \"Les Charmots\", Domaine Georges Joillot_RGE_75CL","s":"Pommard 1er Cru \"Les Charmots\", Domaine Georges Joillot","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. HONEST GIN BLACK EMBER 40° 70CL","s":"HONEST GIN BLACK EMBER 40°","c":"LIQUIDE - ALCOOL - GIN","q":70.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. GINGER BEER VP 20CL","s":"GINGER BEER VP","c":"LIQUIDE - SOFT - SODAS","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"B._Margaux_Château Giscours_RGE_75CL","s":"Margaux Château Giscours","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Languedoc Cabrières_ \"Clos du Temple\", Gérard Bertrand_RSE_300CL","s":"Languedoc Cabrières \"Clos du Temple\", Gérard Bertrand","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._ Pessac-Leognan_ \"Le Petit Haut Lafitte\", Château Smith Haut-Laffite_RGE_75CL","s":"Pessac-Leognan \"Le Petit Haut Lafitte\", Château Smith Haut-Laffite","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Corton Charlemagne Grand Cru_ \"Quintessence\", Domaine Vincent Girardin_BLC_75Cl","s":"Corton Charlemagne Grand Cru \"Quintessence\", Domaine Vincent Girardin","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Saumur Brézé_ Clos Rougeard_BLC_75CL","s":"Saumur Brézé Clos Rougeard","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Mercurey_ \"La Charmée\", Domaine Brintet_RGE_75CL","s":"Mercurey \"La Charmée\", Domaine Brintet","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"ZACAPA 23 ANS RHUM 40°","s":"ZACAPA 23 ANS RHUM 40°","c":"LIQUIDE - ALCOOL - RHUM","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"J. BELUGA GOLD LINE LEATHER VODKA 40° 300CL","s":"BELUGA GOLD LINE LEATHER VODKA 40°","c":"LIQUIDE - ALCOOL - VODKA","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._Ribera Del Duero - Espagne_ \"Unico\", Vega Sicilia_RGE_75CL","s":"Ribera Del Duero - Espagne \"Unico\", Vega Sicilia","c":"LIQUIDE - ALCOOL - VIN - ROUGE DU MONDE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"VERMOUTH BLANC","s":"VERMOUTH BLANC","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Armand de Brignac \"Brut\" 75CL","s":"Armand de Brignac \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ S de Salon, \"Salon le Mesnil\", Blanc de Blancs_75CL","s":"S de Salon, \"Salon le Mesnil\", Blanc de Blancs","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Vin de France, Provence_\"Lys des Sables\", Fonduges-Pradugues_BLC_75CL","s":"Vin de France, Provence \"Lys des Sables\", Fonduges-Pradugues","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"BIB CUBI BLC 100CL","s":"BIB CUBI","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":1000.0,"u":"cL","n":"BIB","e":"litre"},{"y":"LIQUEUR DE POIRE 40°","s":"LIQUEUR DE POIRE 40°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Pinot Noir_\"Côte d'Or\", Domaine Georges Joillot_RGE_75CL","s":"Pinot Noir \"Côte d'Or\", Domaine Georges Joillot","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Pauillac_\"Pauillac de Latour\", Château Latour_RGE_75CL","s":"Pauillac \"Pauillac de Latour\", Château Latour","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"DON JULIO REPOSADO","s":"DON JULIO REPOSADO","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA REPOSADO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Provence_\"Roseblood\", Estoublon_BLC_75CL","s":"Provence \"Roseblood\", Estoublon","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"CREME MURES 18°","s":"CREME MURES 18°","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B. EVIAN PET 50CL","s":"EVIAN PET","c":"LIQUIDE - SOFT - EAU","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"B. ORANGINA VP 25CL","s":"ORANGINA VP","c":"LIQUIDE - SOFT - SODAS","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"B._ Saint-Joseph_ Domaine Bernard Grippa_BLC_75CL","s":"Saint-Joseph Domaine Bernard Grippa","c":"LIQUIDE - ALCOOL - VIN - BLANC RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Chablis 1er Cru_ \"Vaillons\", Domaine Vincent Dauvissat_BLC_75CL","s":"Chablis 1er Cru \"Vaillons\", Domaine Vincent Dauvissat","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._Echezeaux Grand Cru_Domaine Mongeard Mugneret_RGE_150CL","s":"Echezeaux Grand Cru Domaine Mongeard Mugneret","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"AMARETTO 28°","s":"AMARETTO 28°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"PASTIS","s":"PASTIS","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"J._ Chablis 1er Cru_ \"Fourchaume\",  Domaine Gautheron_BLC_300CL","s":"Chablis 1er Cru \"Fourchaume\", Domaine Gautheron","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"M._ Armand de Brignac \"Rosé\" 150CL","s":"Armand de Brignac \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._Côtes de Provence_\"Clos Peyrassol\", Château Peyrassol_RSE_75CL","s":"Côtes de Provence \"Clos Peyrassol\", Château Peyrassol","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Puligny-Montrachet _ Domaine Pernot Belicard_BLC_75CL","s":"Puligny-Montrachet Domaine Pernot Belicard","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Armand de Brignac \"Rosé\" 300CL","s":"Armand de Brignac \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"MUJEN ORIGINAL 35°","s":"MUJEN ORIGINAL 35°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Bellet_ \"Vino di Gio\", Clos Saint Vincent_RGE_75CL","s":"Bellet \"Vino di Gio\", Clos Saint Vincent","c":"LIQUIDE - ALCOOL - VIN - ROUGE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Givry 1er Cru_\"L'Empreinte\", Domaine Joblot_RGE_75CL","s":"Givry 1er Cru \"L'Empreinte\", Domaine Joblot","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"LIQUEUR FRAISE","s":"LIQUEUR FRAISE","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ IGT Toscane_ \"Tignanello\", Marchesi Antinori_RGE_75CL","s":"IGT Toscane \"Tignanello\", Marchesi Antinori","c":"LIQUIDE - ALCOOL - VIN - ROUGE ITALIE TOSCANE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"MIGNONETTE DON JULIO 1942 40° 5CL","s":"MIGNONETTE DON JULIO 1942 40°","c":"LIQUIDE - ALCOOL - TEQUILA","q":1.0,"u":"unit","n":"","e":"litre"},{"y":"B._Bourgogne Côte d'Or_Domaine Yvon Clerget_BLC_75CL","s":"Bourgogne Côte d'Or Domaine Yvon Clerget","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. GRAPPA NONINO MOSCATO 41° 70CL","s":"GRAPPA NONINO MOSCATO 41°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":70.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Criots-Bâtard-Montrachet Grand Cru_Domaine Roger Belland_BLC_75CL","s":"Criots-Bâtard-Montrachet Grand Cru Domaine Roger Belland","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"BABY. ADICCION ANEJO 20CL","s":"ADICCION ANEJO","c":"LIQUIDE - ALCOOL - TEQUILA","q":20.0,"u":"cL","n":"Baby","e":"btl"},{"y":"B._Saint-Emilion Grand Cru_Château Cheval Blanc_RGE_75CL","s":"Saint-Emilion Grand Cru Château Cheval Blanc","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Côtes-De-Provence_ \"Whispering Angel\", Château D'Esclans_RSE_300CL","s":"Côtes-De-Provence \"Whispering Angel\", Château D'Esclans","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._ Perrier Jouet_ Belle Epoque, \"Brut\"_75CL","s":"Perrier Jouet Belle Epoque, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Corton-Charlemagne Grand Cru_ Domaine Jean-Claure Ramonet_BLC_300CL","s":"Corton-Charlemagne Grand Cru Domaine Jean-Claure Ramonet","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"B._ Clos de Tart Grand Cru_Domaine Clos de Tart_RGE_75CL","s":"Clos de Tart Grand Cru Domaine Clos de Tart","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"MATHU. PROVENCE RUMOR RSE 600CL","s":"PROVENCE RUMOR","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"B._Ribera Del Duero - Espagne_ \"Valbuena\", Vega Sicilia_RGE_75CL","s":"Ribera Del Duero - Espagne \"Valbuena\", Vega Sicilia","c":"LIQUIDE - ALCOOL - VIN - ROUGE DU MONDE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Pouilly-Fuissé_ \"Terres du Menhir\", Gilles Morat_BLC_75CL","s":"Pouilly-Fuissé \"Terres du Menhir\", Gilles Morat","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Vosne-Romanée_ Domaine Philippe Charlopin_RGE_75CL","s":"Vosne-Romanée Domaine Philippe Charlopin","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. HONEST GIN FOREST BLEND 40° 70CL","s":"HONEST GIN FOREST BLEND 40°","c":"LIQUIDE - ALCOOL - GIN","q":70.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"BULLEIT BOURBON 45°","s":"BULLEIT BOURBON 45°","c":"LIQUIDE - ALCOOL - WHISKY","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"BABY. ADICCION REPOSADO 20CL","s":"ADICCION REPOSADO","c":"LIQUIDE - ALCOOL - TEQUILA","q":20.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._IGP Collines Rhodaniennes_\"Syrah D'Ogier\", Domaine Stéphane Ogier_RGE_75CL","s":"IGP Collines Rhodaniennes \"Syrah D'Ogier\", Domaine Stéphane Ogier","c":"LIQUIDE - ALCOOL - VIN - ROUGE RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Dom Perignon, \"Rosé\"_150CL","s":"Dom Perignon, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"CASAMIGOS ESPADIN MEZCAL 40°","s":"CASAMIGOS ESPADIN MEZCAL 40°","c":"LIQUIDE - ALCOOL - TEQUILA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Bourgogne Chardonnay_\"Frissons\", Domaine Gautheron_BLC_75CL","s":"Bourgogne Chardonnay \"Frissons\", Domaine Gautheron","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Gevrey Chambertin 1er Cru_ \"Les Cazetiers\", Maison Roche de Bellene_RGE_75CL","s":"Gevrey Chambertin 1er Cru \"Les Cazetiers\", Maison Roche de Bellene","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M. Dom Perignon \"Plénitude 2\" 150CL","s":"Dom Perignon \"Plénitude 2\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B. SAKE DASSAI 23 72CL","s":"SAKE DASSAI 23","c":"LIQUIDE - ALCOOL - VIN - SAKE","q":72.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"LILLET 17°","s":"LILLET 17°","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._Languedoc-Cabrières_\"Clos du Temple\", Gérard Bertrand_RSE_150CL","s":"Languedoc-Cabrières \"Clos du Temple\", Gérard Bertrand","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._Corse_\"Clos Venturi Chiesa Nera\", Domaine Vico_BLC_75CL","s":"Corse \"Clos Venturi Chiesa Nera\", Domaine Vico","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"MATHU._ Armand de Brignac \"Brut\" 600CL","s":"Armand de Brignac \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"PRODUIT PULYCAFF - 100 PASTILLES 1 G","s":"PRODUIT PULYCAFF - 100 PASTILLES 1 G","c":"LIQUIDE - SOFT - CAFETERIE","q":1.0,"u":"unit","n":"","e":"litre"},{"y":"B._Clos-de-Vougeot Grand Cru_Domaine Jean-Marc Millot_RGE_75CL","s":"Clos-de-Vougeot Grand Cru Domaine Jean-Marc Millot","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"MATHU._ Corton Charlemagne Grand Cru_ Domaine Georges Joillot_BLC_600CL","s":"Corton Charlemagne Grand Cru Domaine Georges Joillot","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":600.0,"u":"cL","n":"Mathusalem","e":"btl"},{"y":"EAU GAZEUZE PET","s":"EAU GAZEUZE PET","c":"LIQUIDE - SOFT - EAU","q":1.0,"u":"unit","n":"Bouteille","e":"litre"},{"y":"B._Médoc_\"La Chapelle de Potensac\", Château Potensac_RGE_75CL","s":"Médoc \"La Chapelle de Potensac\", Château Potensac","c":"LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"CIGARETTE","s":"CIGARETTE","c":"LIQUIDE - CIGARETTE","q":1.0,"u":"unit","n":"Paquet","e":"litre"},{"y":"CAMPARI 25°","s":"CAMPARI 25°","c":"LIQUIDE - ALCOOL - APERITIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"GIN VERSE","s":"GIN VERSE","c":"LIQUIDE - ALCOOL - GIN","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._Ribera Del Duero - Espagne_ \"Valbuena\", Vega Sicilia_RGE_150CL","s":"Ribera Del Duero - Espagne \"Valbuena\", Vega Sicilia","c":"LIQUIDE - ALCOOL - VIN - ROUGE DU MONDE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"LIQUEUR D'ABRICOT DOMAINE JEAN MARC ROULOT 25°","s":"LIQUEUR D'ABRICOT DOMAINE JEAN MARC ROULOT 25°","c":"LIQUIDE - ALCOOL - LIQUEUR","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._ Bourgogne_ \"Clos du Moulin\", Domaine Bouzereau_BLC_150CL","s":"Bourgogne \"Clos du Moulin\", Domaine Bouzereau","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"HEINEKEN FUT 30L 5°","s":"HEINEKEN FUT 30L 5°","c":"LIQUIDE - ALCOOL - BIERE","q":30.0,"u":"L","n":"Fût","e":"litre"},{"y":"B._Savigny-lès-Beaune_\"Clos des Guettotes, Monopole\", Domaine Caroline Frey_RGE_75CL","s":"Savigny-lès-Beaune \"Clos des Guettotes, Monopole\", Domaine Caroline Frey","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Côtes-De-Provence_ \"Habillage Noir et Or\", Château la Tour de l'Évêque_RGE_75CL","s":"Côtes-De-Provence \"Habillage Noir et Or\", Château la Tour de l'Évêque","c":"LIQUIDE - ALCOOL - VIN - ROUGE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"BELUGA GOLD LINE VODKA 40°","s":"BELUGA GOLD LINE VODKA 40°","c":"LIQUIDE - ALCOOL - VODKA","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"WHISTLEPIG","s":"WHISTLEPIG","c":"LIQUIDE - ALCOOL - WHISKY","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._ Dom Perignon, \"Brut\"_75CL","s":"Dom Perignon, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"ADICCION REPOSADO","s":"ADICCION REPOSADO","c":"LIQUIDE - ALCOOL - TEQUILA - TEQUILA REPOSADO","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Vin de France, Loire_\"Silex\", Domaine Dagueneau_BLC_75CL","s":"Vin de France, Loire \"Silex\", Domaine Dagueneau","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M_ Cristal Roederer, \"Rosé\"_150CL","s":"M Cristal Roederer, \"Rosé\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"litre"},{"y":"B._Vouvray sec_\"Empreinte\", Vignoble Alain Robert_BLC_75CL","s":"Vouvray sec \"Empreinte\", Vignoble Alain Robert","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"M._ Côtes-De-Provence_ \"Clos Mireille\", Domaine Ott_BLC_150CL","s":"Côtes-De-Provence \"Clos Mireille\", Domaine Ott","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"M. BELUGA GOLD LINE LEATHER VODKA 40° 150CL","s":"BELUGA GOLD LINE LEATHER VODKA 40°","c":"LIQUIDE - ALCOOL - VODKA","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"FEE BROTHERS Fee Foam","s":"FEE BROTHERS Fee Foam","c":"LIQUIDE - SOFT - SODAS","q":15.0,"u":"cL","n":"Bouteille","e":"litre"},{"y":"B._Crozes Hermitage_\"Le Clos des Grives\", Domaine Combier_BLC_75CL","s":"Crozes Hermitage \"Le Clos des Grives\", Domaine Combier","c":"LIQUIDE - ALCOOL - VIN - BLANC RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Musigny Grand Cru_ Jacques-Frédéric Mugnier_RGE_75CL","s":"Musigny Grand Cru Jacques-Frédéric Mugnier","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Côtes-De-Provence_ Rumor_RSE_300CL","s":"Côtes-De-Provence Rumor","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"J&B WHISKY 40°","s":"J&B WHISKY 40°","c":"LIQUIDE - ALCOOL - WHISKY","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Champagne_ Malard Brut_75CL","s":"Champagne Malard Brut","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Vin de France, Provence_\"Etoile\", Domaine Ott_RSE_75CL","s":"Vin de France, Provence \"Etoile\", Domaine Ott","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Ventoux_\"Château de Bacchus\", Claret Tournier_BLC_75CL","s":"Ventoux \"Château de Bacchus\", Claret Tournier","c":"LIQUIDE - ALCOOL - VIN - BLANC RHONE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"COCA COLA VERSE","s":"COCA COLA VERSE","c":"LIQUIDE - SOFT - SODAS","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B._Provence_\"Cuvée Osé Rosé\" Domaine des Campaux_RSE_75CL","s":"Provence \"Cuvée Osé Rosé\" Domaine des Campaux","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"J._ Puligny-Montrachet 1er Cru_ \"Les Folatières\", Domaine Xavier Monnot_BLC_300CL","s":"Puligny-Montrachet 1er Cru \"Les Folatières\", Domaine Xavier Monnot","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"M._ Pouilly-Fuissé 1er Cru_ \"Sur la Roche\", Domaine Gilles Morat_BLC_150Cl","s":"Pouilly-Fuissé 1er Cru \"Sur la Roche\", Domaine Gilles Morat","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._ Corse Calvi_ \"Pumonte\", Domaine Alzipratu_BLC_75CL","s":"Corse Calvi \"Pumonte\", Domaine Alzipratu","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Toscane IGT_ Solaia_RGE_75CL","s":"Toscane IGT Solaia","c":"LIQUIDE - ALCOOL - VIN - ROUGE ITALIE TOSCANE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"BITTERS COCKTAIL","s":"BITTERS COCKTAIL","c":"LIQUIDE - ALCOOL - BITTER","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"M._ Perrier Jouet_ Belle Epoque, \"Brut\"_150CL","s":"Perrier Jouet Belle Epoque, \"Brut\"","c":"LIQUIDE - ALCOOL - VIN - CHAMPAGNE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"M._ Corse Calvi_ \"Pumonte\", Domaine Alzipratu_BLC_150CL","s":"Corse Calvi \"Pumonte\", Domaine Alzipratu","c":"LIQUIDE - ALCOOL - VIN - BLANC PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"J._ Pouilly-Fumé_ \"Barre À Mine\", Michel Redde et Fils_BLC_300CL","s":"Pouilly-Fumé \"Barre À Mine\", Michel Redde et Fils","c":"LIQUIDE - ALCOOL - VIN - BLANC LOIRE","q":300.0,"u":"cL","n":"Jeroboam","e":"btl"},{"y":"M._ Côtes-De-Provence_ Domaine des Grands Pins_RSE_150CL","s":"Côtes-De-Provence Domaine des Grands Pins","c":"LIQUIDE - ALCOOL - VIN - ROSE PROVENCE","q":150.0,"u":"cL","n":"Magnum","e":"btl"},{"y":"B._ Meursault_ \"Les Narvaux\", Domaine Caroline Frey_BLC_75CL","s":"Meursault \"Les Narvaux\", Domaine Caroline Frey","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"GINGER BEER VERSE","s":"GINGER BEER VERSE","c":"LIQUIDE - SOFT - SODAS","q":1.0,"u":"unit","n":"","e":"litre"},{"y":"B. EVIAN VP 33CL","s":"EVIAN VP","c":"LIQUIDE - SOFT - EAU","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"1/2 B._ Sauternes_ Château de Fargues_BLC_37.5CL","s":"1/2 B. Sauternes Château de Fargues","c":"LIQUIDE - ALCOOL - VIN - BLANC BORDEAUX","q":37.5,"u":"cL","n":"1/2 Bouteille","e":"litre"},{"y":"B. BIERE SANS ALCOOL 0° 33CL","s":"BIERE SANS ALCOOL 0°","c":"LIQUIDE - ALCOOL - BIERE","q":1.0,"u":"unit","n":"Bouteille","e":"btl"},{"y":"B._Bourgeuil_\"Clos Nouveau\", Domaine du Bel Air_RGE_75CL","s":"Bourgeuil \"Clos Nouveau\", Domaine du Bel Air","c":"LIQUIDE - ALCOOL - VIN - ROUGE LOIRE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Chassagne Montrachet 1Er Cru_ \"Les Chaumées\", Domaine Bruno Clolin_BLC_75CL","s":"Chassagne Montrachet 1Er Cru \"Les Chaumées\", Domaine Bruno Clolin","c":"LIQUIDE - ALCOOL - VIN - BLANC BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._ Volnay 1 er cru_ \"Clos du Verseuil\", Domaine Y.Clerget_RGE_75CL","s":"Volnay 1 er cru \"Clos du Verseuil\", Domaine Y.Clerget","c":"LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B._Terrasses du Larzac_\"Château La Sauvageonne\", Gérard Bertrand_RGE_75CL","s":"Terrasses du Larzac \"Château La Sauvageonne\", Gérard Bertrand","c":"LIQUIDE - ALCOOL - VIN - ROUGE LANGUEDOC","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"HENNESSY XO 40°","s":"HENNESSY XO 40°","c":"LIQUIDE - ALCOOL - DIGESTIF","q":100.0,"u":"cL","n":"","e":"litre"},{"y":"B. \"Amazing Brut\" DOMAINE DE LA ROUILLERE 0° 75CL","s":"\"Amazing Brut\" DOMAINE DE LA ROUILLERE 0°","c":"","q":75.0,"u":"cL","n":"Bouteille","e":"btl"},{"y":"B. BELUGA EPICURE BY LALIQUE 40° 70CL","s":"BELUGA EPICURE BY LALIQUE 40°","c":"LIQUIDE - ALCOOL - VODKA","q":70.0,"u":"cL","n":"Bouteille","e":"btl"}]</script>
+<script>
+/* === ITM APP === */
+(function(){
+'use strict';
+
+/* ---------- Catalogue ---------- */
+const RAW = JSON.parse(document.getElementById('CATDATA').textContent);
+const CATALOGUE = RAW.map((p, i) => ({
+  id: i,
+  y: p.y,         // nom Yokitup exact (export)
+  s: p.s,         // nom court (recherche / affichage)
+  c: p.c,         // catégorie
+  q: p.q,         // quantité conditionnement (75)
+  u: p.u,         // unité conditionnement (cL, L, unit)
+  n: p.n,         // nom conditionnement (Bouteille, Magnum...)
+  e: p.e,         // 'btl' ou 'litre'
+  _search: (p.s + ' ' + p.y + ' ' + p.c).toLowerCase()
+}));
+
+/* ---------- State ---------- */
+const LS_KEY = 'itm_session_v8';
+const LS_ZONES = 'itm_zones_v8';
+const LS_CHAT = 'itm_chat_v8';
+
+const DEFAULT_ZONES = ['Bar', 'Cave', 'Terrasse', 'Cuisine', 'Réserve'];
+
+let state = loadState();
+let zones = loadZones();
+let chatMsgs = [];
+
+function loadState(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e){}
+  return {
+    estab: 'Indie Beach',
+    currentZone: 'Bar',
+    date: new Date().toISOString().slice(0,10),
+    lines: []  // { id, productId, zone, qty, unit: 'btl'|'litre', details: [{format, qty}] | null, carton: {active, nb, pieces, format} | null, total }
+  };
+}
+function loadZones(){
+  try {
+    const raw = localStorage.getItem(LS_ZONES);
+    if (raw) { const z = JSON.parse(raw); if (Array.isArray(z) && z.length) return z; }
+  } catch(e){}
+  return DEFAULT_ZONES.slice();
+}
+function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function saveZones(){ localStorage.setItem(LS_ZONES, JSON.stringify(zones)); }
+
+/* ---------- Utils ---------- */
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function round(v, d){ const k = Math.pow(10, d||3); return Math.round(v*k)/k; }
+function fmtQty(v){
+  if (v == null || isNaN(v)) return '—';
+  const n = Number(v);
+  if (Number.isInteger(n)) return String(n);
+  return n.toFixed(n < 1 ? 3 : 2).replace(/\.?0+$/, '');
+}
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', {day: '2-digit', month: 'long', year: 'numeric'});
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* ---------- Sheets (bottom sheets) ---------- */
+function openSheet(sheetId, overlayId){
+  document.getElementById(overlayId).classList.add('open');
+  document.getElementById(sheetId).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet(sheetId, overlayId){
+  document.getElementById(overlayId).classList.remove('open');
+  document.getElementById(sheetId).classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeAllSheets(){
+  ['shProd','shZone','shNewZone','shConfirm'].forEach(id => document.getElementById(id).classList.remove('open'));
+  ['ovProd','ovZone','ovNewZone','ovConfirm'].forEach(id => document.getElementById(id).classList.remove('open'));
+  document.body.style.overflow = '';
+}
+
+/* ---------- Header ---------- */
+function renderHeader(){
+  document.getElementById('hSubDate').textContent = state.estab + ' · ' + fmtDate(state.date);
+  document.getElementById('zoneLabel').textContent = state.currentZone;
+}
+
+/* ---------- Tabs ---------- */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('v' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  if (name === 'session') renderSession();
+  if (name === 'export') renderExport();
+  // scroll reset
+  document.querySelector('main').scrollTop = 0;
+}
+
+/* ---------- Catalogue list ---------- */
+let searchTerm = '';
+function normalize(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+
+function searchProducts(term){
+  const t = normalize(term.trim());
+  if (!t) return CATALOGUE;
+  const words = t.split(/\s+/).filter(Boolean);
+  return CATALOGUE.filter(p => {
+    const s = normalize(p._search);
+    return words.every(w => s.includes(w));
+  });
+}
+
+function isProductSaisi(productId){
+  return state.lines.some(l => l.productId === productId);
+}
+
+function renderCatalogue(){
+  const list = searchProducts(searchTerm);
+  const root = document.getElementById('prodList');
+
+  if (!list.length){
+    root.innerHTML = '<div class="prod-empty">Aucun produit trouvé.</div>';
+    return;
+  }
+
+  // Grouper par catégorie
+  const byCat = {};
+  list.forEach(p => {
+    const k = cleanCat(p.c);
+    if (!byCat[k]) byCat[k] = [];
+    byCat[k].push(p);
+  });
+
+  const orderedCats = Object.keys(byCat).sort((a,b) => {
+    if (a === 'Autre') return 1;
+    if (b === 'Autre') return -1;
+    return a.localeCompare(b);
+  });
+
+  let html = '';
+  orderedCats.forEach(cat => {
+    html += `<div class="prod-cat-title">${escape(cat)}</div>`;
+    byCat[cat].forEach(p => {
+      const saisi = isProductSaisi(p.id) ? ' prod-saisi' : '';
+      const tag = p.e === 'btl'
+        ? '<span class="prod-tag tag-btl">BTL</span>'
+        : '<span class="prod-tag tag-lit">LIT</span>';
+      html += `<div class="prod${saisi}" data-pid="${p.id}">
+        <div class="prod-name">${escape(p.s)}</div>
+        ${tag}
+      </div>`;
+    });
+  });
+
+  root.innerHTML = html;
+  root.querySelectorAll('.prod').forEach(el => {
+    el.addEventListener('click', () => openProductSheet(parseInt(el.dataset.pid)));
+  });
+}
+
+function cleanCat(c){
+  if (!c) return 'Autre';
+  // Transformer "LIQUIDE - ALCOOL - VIN - ROUGE BOURGOGNE" en "Vin rouge Bourgogne"
+  const parts = c.split(' - ').map(s => s.trim()).filter(Boolean);
+  if (parts.length === 0) return 'Autre';
+  // drop first "LIQUIDE" or "SOLIDE" or "CONSOMMABLE"
+  let p = parts.slice();
+  if (['LIQUIDE','SOLIDE','CONSOMMABLE'].includes(p[0])) p = p.slice(1);
+  if (p.length === 0) return 'Autre';
+  // dernier niveau
+  const last = p[p.length - 1];
+  // Convertir "ROUGE BOURGOGNE" en "Rouge Bourgogne"
+  return last.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+}
+
+function escape(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ---------- Product sheet ---------- */
+let currentProduct = null;
+let editingLineId = null;
+let draft = null;  // draft de saisie
+
+const FORMATS_LITRE = [
+  {label: '50cl', cl: 50},
+  {label: '70cl', cl: 70},
+  {label: '75cl', cl: 75},
+  {label: '100cl', cl: 100}
+];
+
+function openProductSheet(productId, lineId){
+  currentProduct = CATALOGUE[productId];
+  editingLineId = lineId || null;
+
+  // Init draft
+  if (lineId){
+    const line = state.lines.find(l => l.id === lineId);
+    draft = JSON.parse(JSON.stringify(line));
+  } else {
+    draft = {
+      id: null,
+      productId: productId,
+      zone: state.currentZone,
+      unit: currentProduct.e,
+      qty: 0,
+      details: currentProduct.e === 'litre' ? FORMATS_LITRE.map(f => ({format: f.label, cl: f.cl, qty: 0})) : null,
+      carton: {active: false, nb: 0, pieces: 0, format: '75cl'},
+      total: 0
+    };
+  }
+
+  renderProductSheet();
+  openSheet('shProd', 'ovProd');
+}
+
+function renderProductSheet(){
+  const p = currentProduct;
+
+  // Header
+  document.getElementById('shProdName').textContent = p.s;
+  const sub = document.getElementById('shProdSub');
+  const modeChip = editingLineId ? '<span class="edit-chip">Modification</span>' : '';
+  const tag = p.e === 'btl'
+    ? '<span class="prod-tag tag-btl">Export : bouteilles</span>'
+    : '<span class="prod-tag tag-lit">Export : litres</span>';
+  sub.innerHTML = `${tag} · Zone : <strong style="color:var(--ink)">${escape(draft.zone)}</strong> ${modeChip}`;
+
+  // Body
+  const body = document.getElementById('shProdBody');
+  let html = '';
+
+  if (p.e === 'btl'){
+    // Un seul champ quantité
+    html += `
+      <div class="field">
+        <label class="field-lbl">Quantité (bouteilles)</label>
+        <div class="field-row">
+          <input id="fQty" type="number" step="0.1" inputmode="decimal" value="${draft.qty || ''}" placeholder="ex: 2.5">
+          <span class="field-label-inline">btl</span>
+        </div>
+      </div>
+    `;
+  } else {
+    // Plusieurs lignes de format
+    html += `<div class="field">
+      <label class="field-lbl">Quantité par format de bouteille</label>`;
+    FORMATS_LITRE.forEach((f, idx) => {
+      const detail = draft.details.find(d => d.label === f.label) || {qty: 0};
+      html += `
+        <div class="qty-format-row">
+          <div class="qty-format-label">× ${f.label}</div>
+          <input type="number" step="0.1" inputmode="decimal" data-format="${f.label}" value="${detail.qty || ''}" placeholder="0">
+          <div class="qty-format-sub" data-sub="${f.label}">—</div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  }
+
+  // Carton (pour tous les produits)
+  const cartonOn = draft.carton.active ? 'on' : '';
+  html += `
+    <label class="check ${cartonOn}" id="cartonCheck">
+      <input type="checkbox" id="fCarton" ${draft.carton.active ? 'checked' : ''}>
+      <span class="check-lbl">Ajouter des cartons</span>
+    </label>
+    <div id="cartonBox" style="display:${draft.carton.active ? 'block' : 'none'}">
+      <div class="carton-box">
+        <div class="field">
+          <label class="field-lbl">Nombre de cartons</label>
+          <div class="field-row">
+            <input id="fCartonNb" type="number" step="1" inputmode="numeric" value="${draft.carton.nb || ''}" placeholder="ex: 2">
+            <span class="field-label-inline">cartons</span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-lbl">Pièces par carton</label>
+          <div class="field-row">
+            <input id="fCartonPieces" type="number" step="1" inputmode="numeric" value="${draft.carton.pieces || ''}" placeholder="ex: 6">
+            <span class="field-label-inline">btl/carton</span>
+          </div>
+        </div>
+        ${p.e === 'litre' ? `
+        <div class="field" style="margin-bottom:0">
+          <label class="field-lbl">Format des bouteilles dans le carton</label>
+          <div class="field-row" style="padding: 4px 6px">
+            <div style="display: flex; gap: 4px; width: 100%">
+              ${FORMATS_LITRE.map(f => `
+                <label style="flex:1; display:block; text-align:center; padding:8px 0; border-radius:6px; background:${draft.carton.format === f.label ? 'var(--accent)' : 'transparent'}; color:${draft.carton.format === f.label ? '#fff' : 'var(--ink-2)'}; font-weight:500; font-size:13px; cursor:pointer">
+                  <input type="radio" name="cartonFormat" value="${f.label}" ${draft.carton.format === f.label ? 'checked' : ''} style="display:none">
+                  ${f.label}
+                </label>
+              `).join('')}
+            </div>
+          </div>
+        </div>` : ''}
+      </div>
+    </div>
+  `;
+
+  // Total
+  html += `<div style="margin-top: 18px;">
+    <div class="result-box">
+      <div>
+        <div class="result-lbl">Total export</div>
+      </div>
+      <div class="result-val" id="resultVal">—</div>
+    </div>
+  </div>`;
+
+  body.innerHTML = html;
+
+  // Attachments
+  if (p.e === 'btl'){
+    document.getElementById('fQty').addEventListener('input', updateDraftFromInputs);
+  } else {
+    body.querySelectorAll('input[data-format]').forEach(el => {
+      el.addEventListener('input', updateDraftFromInputs);
+    });
+  }
+  document.getElementById('fCarton').addEventListener('change', () => {
+    draft.carton.active = document.getElementById('fCarton').checked;
+    document.getElementById('cartonBox').style.display = draft.carton.active ? 'block' : 'none';
+    document.getElementById('cartonCheck').classList.toggle('on', draft.carton.active);
+    updateDraftFromInputs();
+  });
+  const cnb = document.getElementById('fCartonNb');
+  const cpc = document.getElementById('fCartonPieces');
+  if (cnb) cnb.addEventListener('input', updateDraftFromInputs);
+  if (cpc) cpc.addEventListener('input', updateDraftFromInputs);
+  body.querySelectorAll('input[name="cartonFormat"]').forEach(el => {
+    el.addEventListener('change', () => {
+      draft.carton.format = el.value;
+      updateDraftFromInputs();
+      // refresh labels
+      body.querySelectorAll('input[name="cartonFormat"]').forEach(r => {
+        const lbl = r.parentElement;
+        const on = r.checked;
+        lbl.style.background = on ? 'var(--accent)' : 'transparent';
+        lbl.style.color = on ? '#fff' : 'var(--ink-2)';
+      });
+    });
+  });
+
+  // Foot
+  const foot = document.getElementById('shProdFoot');
+  foot.innerHTML = `
+    <button class="btn-cancel" id="btnCancelProd" type="button">Annuler</button>
+    ${editingLineId ? '<button class="btn-delete" id="btnDeleteLine" type="button">Supprimer</button>' : ''}
+    <button class="btn-valid" id="btnSaveLine" type="button">${editingLineId ? 'Enregistrer' : 'Ajouter'}</button>
+  `;
+  document.getElementById('btnCancelProd').addEventListener('click', () => closeSheet('shProd','ovProd'));
+  document.getElementById('btnSaveLine').addEventListener('click', saveLine);
+  const dl = document.getElementById('btnDeleteLine');
+  if (dl) dl.addEventListener('click', deleteLine);
+
+  updateDraftFromInputs();
+}
+
+function updateDraftFromInputs(){
+  const p = currentProduct;
+
+  if (p.e === 'btl'){
+    const v = parseFloat(document.getElementById('fQty').value) || 0;
+    draft.qty = v;
+  } else {
+    draft.details.forEach(d => {
+      const el = document.querySelector(`input[data-format="${d.label}"]`);
+      d.qty = el ? (parseFloat(el.value) || 0) : 0;
+    });
+  }
+
+  const cnb = document.getElementById('fCartonNb');
+  const cpc = document.getElementById('fCartonPieces');
+  if (cnb) draft.carton.nb = parseFloat(cnb.value) || 0;
+  if (cpc) draft.carton.pieces = parseFloat(cpc.value) || 0;
+
+  computeTotal();
+  renderSubs();
+  renderTotal();
+}
+
+function computeTotal(){
+  const p = currentProduct;
+
+  if (p.e === 'btl'){
+    // Export en bouteilles : qty + cartons
+    let btl = draft.qty || 0;
+    if (draft.carton.active){
+      btl += (draft.carton.nb || 0) * (draft.carton.pieces || 0);
+    }
+    draft.total = round(btl, 3);
+  } else {
+    // Export en litres
+    let cl = 0;
+    draft.details.forEach(d => {
+      cl += (d.qty || 0) * d.cl;
+    });
+    if (draft.carton.active){
+      const fmt = FORMATS_LITRE.find(f => f.label === draft.carton.format);
+      if (fmt){
+        cl += (draft.carton.nb || 0) * (draft.carton.pieces || 0) * fmt.cl;
+      }
+    }
+    draft.total = round(cl / 100, 3);  // L
+  }
+}
+
+function renderSubs(){
+  const p = currentProduct;
+  if (p.e !== 'litre') return;
+  draft.details.forEach(d => {
+    const el = document.querySelector(`[data-sub="${d.label}"]`);
+    if (!el) return;
+    const litres = (d.qty || 0) * d.cl / 100;
+    el.textContent = litres > 0 ? round(litres, 3) + 'L' : '—';
+  });
+}
+
+function renderTotal(){
+  const el = document.getElementById('resultVal');
+  if (!el) return;
+  const p = currentProduct;
+  const t = draft.total;
+  if (!t) { el.textContent = '—'; return; }
+  el.textContent = p.e === 'btl' ? fmtQty(t) + ' btl' : fmtQty(t) + ' L';
+}
+
+function saveLine(){
+  if (!draft.total || draft.total <= 0){
+    toast('Saisis au moins une quantité');
+    return;
+  }
+
+  if (editingLineId){
+    const idx = state.lines.findIndex(l => l.id === editingLineId);
+    if (idx >= 0){
+      draft.id = editingLineId;
+      state.lines[idx] = draft;
+    }
+    toast('Modifié');
+  } else {
+    draft.id = uid();
+    state.lines.push(draft);
+    toast('Ajouté');
+  }
+
+  saveState();
+  renderCatalogue();
+  updateBadge();
+  closeSheet('shProd','ovProd');
+}
+
+function deleteLine(){
+  if (!editingLineId) return;
+  state.lines = state.lines.filter(l => l.id !== editingLineId);
+  saveState();
+  renderCatalogue();
+  renderSession();
+  updateBadge();
+  toast('Supprimé');
+  closeSheet('shProd','ovProd');
+}
+
+/* ---------- Session view ---------- */
+function renderSession(){
+  const root = document.getElementById('sessList');
+  if (!state.lines.length){
+    root.innerHTML = '<div class="prod-empty">Aucune saisie pour l\'instant.<br>Retourne au catalogue pour commencer.</div>';
+    return;
+  }
+
+  // Grouper par zone
+  const byZone = {};
+  state.lines.forEach(l => {
+    if (!byZone[l.zone]) byZone[l.zone] = [];
+    byZone[l.zone].push(l);
+  });
+
+  // Ordre zones : zone courante d'abord, puis les autres dans l'ordre de zones
+  const sortedZones = Object.keys(byZone).sort((a, b) => {
+    if (a === state.currentZone) return -1;
+    if (b === state.currentZone) return 1;
+    return zones.indexOf(a) - zones.indexOf(b);
+  });
+
+  let html = '';
+  sortedZones.forEach(z => {
+    const items = byZone[z];
+    html += `<div class="sess-zone">${escape(z)} <span class="sess-zone-count">${items.length}</span></div>`;
+    items.forEach(l => {
+      const p = CATALOGUE[l.productId];
+      const detail = describeLine(l, p);
+      html += `<div class="sess-item" data-lid="${l.id}" data-pid="${l.productId}">
+        <div class="sess-body">
+          <div class="sess-name">${escape(p.s)}</div>
+          <div class="sess-detail">${detail}</div>
+        </div>
+        <button class="sess-del" data-del="${l.id}" type="button" aria-label="Supprimer">✕</button>
+      </div>`;
+    });
+  });
+
+  root.innerHTML = html;
+  root.querySelectorAll('.sess-item').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('[data-del]')) return;
+      const pid = parseInt(el.dataset.pid);
+      const lid = el.dataset.lid;
+      openProductSheet(pid, lid);
+    });
+  });
+  root.querySelectorAll('[data-del]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const lid = el.dataset.del;
+      state.lines = state.lines.filter(l => l.id !== lid);
+      saveState();
+      renderSession();
+      renderCatalogue();
+      updateBadge();
+      toast('Supprimé');
+    });
+  });
+}
+
+function describeLine(l, p){
+  let parts = [];
+
+  if (p.e === 'btl'){
+    const base = l.qty || 0;
+    if (base > 0) parts.push(`<span class="mono">${fmtQty(base)} btl</span>`);
+    if (l.carton && l.carton.active && l.carton.nb && l.carton.pieces){
+      parts.push(`<span class="mono">${fmtQty(l.carton.nb)} ctn × ${fmtQty(l.carton.pieces)}</span>`);
+    }
+  } else {
+    (l.details || []).forEach(d => {
+      if (d.qty > 0){
+        parts.push(`<span class="mono">${fmtQty(d.qty)} × ${d.label}</span>`);
+      }
+    });
+    if (l.carton && l.carton.active && l.carton.nb && l.carton.pieces){
+      parts.push(`<span class="mono">${fmtQty(l.carton.nb)} ctn × ${fmtQty(l.carton.pieces)} (${l.carton.format})</span>`);
+    }
+  }
+
+  const total = p.e === 'btl'
+    ? `<span class="summary-strong mono">= ${fmtQty(l.total)} btl</span>`
+    : `<span class="summary-strong mono">= ${fmtQty(l.total)} L</span>`;
+
+  return parts.join(' · ') + ' · ' + total;
+}
+
+function updateBadge(){
+  document.getElementById('badgeSess').textContent = state.lines.length;
+}
+
+/* ---------- Export view ---------- */
+function renderExport(){
+  const root = document.getElementById('exportView');
+  if (!state.lines.length){
+    root.innerHTML = '<div class="prod-empty">Aucune saisie à exporter.</div>';
+    return;
+  }
+
+  // Agrégation par produit (zones confondues)
+  const agg = {};
+  state.lines.forEach(l => {
+    const p = CATALOGUE[l.productId];
+    const key = p.y; // nom Yokitup exact
+    if (!agg[key]){
+      agg[key] = { product: p, total: 0, zones: new Set(), count: 0 };
+    }
+    agg[key].total = round(agg[key].total + l.total, 3);
+    agg[key].zones.add(l.zone);
+    agg[key].count++;
+  });
+
+  const entries = Object.values(agg);
+  const totalLignes = entries.length;
+  const totalBtl = entries.filter(e => e.product.e === 'btl').reduce((s,e) => s + e.total, 0);
+  const totalLit = entries.filter(e => e.product.e === 'litre').reduce((s,e) => s + e.total, 0);
+
+  let html = `
+    <div class="summary-card">
+      <div class="summary-row"><span class="summary-label">Établissement</span><span class="summary-strong">${escape(state.estab)}</span></div>
+      <div class="summary-row"><span class="summary-label">Date</span><span class="summary-strong mono">${state.date}</span></div>
+      <div class="summary-row"><span class="summary-label">Zones saisies</span><span class="summary-strong mono">${new Set(state.lines.map(l => l.zone)).size}</span></div>
+      <div class="summary-row"><span class="summary-label">Lignes d'export (produits uniques)</span><span class="summary-strong mono">${totalLignes}</span></div>
+      <div class="summary-row"><span class="summary-label">Total bouteilles</span><span class="summary-strong mono">${round(totalBtl,2)}</span></div>
+      <div class="summary-row"><span class="summary-label">Total litres</span><span class="summary-strong mono">${round(totalLit,2)}</span></div>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+      <button class="btn-primary" id="btnExportCsv" style="flex:1; justify-content:center" type="button">Télécharger le CSV Yokitup</button>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+      <button class="btn-sec" id="btnResetSession" style="flex:1" type="button">Terminer & réinitialiser</button>
+    </div>
+
+    <div class="prod-cat-title" style="padding-left:0">Aperçu des lignes exportées</div>
+  `;
+
+  entries.sort((a,b) => a.product.s.localeCompare(b.product.s));
+  entries.forEach(e => {
+    const u = e.product.e === 'btl' ? 'btl' : 'L';
+    const zonesTxt = Array.from(e.zones).join(' + ');
+    html += `<div class="sess-item">
+      <div class="sess-body">
+        <div class="sess-name">${escape(e.product.s)}</div>
+        <div class="sess-detail mono" style="font-size:11px; color:var(--ink-3); margin-top:4px">${escape(e.product.y)}</div>
+        <div class="sess-detail">Zones: ${escape(zonesTxt)} · <span class="summary-strong mono">${fmtQty(e.total)} ${u}</span></div>
+      </div>
+    </div>`;
+  });
+
+  root.innerHTML = html;
+
+  document.getElementById('btnExportCsv').addEventListener('click', exportCsv);
+  document.getElementById('btnResetSession').addEventListener('click', askResetSession);
+}
+
+function exportCsv(){
+  const agg = {};
+  state.lines.forEach(l => {
+    const p = CATALOGUE[l.productId];
+    const key = p.y;
+    if (!agg[key]){ agg[key] = { product: p, total: 0 }; }
+    agg[key].total = round(agg[key].total + l.total, 3);
+  });
+
+  let csv = 'product_name,quantity\n';
+  Object.values(agg).forEach(e => {
+    const name = e.product.y;
+    const needsQuotes = /[,"\n]/.test(name);
+    const safe = needsQuotes ? '"' + name.replace(/"/g, '""') + '"' : name;
+    csv += safe + ',' + fmtQty(e.total) + '\n';
+  });
+
+  const fname = state.estab.replace(/\s+/g, '_') + '_' + state.date + '.csv';
+  const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fname;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  toast('CSV téléchargé');
+}
+
+function askResetSession(){
+  openConfirm('Terminer la session ?',
+    `Vas-tu vraiment réinitialiser la session ? Tes ${state.lines.length} saisies seront effacées. Exporte d'abord le CSV si besoin.`,
+    () => {
+      state.lines = [];
+      state.date = new Date().toISOString().slice(0,10);
+      saveState();
+      renderHeader();
+      updateBadge();
+      renderExport();
+      renderCatalogue();
+      toast('Session réinitialisée');
+    });
+}
+
+/* ---------- Zones ---------- */
+function renderZonesList(){
+  const root = document.getElementById('zoneList');
+  root.innerHTML = zones.map(z => {
+    const cur = z === state.currentZone ? 'current' : '';
+    const nb = state.lines.filter(l => l.zone === z).length;
+    return `<div class="zone-option ${cur}" data-z="${escape(z)}">
+      <span style="flex:1">${escape(z)}</span>
+      ${nb ? `<span class="sess-zone-count">${nb}</span>` : ''}
+      ${cur ? '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>' : ''}
+    </div>`;
+  }).join('');
+  root.querySelectorAll('.zone-option').forEach(el => {
+    el.addEventListener('click', () => {
+      state.currentZone = el.dataset.z;
+      saveState();
+      renderHeader();
+      renderCatalogue();
+      closeSheet('shZone','ovZone');
+      toast('Zone : ' + state.currentZone);
+    });
+  });
+}
+
+/* ---------- Confirm ---------- */
+let confirmCb = null;
+function openConfirm(title, msg, cb){
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  confirmCb = cb;
+  openSheet('shConfirm','ovConfirm');
+}
+
+/* ---------- Chat ---------- */
+function openChat(){
+  document.getElementById('chatPanel').classList.add('open');
+  document.getElementById('mascotBubble').classList.remove('open');
+  if (!chatMsgs.length){
+    addChatMsg('assistant', "Salut 👋 Je suis là pour t'aider pendant ton inventaire. Une question ?");
+  }
+}
+function closeChat(){ document.getElementById('chatPanel').classList.remove('open'); }
+
+function addChatMsg(role, text){
+  chatMsgs.push({role, text});
+  const root = document.getElementById('chatMsgs');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'msg-u' : 'msg-a');
+  div.textContent = text;
+  root.appendChild(div);
+  root.scrollTop = root.scrollHeight;
+  return div;
+}
+
+async function sendChat(){
+  const input = document.getElementById('chatInput');
+  const txt = input.value.trim();
+  if (!txt) return;
+  input.value = '';
+  addChatMsg('user', txt);
+
+  // Typing indicator
+  const root = document.getElementById('chatMsgs');
+  const t = document.createElement('div');
+  t.className = 'msg msg-a typing';
+  t.innerHTML = '<span></span><span></span><span></span>';
+  root.appendChild(t);
+  root.scrollTop = root.scrollHeight;
+
+  const system = `Tu es l'assistant ITM pour Indie Group (groupe de restaurants Saint-Tropez, Paris, Saint-Barth, Megève, Courchevel).
+L'utilisateur fait un inventaire sur le terrain. Tu l'aides sur :
+- les règles de comptage (bouteilles pleines + entamées en décimal)
+- les formats de bouteilles (50/70/75/100cl)
+- la logique cartons
+- les conditionnements (Magnum = 150cl, Jéroboam = 300cl, Mathusalem = 600cl, Nabuchodonosor = 1500cl)
+Réponds en français, tutoie, maximum 2-3 phrases, ton direct et terrain. Pas de politesse inutile.`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 250,
+        system: system,
+        messages: chatMsgs.slice(-6).map(m => ({role: m.role, content: m.text}))
+      })
+    });
+    const data = await r.json();
+    t.remove();
+    const reply = data.content?.[0]?.text || 'Désolé, je n\'ai pas pu répondre.';
+    addChatMsg('assistant', reply);
+  } catch (e) {
+    t.remove();
+    addChatMsg('assistant', 'Connexion impossible. Réessaie dans un instant.');
+  }
+}
+
+/* ---------- Init ---------- */
+function init(){
+  renderHeader();
+  renderCatalogue();
+  updateBadge();
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
+  });
+
+  // Search
+  const si = document.getElementById('searchInput');
+  si.addEventListener('input', () => {
+    searchTerm = si.value;
+    renderCatalogue();
+  });
+
+  // Zone
+  document.getElementById('btnZone').addEventListener('click', () => {
+    renderZonesList();
+    openSheet('shZone','ovZone');
+  });
+
+  // Ajouter zone
+  document.getElementById('btnAddZone').addEventListener('click', () => {
+    document.getElementById('newZoneInput').value = '';
+    openSheet('shNewZone','ovNewZone');
+    setTimeout(() => document.getElementById('newZoneInput').focus(), 200);
+  });
+  document.getElementById('newZoneCancel').addEventListener('click', () => closeSheet('shNewZone','ovNewZone'));
+  document.getElementById('newZoneOk').addEventListener('click', () => {
+    const v = document.getElementById('newZoneInput').value.trim();
+    if (!v){ toast('Nom requis'); return; }
+    if (zones.includes(v)){ toast('Zone déjà existante'); return; }
+    zones.push(v);
+    saveZones();
+    state.currentZone = v;
+    saveState();
+    renderHeader();
+    renderCatalogue();
+    closeSheet('shNewZone','ovNewZone');
+    closeSheet('shZone','ovZone');
+    toast('Zone « ' + v + ' » créée');
+  });
+
+  // Overlays
+  document.getElementById('ovProd').addEventListener('click', () => closeSheet('shProd','ovProd'));
+  document.getElementById('ovZone').addEventListener('click', () => closeSheet('shZone','ovZone'));
+  document.getElementById('ovNewZone').addEventListener('click', () => closeSheet('shNewZone','ovNewZone'));
+  document.getElementById('ovConfirm').addEventListener('click', () => closeSheet('shConfirm','ovConfirm'));
+
+  // Confirm
+  document.getElementById('confirmNo').addEventListener('click', () => closeSheet('shConfirm','ovConfirm'));
+  document.getElementById('confirmYes').addEventListener('click', () => {
+    const cb = confirmCb;
+    confirmCb = null;
+    closeSheet('shConfirm','ovConfirm');
+    if (cb) cb();
+  });
+
+  // Mascotte
+  const bubble = document.getElementById('mascotBubble');
+  setTimeout(() => bubble.classList.add('open'), 1200);
+  setTimeout(() => bubble.classList.remove('open'), 6000);
+  document.getElementById('mascotBtn').addEventListener('click', openChat);
+  document.getElementById('chatClose').addEventListener('click', closeChat);
+  document.getElementById('chatSend').addEventListener('click', sendChat);
+  document.getElementById('chatInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendChat();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+<script>
+// Enregistrement du service worker pour l'offline
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('SW registered:', reg.scope))
+      .catch((err) => console.warn('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
