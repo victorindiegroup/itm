@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITM — Convertisseur CSV Yokitup</title>
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --ink: #1B1B18;
+    --ink-2: #5A5A52;
+    --border: #E5E3DA;
+    --accent: #1D9E75;
+    --accent-dark: #0F6E56;
+    --accent-soft: #E1F5EE;
+    --warn: #BA7517;
+    --warn-soft: #FAEEDA;
+    --danger: #C04343;
+    --radius: 12px;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 24px 16px 40px;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; color: var(--accent-dark); }
+  .sub { color: var(--ink-2); font-size: 14px; margin: 0 0 24px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 16px; margin: 0 0 12px; }
+  .step { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+  .step-num {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent); color: white;
+    display: grid; place-items: center;
+    font-weight: 600; font-size: 13px;
+  }
+  .step-body { flex: 1; }
+  .step-body p { margin: 0 0 6px; }
+  input[type=file] { display: none; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 8px;
+    background: var(--accent); color: white;
+    border: none; cursor: pointer;
+    font-family: inherit; font-size: 15px; font-weight: 500;
+    transition: background 0.15s;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn:disabled { background: #A0A0A0; cursor: not-allowed; }
+  .btn-outline {
+    background: transparent; color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .btn-outline:hover { background: var(--accent-soft); color: var(--accent-dark); }
+  .status {
+    padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 12px;
+  }
+  .status.info { background: var(--accent-soft); color: var(--accent-dark); }
+  .status.warn { background: var(--warn-soft); color: var(--warn); }
+  .status.err { background: #FAE1E1; color: var(--danger); }
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px; margin-top: 12px;
+  }
+  .stat {
+    background: var(--bg); border-radius: 6px; padding: 8px 10px;
+    font-size: 13px;
+  }
+  .stat-lbl { color: var(--ink-2); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-val { font-weight: 600; font-size: 16px; font-family: var(--mono); }
+  pre {
+    background: #2C2C2A; color: #F7F6F2;
+    padding: 12px; border-radius: 6px;
+    font-size: 12px; overflow-x: auto;
+    font-family: var(--mono);
+    max-height: 200px; margin: 8px 0;
+  }
+  .filename { font-family: var(--mono); color: var(--accent-dark); font-size: 14px; }
+  ul { margin: 6px 0; padding-left: 22px; }
+  li { margin: 3px 0; }
+  .hint { color: var(--ink-2); font-size: 13px; margin-top: 4px; }
+  details { margin-top: 12px; }
+  summary { cursor: pointer; color: var(--ink-2); font-size: 13px; padding: 4px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>ITM — Convertisseur CSV Yokitup</h1>
+<p class="sub">Cette page convertit ton export CSV Yokitup en <span class="filename">catalogue.json</span> à uploader sur GitHub. Tout se passe localement dans ton navigateur, rien n'est envoyé en ligne.</p>
+
+<div class="card">
+  <h2>1. Uploade ton CSV Yokitup</h2>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <p>Exporte ton catalogue complet depuis Yokitup (l'export qui contient les colonnes <span class="filename">Produit identifiant Yokitup</span>, <span class="filename">Produit nom</span>, <span class="filename">Tags</span>, etc.)</p>
+      <label for="csvFile" class="btn btn-outline" id="uploadLbl">📂 Choisir un fichier CSV</label>
+      <input type="file" id="csvFile" accept=".csv">
+      <div id="fileInfo" class="hint"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="analyzeCard" style="display:none">
+  <h2>2. Analyse du catalogue</h2>
+  <div id="analysis"></div>
+</div>
+
+<div class="card" id="downloadCard" style="display:none">
+  <h2>3. Télécharge le catalogue</h2>
+  <p>Le fichier <span class="filename">catalogue.json</span> est prêt. Clique pour le télécharger, puis uploade-le sur GitHub dans ton repo ITM (il remplacera l'ancien).</p>
+  <button class="btn" id="btnDownload">⬇ Télécharger catalogue.json</button>
+  <div class="hint" style="margin-top:12px">
+    <strong>Étape suivante :</strong> sur GitHub, vas dans ton repo ITM → clique sur le fichier <span class="filename">catalogue.json</span> → icône crayon ("Edit this file") → supprime tout le contenu → colle le nouveau contenu OU plus simple : upload nouveau fichier qui écrase l'ancien. Commit, et c'est déployé.
+  </div>
+  <details>
+    <summary>Mémo overrides appliqués</summary>
+    <ul id="overridesList"></ul>
+  </details>
+</div>
+
+<div class="card" style="background:var(--bg); border-style:dashed">
+  <h2 style="color:var(--ink-2)">📖 Règles appliquées</h2>
+  <p style="font-size:13px; color:var(--ink-2)">
+    Le convertisseur applique les règles suivantes (identiques à ce que gère l'app ITM) :
+  </p>
+  <ul style="font-size:13px; color:var(--ink-2)">
+    <li><strong>Type "bouteille"</strong> (saisie au nb de pièces) : produits dont le nom Yokitup commence par <span class="filename">B. M. J. MATHU. NABU. 1/2. BABY. MIDAS. BALTHA. REHO. BIB. COFFRET. GALLON.</span></li>
+    <li><strong>Type "litre"</strong> (saisie aux 4 formats 50/70/75/100cL) : produits sans préfixe et avec unité cL/L/ml dans Yokitup</li>
+    <li><strong>Type "unit"</strong> (saisie au nb de pièces) : produits sans préfixe et avec unité <span class="filename">unit</span>, <span class="filename">kg</span>, <span class="filename">g</span></li>
+    <li>Les produits <strong>sans tag établissement</strong> sont conservés mais marqués comme archives (non visibles dans les inventaires actifs)</li>
+    <li><strong>Overrides</strong> : <span class="filename">CORONA 33 CL VP 4,5°</span> forcé en BTL, <span class="filename">GINGER BEER VERSE</span> forcé en LITRE</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+'use strict';
+
+const PREFIXES = [
+  { pfx: 'B.',      type: 'btl',   pill: 'BTL' },
+  { pfx: 'M.',      type: 'btl',   pill: 'MAG' },
+  { pfx: 'J.',      type: 'btl',   pill: 'JERO' },
+  { pfx: 'MATHU.',  type: 'btl',   pill: 'MATHU' },
+  { pfx: 'NABU.',   type: 'btl',   pill: 'NABU' },
+  { pfx: '1/2.',    type: 'btl',   pill: '½' },
+  { pfx: 'BABY.',   type: 'btl',   pill: 'BABY' },
+  { pfx: 'MIDAS.',  type: 'btl',   pill: 'MIDAS' },
+  { pfx: 'BALTHA.', type: 'btl',   pill: 'BALTHA' },
+  { pfx: 'REHO.',   type: 'btl',   pill: 'REHO' },
+  { pfx: 'BIB.',    type: 'btl',   pill: 'BIB' },
+  { pfx: 'COFFRET.',type: 'btl',   pill: 'COFF' },
+  { pfx: 'GALLON.', type: 'btl',   pill: 'GAL' },
+];
+
+const OVERRIDES = {
+  'CORONA 33 CL VP 4,5°': { type: 'btl', pill: 'BTL' },
+  'GINGER BEER VERSE': { type: 'litre', pill: 'LITRE' }
+};
+
+const ETAB_TAGS = new Set([
+  'INDIE BEACH', 'ORMEAU', 'SAUVAGEONNE', 'PLAYAMIGOS',
+  'PABLO', 'CHERRY', 'CAT CLUB', 'IMOUNTAIN',
+  'PARIS CHERRY', 'PABLO SBH', 'FOURMI'
+]);
+
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function detectTypeAndPill(name) {
+  if (OVERRIDES[name]) return OVERRIDES[name];
+  for (const { pfx, type, pill } of PREFIXES) {
+    const re = new RegExp('^' + escapeRegex(pfx) + '(_|\\s|$)');
+    if (re.test(name)) return { type, pill };
+  }
+  return null; // décision au caller selon unité
+}
+
+function stripPrefix(name) {
+  for (const { pfx } of PREFIXES) {
+    const re = new RegExp('^' + escapeRegex(pfx) + '_?\\s*');
+    if (re.test(name)) return name.replace(re, '');
+  }
+  return name;
+}
+
+function makeShort(yk) {
+  let s = stripPrefix(yk);
+  s = s.replace(/[_\s]+(RGE|BLC|RSE|ROS)[_\s]+\d+[,.]?\d*\s*CL\s*$/i, '');
+  s = s.replace(/[_\s]+\d+[,.]?\d*\s*CL\s*$/i, '');
+  s = s.replace(/[_\s]+(RGE|BLC|RSE|ROS)\s*$/i, '');
+  s = s.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+  s = s.replace(/[,;\s]+$/, '');
+  return s;
+}
+
+// Parser CSV robuste (gère les guillemets, virgules dans les champs, retours ligne)
+function parseCSV(text) {
+  const rows = [];
+  let i = 0, field = '', row = [], inQuotes = false;
+  while (i < text.length) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i+1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++;
+      } else { field += c; i++; }
+    } else {
+      if (c === '"') { inQuotes = true; i++; }
+      else if (c === ',') { row.push(field); field = ''; i++; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i+1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.length > 1 || row[0] !== '') rows.push(row);
+        row = []; i++;
+      } else { field += c; i++; }
+    }
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+function convertCSV(text) {
+  const rows = parseCSV(text);
+  if (rows.length < 2) throw new Error('CSV vide ou invalide');
+
+  const header = rows[0];
+  const idxName = header.indexOf('Produit nom');
+  const idxCost = header.indexOf('Produit cout de revient');
+  const idxQty = header.indexOf('Produit quantité du conditionnement de stockage');
+  const idxUnit = header.indexOf('Produit unité du conditionnement de stockage');
+  const idxCondName = header.indexOf('Produit nom du conditionnement de stockage');
+  const idxTags = header.indexOf('Tags');
+
+  if (idxName < 0 || idxQty < 0 || idxUnit < 0 || idxTags < 0) {
+    throw new Error('Colonnes attendues non trouvées. Vérifie que c\'est bien un export Yokitup complet (colonnes: Produit nom, quantité/unité/nom du conditionnement, Tags).');
+  }
+
+  const products = [];
+  const archives = [];
+  const etabCount = {};
+  const typeCount = { btl: 0, litre: 0, unit: 0 };
+  const overridesUsed = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r[idxName] || !r[idxName].trim()) continue;
+
+    const name = r[idxName].trim();
+    const qty = parseFloat(r[idxQty]) || 0;
+    const unit = (r[idxUnit] || '').trim();
+    const condName = (r[idxCondName] || '').trim();
+    const tagsRaw = (r[idxTags] || '').split(',').map(s => s.trim()).filter(Boolean);
+
+    // Extraction catégorie + étabs + fournisseurs
+    let categorie = '';
+    const etabs = [];
+    for (const t of tagsRaw) {
+      if (ETAB_TAGS.has(t)) etabs.push(t);
+      else if (t.startsWith('LIQUIDE') || t.startsWith('SOLIDE') || t.startsWith('CONSOMMABLE')) {
+        if (!categorie) categorie = t;
+      }
+    }
+
+    // Type & pill
+    let typeInfo = detectTypeAndPill(name);
+    if (typeInfo && OVERRIDES[name]) overridesUsed.push(name);
+    if (!typeInfo) {
+      // pas de préfixe : selon unité
+      if (unit === 'cL' || unit === 'L' || unit === 'ml') typeInfo = { type: 'litre', pill: 'LITRE' };
+      else typeInfo = { type: 'unit', pill: 'UNIT' };
+    }
+
+    typeCount[typeInfo.type]++;
+    etabs.forEach(e => { etabCount[e] = (etabCount[e] || 0) + 1; });
+
+    const product = {
+      y: name,
+      s: makeShort(name),
+      c: categorie,
+      q: qty,
+      u: unit,
+      n: condName,
+      e: typeInfo.type,
+      p: typeInfo.pill,
+      t: etabs
+    };
+
+    if (etabs.length === 0) archives.push(product);
+    products.push(product);
+  }
+
+  return { products, archives, typeCount, etabCount, overridesUsed, totalRows: rows.length - 1 };
+}
+
+let convertedData = null;
+
+document.getElementById('csvFile').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  document.getElementById('fileInfo').textContent = '📄 ' + f.name + ' — ' + Math.round(f.size/1024) + ' KB';
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const result = convertCSV(ev.target.result);
+      convertedData = result.products;
+      displayAnalysis(result);
+      document.getElementById('downloadCard').style.display = 'block';
+    } catch(err) {
+      document.getElementById('analyzeCard').style.display = 'block';
+      document.getElementById('analysis').innerHTML = '<div class="status err">❌ ' + err.message + '</div>';
+      document.getElementById('downloadCard').style.display = 'none';
+    }
+  };
+  reader.readAsText(f, 'utf-8');
+});
+
+function displayAnalysis(r) {
+  const card = document.getElementById('analyzeCard');
+  card.style.display = 'block';
+  const a = document.getElementById('analysis');
+
+  let html = '<div class="status info">✓ ' + r.products.length + ' produits convertis (sur ' + r.totalRows + ' lignes CSV)</div>';
+
+  html += '<h3 style="font-size:14px;margin:16px 0 8px">Répartition par type d\'export</h3>';
+  html += '<div class="stat-grid">';
+  html += '<div class="stat"><div class="stat-lbl">Bouteilles</div><div class="stat-val">' + r.typeCount.btl + '</div></div>';
+  html += '<div class="stat"><div class="stat-lbl">Litres</div><div class="stat-val">' + r.typeCount.litre + '</div></div>';
+  html += '<div class="stat"><div class="stat-lbl">Unités</div><div class="stat-val">' + r.typeCount.unit + '</div></div>';
+  html += '<div class="stat"><div class="stat-lbl">Archives</div><div class="stat-val">' + r.archives.length + '</div></div>';
+  html += '</div>';
+
+  html += '<h3 style="font-size:14px;margin:16px 0 8px">Produits par établissement</h3>';
+  html += '<div class="stat-grid">';
+  Object.entries(r.etabCount).sort((a,b) => b[1] - a[1]).forEach(([etab, count]) => {
+    html += '<div class="stat"><div class="stat-lbl">' + etab + '</div><div class="stat-val">' + count + '</div></div>';
+  });
+  html += '</div>';
+
+  if (r.archives.length > 0) {
+    html += '<div class="status warn" style="margin-top:12px">⚠ ' + r.archives.length + ' produits sans tag établissement (conservés mais masqués dans l\'app)</div>';
+  }
+
+  if (r.overridesUsed.length > 0) {
+    const list = document.getElementById('overridesList');
+    list.innerHTML = r.overridesUsed.map(n => '<li><span class="filename">' + n + '</span></li>').join('');
+  }
+
+  a.innerHTML = html;
+}
+
+document.getElementById('btnDownload').addEventListener('click', () => {
+  if (!convertedData) return;
+  const json = JSON.stringify(convertedData);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'catalogue.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+</script>
+</body>
+</html>
