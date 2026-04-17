@@ -33,7 +33,7 @@
     --shadow-2: 0 4px 16px rgba(27,27,24,.08), 0 12px 40px rgba(27,27,24,.08);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.4; height: 100%; overscroll-behavior: none; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.4; height: 100vh; overscroll-behavior: none; display: flex; flex-direction: column; overflow: hidden; }
   body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; overflow: hidden; }
   .mono { font-family: 'DM Mono', ui-monospace, monospace; }
   button { font-family: inherit; font-size: inherit; cursor: pointer; border: none; background: none; color: inherit; }
@@ -64,7 +64,7 @@
   .view.active { display: block; }
 
   /* SEARCH */
-  .search-wrap { padding: 12px 16px 8px; background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .search-wrap { padding: 12px 16px 8px; background: var(--bg); position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
   .search { width: 100%; padding: 12px 14px 12px 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); font-size: 15px; box-shadow: var(--shadow-1); }
   .search:focus { border-color: var(--accent); outline: none; }
   .search-ico { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); color: var(--ink-3); font-size: 16px; pointer-events: none; }
@@ -258,6 +258,54 @@
     opacity: 0.6;
   }
   .logout-btn:active { opacity: 1; }
+
+  /* Palette pills par conditionnement */
+  .pill-BTL    { background: #FAEEDA; color: #854F0B; }
+  .pill-MAG    { background: #EEEDFE; color: #3C3489; }
+  .pill-JERO   { background: #FBEAF0; color: #72243E; }
+  .pill-MATHU  { background: #FAECE7; color: #712B13; }
+  .pill-NABU   { background: #FCEBEB; color: #791F1F; }
+  .pill-DEMI   { background: #FEF5E5; color: #633806; }
+  .pill-BABY   { background: #EAF3DE; color: #27500A; }
+  .pill-MIDAS  { background: #F1EFE8; color: #444441; }
+  .pill-BALTHA { background: #F1EFE8; color: #444441; }
+  .pill-REHO   { background: #F1EFE8; color: #444441; }
+  .pill-COFF   { background: #F1EFE8; color: #444441; }
+  .pill-GAL    { background: #F1EFE8; color: #444441; }
+  .pill-BIB    { background: #F1EFE8; color: #444441; }
+  .pill-LITRE  { background: #E6F1FB; color: #0C447C; }
+  .pill-UNIT   { background: #E1F5EE; color: #0F6E56; }
+
+  .prod-tag { margin-right: 10px; min-width: 44px; text-align: center; flex-shrink: 0; }
+
+  /* Liste établissement : lignes aérées */
+  #estabList .zone-row { padding: 14px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  #estabList .zone-row:last-child { border-bottom: none; }
+  #estabList .zone-row.on { background: var(--accent-soft); border-radius: var(--radius); }
+  #estabList .zone-row:active { background: var(--bg); }
+  #estabList .zone-row-name { font-weight: 500; flex: 1; font-size: 15px; }
+  #estabList .zone-row-count { font-size: 12px; color: var(--ink-2); background: var(--bg); padding: 2px 8px; border-radius: 10px; }
+
+  /* Boutons +/- pour la saisie de quantité */
+  .qty-step-btn {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    border: 1px solid var(--border);
+    font-size: 20px; font-weight: 500;
+    cursor: pointer;
+    display: grid; place-items: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, transform 0.1s;
+    flex-shrink: 0;
+  }
+  .qty-step-btn:active { background: var(--accent); color: white; transform: scale(0.92); }
+  .qty-step-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .qty-format-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+  .qty-format-row input { flex: 1; min-width: 0; }
+  .field-row { display: flex; align-items: center; gap: 6px; }
+  .field-row input { flex: 1; min-width: 0; }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -365,7 +413,7 @@
     <div class="sheet-handle"></div>
     <div class="sheet-title">Établissement</div>
   </div>
-  <div class="sheet-body" id="estabList" style="max-height:60vh;overflow-y:auto"></div>
+  <div class="sheet-body" id="estabList"></div>
 </div>
 
   <div class="sheet-body">
@@ -414,8 +462,8 @@
 </div>
 
 <!-- Mascotte -->
-<button class="mascot-btn" id="mascotBtn" type="button" aria-label="Assistant">
-  <img src="./mascot.png" alt="Assistant" style="width:100%;height:100%;object-fit:cover;object-position:center top;">
+<button class="mascot-btn" id="mascotBtn" type="button" aria-label="Victor">
+  <img src="./mascot.png" alt="Victor" style="width:100%;height:100%;object-fit:cover;object-position:center top;">
 </button>
 
 <div class="mascot-bubble" id="mascotBubble">Besoin d'un coup de main ?</div>
@@ -426,7 +474,7 @@
         <img src="./mascot.png" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center top;">
       </div>
     <div class="chat-head-t">
-      <b>Assistant ITM</b>
+      <b>Victor</b>
       <span>• en ligne</span>
     </div>
     <button class="chat-close" id="chatClose" type="button">✕</button>
@@ -547,6 +595,11 @@ function onLoginSuccess() {
   // Relancer le rendu
   if (typeof renderHeader === 'function') renderHeader();
   if (typeof renderCatalogue === 'function') renderCatalogue();
+  // Message de bienvenue
+  const welcomeName = currentAuth.role === 'admin' ? 'Admin' : currentAuth.etab;
+  if (typeof toast === 'function') {
+    setTimeout(() => toast('Bienvenue à ' + welcomeName + ' 👋'), 300);
+  }
 }
 
 /* Init auth au démarrage : si déjà loggé, skip l'écran */
@@ -763,12 +816,13 @@ function renderCatalogue(){
     html += `<div class="prod-cat-title">${escape(cat)}</div>`;
     byCat[cat].forEach(p => {
       const saisi = isProductSaisi(p.id) ? ' prod-saisi' : '';
-      const pillClass = p.e === 'btl' ? 'tag-btl' : (p.e === 'unit' ? 'tag-unit' : 'tag-lit');
       const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
+      // Normaliser le nom de la classe CSS (½ → DEMI)
+      const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
       const tag = `<span class="prod-tag ${pillClass}">${escape(pillLabel)}</span>`;
       html += `<div class="prod${saisi}" data-pid="${p.id}">
-        <div class="prod-name">${escape(p.s)}</div>
         ${tag}
+        <div class="prod-name">${escape(p.s)}</div>
       </div>`;
     });
   });
@@ -825,7 +879,7 @@ function openProductSheet(productId, lineId){
       zone: state.currentZone,
       unit: currentProduct.e,
       qty: 0,
-      details: currentProduct.e === 'litre' ? FORMATS_LITRE.map(f => ({format: f.label, cl: f.cl, qty: 0})) : null,
+      details: currentProduct.e === 'litre' ? FORMATS_LITRE.map(f => ({label: f.label, cl: f.cl, qty: 0})) : null,
       carton: {active: false, nb: 0, pieces: 0, format: '75cl'},
       total: 0
     };
@@ -862,7 +916,9 @@ function renderProductSheet(){
       <div class="field">
         <label class="field-lbl">Quantité (bouteilles)</label>
         <div class="field-row">
+          <button type="button" class="qty-step-btn" data-step="-1" data-target="fQty" aria-label="Diminuer">−</button>
           <input id="fQty" type="number" step="0.1" inputmode="decimal" value="${draft.qty || ''}" placeholder="ex: 2.5">
+          <button type="button" class="qty-step-btn" data-step="1" data-target="fQty" aria-label="Augmenter">+</button>
           <span class="field-label-inline">btl</span>
         </div>
       </div>
@@ -873,7 +929,9 @@ function renderProductSheet(){
       <div class="field">
         <label class="field-lbl">Quantité (unités)</label>
         <div class="field-row">
+          <button type="button" class="qty-step-btn" data-step="-1" data-target="fQty" aria-label="Diminuer">−</button>
           <input id="fQty" type="number" step="1" inputmode="numeric" value="${draft.qty || ''}" placeholder="ex: 12">
+          <button type="button" class="qty-step-btn" data-step="1" data-target="fQty" aria-label="Augmenter">+</button>
           <span class="field-label-inline">unit.</span>
         </div>
       </div>
@@ -887,7 +945,9 @@ function renderProductSheet(){
       html += `
         <div class="qty-format-row">
           <div class="qty-format-label">× ${f.label}</div>
+          <button type="button" class="qty-step-btn" data-step="-1" data-target-fmt="${f.label}" aria-label="Diminuer">−</button>
           <input type="number" step="0.1" inputmode="decimal" data-format="${f.label}" value="${detail.qty || ''}" placeholder="0">
+          <button type="button" class="qty-step-btn" data-step="1" data-target-fmt="${f.label}" aria-label="Augmenter">+</button>
           <div class="qty-format-sub" data-sub="${f.label}">—</div>
         </div>
       `;
@@ -956,6 +1016,27 @@ function renderProductSheet(){
       el.addEventListener('input', updateDraftFromInputs);
     });
   }
+
+  // Boutons +/- : incrément/décrément de la quantité
+  body.querySelectorAll('.qty-step-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const step = parseFloat(btn.dataset.step) || 1;
+      let input;
+      if (btn.dataset.target) {
+        input = document.getElementById(btn.dataset.target);
+      } else if (btn.dataset.targetFmt) {
+        input = body.querySelector(`input[data-format="${btn.dataset.targetFmt}"]`);
+      }
+      if (!input) return;
+      const currentVal = parseFloat(input.value) || 0;
+      let newVal = currentVal + step;
+      if (newVal < 0) newVal = 0;
+      // Arrondir à 0.1 près pour éviter les soucis de float
+      newVal = Math.round(newVal * 10) / 10;
+      input.value = newVal || '';
+      updateDraftFromInputs();
+    });
+  });
   document.getElementById('fCarton').addEventListener('change', () => {
     draft.carton.active = document.getElementById('fCarton').checked;
     document.getElementById('cartonBox').style.display = draft.carton.active ? 'block' : 'none';
@@ -1323,19 +1404,72 @@ function renderZonesList(){
     const cur = z === state.currentZone ? 'current' : '';
     const nb = state.lines.filter(l => l.zone === z).length;
     return `<div class="zone-option ${cur}" data-z="${escape(z)}">
-      <span style="flex:1">${escape(z)}</span>
+      <span class="zone-option-name" data-select="${escape(z)}" style="flex:1;cursor:pointer">${escape(z)}</span>
       ${nb ? `<span class="sess-zone-count">${nb}</span>` : ''}
       ${cur ? '<svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8l3 3 7-7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>' : ''}
+      <button class="zone-btn-ren" data-ren="${escape(z)}" type="button" aria-label="Renommer" style="background:transparent;border:none;padding:4px 8px;cursor:pointer;color:var(--ink-2);font-size:14px">✎</button>
+      <button class="zone-btn-del" data-del="${escape(z)}" type="button" aria-label="Supprimer" style="background:transparent;border:none;padding:4px 8px;cursor:pointer;color:var(--danger);font-size:14px">🗑</button>
     </div>`;
   }).join('');
-  root.querySelectorAll('.zone-option').forEach(el => {
+
+  // Sélectionner une zone (clic sur le nom)
+  root.querySelectorAll('[data-select]').forEach(el => {
     el.addEventListener('click', () => {
-      state.currentZone = el.dataset.z;
+      state.currentZone = el.dataset.select;
       saveState();
       renderHeader();
       renderCatalogue();
       closeSheet('shZone','ovZone');
       toast('Zone : ' + state.currentZone);
+    });
+  });
+
+  // Renommer
+  root.querySelectorAll('[data-ren]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const oldName = el.dataset.ren;
+      const newName = prompt('Renommer la zone « ' + oldName + ' » en :', oldName);
+      if (!newName || !newName.trim()) return;
+      const trimmed = newName.trim();
+      if (trimmed === oldName) return;
+      if (zones.includes(trimmed)) { toast('Cette zone existe déjà'); return; }
+      // Renommer dans zones[]
+      const idx = zones.indexOf(oldName);
+      if (idx >= 0) zones[idx] = trimmed;
+      // Renommer dans les lignes de saisie existantes
+      state.lines.forEach(l => { if (l.zone === oldName) l.zone = trimmed; });
+      // Zone courante
+      if (state.currentZone === oldName) state.currentZone = trimmed;
+      saveZones(); saveState();
+      renderZonesList();
+      renderHeader();
+      toast('Zone renommée');
+    });
+  });
+
+  // Supprimer
+  root.querySelectorAll('[data-del]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const name = el.dataset.del;
+      if (zones.length <= 1) { toast('Impossible : au moins une zone requise'); return; }
+      const nb = state.lines.filter(l => l.zone === name).length;
+      const msg = nb > 0
+        ? 'Supprimer la zone « ' + name + ' » ? ' + nb + ' saisie(s) seront supprimées.'
+        : 'Supprimer la zone « ' + name + ' » ?';
+      if (!confirm(msg)) return;
+      // Retirer les lignes de cette zone
+      state.lines = state.lines.filter(l => l.zone !== name);
+      // Retirer de zones[]
+      zones = zones.filter(z => z !== name);
+      // Si zone courante était celle-ci, on passe à la première
+      if (state.currentZone === name) state.currentZone = zones[0];
+      saveZones(); saveState();
+      renderZonesList();
+      renderHeader();
+      renderCatalogue();
+      toast('Zone supprimée');
     });
   });
 }
@@ -1354,7 +1488,7 @@ function openChat(){
   document.getElementById('chatPanel').classList.add('open');
   document.getElementById('mascotBubble').classList.remove('open');
   if (!chatMsgs.length){
-    addChatMsg('assistant', "Salut 👋 Je suis là pour t'aider pendant ton inventaire. Une question ?");
+    addChatMsg('assistant', "Salut, moi c'est Victor 👋 Je suis là pour t'aider pendant ton inventaire. Une question ?");
   }
 }
 function closeChat(){ document.getElementById('chatPanel').classList.remove('open'); }
@@ -1385,7 +1519,7 @@ async function sendChat(){
   root.appendChild(t);
   root.scrollTop = root.scrollHeight;
 
-  const system = `Tu es l'assistant ITM pour Indie Group (groupe de restaurants Saint-Tropez, Paris, Saint-Barth, Megève, Courchevel).
+  const system = `Tu es Victor, l'assistant ITM pour Indie Group (groupe de restaurants Saint-Tropez, Paris, Saint-Barth, Megève, Courchevel).
 L'utilisateur fait un inventaire sur le terrain. Tu l'aides sur :
 - les règles de comptage (bouteilles pleines + entamées en décimal)
 - les formats de bouteilles (50/70/75/100cl)
