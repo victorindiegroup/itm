@@ -1046,6 +1046,8 @@ function startInventory(meta) {
     startedAt: new Date().toISOString(),
     lines: []
   };
+  // Ré-installer le proxy au cas où state.lines aurait été écrasé
+  installLinesProxy();
   saveState();
 }
 
@@ -1067,6 +1069,8 @@ function finishInventory() {
   };
   state.inventories.unshift(finished);  // plus récent en haut
   state.currentInventory = null;
+  // Ré-installer le proxy pour qu'il retourne bien [] maintenant
+  installLinesProxy();
   saveState();
   return finished;
 }
@@ -1076,13 +1080,45 @@ let chatMsgs = [];
 function loadState(){
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch(e){}
+    if (raw) {
+      const s = JSON.parse(raw);
+      // Garanties de structure
+      if (!s.inventories) s.inventories = [];
+      if (s.currentInventory === undefined) s.currentInventory = null;
+      // Migration / récupération : si s.lines existe (ancien format OU données fantômes)
+      if (Array.isArray(s.lines) && s.lines.length > 0) {
+        if (s.currentInventory) {
+          // Fusion avec l'inventaire actif existant
+          const existing = Array.isArray(s.currentInventory.lines) ? s.currentInventory.lines : [];
+          const seen = new Set(existing.map(l => l.id).filter(Boolean));
+          const merged = existing.slice();
+          s.lines.forEach(l => {
+            if (!l.id || !seen.has(l.id)) merged.push(l);
+          });
+          s.currentInventory.lines = merged;
+        } else {
+          // Créer un nouvel inventaire actif avec ces lignes
+          s.currentInventory = {
+            id: 'inv_migrated_' + Date.now(),
+            date: s.date || new Date().toISOString().slice(0,10),
+            moment: 'avant',
+            personne: '',
+            startedAt: new Date().toISOString(),
+            lines: s.lines.slice()
+          };
+        }
+      }
+      // Nettoyer les anciennes propriétés pour laisser le proxy s'installer
+      delete s.lines;
+      delete s.date;
+      return s;
+    }
+  } catch(e){ console.warn('loadState error:', e); }
   return {
     estab: 'Indie Beach',
     currentZone: 'Bar',
-    date: new Date().toISOString().slice(0,10),
-    lines: []  // { id, productId, zone, qty, unit: 'btl'|'litre', details: [{format, qty}] | null, carton: {active, nb, pieces, format} | null, total }
+    currentInventory: null,
+    inventories: []
   };
 }
 function loadZones(){
@@ -1633,21 +1669,30 @@ function renderTotal(){
 }
 
 function saveLine(){
+  // Garde : il faut un inventaire actif pour pouvoir saisir
+  if (!state.currentInventory) {
+    toast('Démarre un inventaire d\'abord');
+    return;
+  }
+
   if (!draft.total || draft.total <= 0){
     toast('Saisis au moins une quantité');
     return;
   }
 
+  // Accès direct à currentInventory.lines (pas via proxy)
+  const lines = state.currentInventory.lines;
+
   if (editingLineId){
-    const idx = state.lines.findIndex(l => l.id === editingLineId);
+    const idx = lines.findIndex(l => l.id === editingLineId);
     if (idx >= 0){
       draft.id = editingLineId;
-      state.lines[idx] = draft;
+      lines[idx] = draft;
     }
     toast('Modifié');
   } else {
     draft.id = uid();
-    state.lines.push(draft);
+    lines.push(draft);
     toast('Ajouté');
   }
 
@@ -1659,7 +1704,8 @@ function saveLine(){
 
 function deleteLine(){
   if (!editingLineId) return;
-  state.lines = state.lines.filter(l => l.id !== editingLineId);
+  if (!state.currentInventory) return;
+  state.currentInventory.lines = state.currentInventory.lines.filter(l => l.id !== editingLineId);
   saveState();
   renderCatalogue();
   renderSession();
@@ -1763,7 +1809,8 @@ function describeLine(l, p){
 }
 
 function updateBadge(){
-  document.getElementById('badgeSess').textContent = state.lines.length;
+  const n = state.currentInventory ? state.currentInventory.lines.length : 0;
+  document.getElementById('badgeSess').textContent = n;
 }
 
 /* ---------- Export view ---------- */
@@ -2252,6 +2299,27 @@ function resendInventoryDetail() {
   toast('CSV régénéré et mail ouvert');
 }
 
+
+// Debug : tape window.debugITM() dans la console pour voir l'état
+window.debugITM = function() {
+  console.log('=== ITM DEBUG ===');
+  console.log('state.estab:', state.estab);
+  console.log('currentAuth:', currentAuth);
+  console.log('currentInventory:', state.currentInventory ? {
+    id: state.currentInventory.id,
+    date: state.currentInventory.date,
+    moment: state.currentInventory.moment,
+    personne: state.currentInventory.personne,
+    nbLines: state.currentInventory.lines.length
+  } : null);
+  console.log('inventories archivés:', state.inventories.map(i => ({
+    id: i.id, date: i.date, moment: i.moment, personne: i.personne,
+    nbLines: i.lines.length, exported: i.exported
+  })));
+  console.log('state.lines (via proxy):', state.lines.length, 'lignes');
+  console.log('Descriptor lines:', Object.getOwnPropertyDescriptor(state, 'lines'));
+  return 'Debug logged in console';
+};
 function init(){
   // Si utilisateur connecté et pas admin, forcer son établissement
   if (currentAuth && currentAuth.role === 'user' && currentAuth.etab) {
