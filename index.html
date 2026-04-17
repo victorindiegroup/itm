@@ -409,6 +409,200 @@
   .estab-page-body .estab-item.on .estab-name { color: var(--accent-dark); font-weight: 600; }
   .estab-page-body .estab-name { font-size: 15px; color: var(--ink); flex: 1; }
   .estab-page-body .estab-count { font-size: 12px; color: var(--ink-2); background: var(--bg); padding: 4px 10px; border-radius: 12px; }
+
+  /* === VUE SESSION REFAITE === */
+  .sess-header {
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .sess-auth-info {
+    font-size: 13px;
+    color: var(--ink-2);
+  }
+  .sess-logout-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink-2);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  /* Bouton principal : Lancer / Reprendre inventaire */
+  .sess-cta {
+    margin: 16px;
+    padding: 18px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: calc(100% - 32px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(29,158,117,0.25);
+  }
+  .sess-cta:active { background: var(--accent-dark); transform: scale(0.99); }
+  .sess-cta.resume { background: var(--warn); }
+  .sess-cta.resume:active { background: #9B6212; }
+
+  /* Section "Inventaire en cours" */
+  .sess-current {
+    margin: 0 16px 20px;
+    border: 1px solid var(--warn);
+    border-radius: 12px;
+    background: var(--warn-soft);
+    padding: 14px;
+  }
+  .sess-current-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--warn);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .sess-current-meta {
+    font-size: 14px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .sess-current-meta b { font-weight: 600; }
+  .sess-current-count {
+    font-size: 13px;
+    color: var(--ink-2);
+    margin-bottom: 12px;
+  }
+  .sess-current-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .sess-current-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .sess-btn-continue {
+    background: var(--surface);
+    color: var(--ink);
+    border-color: var(--border) !important;
+  }
+  .sess-btn-finish {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* Historique */
+  .sess-history-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 20px 6px;
+  }
+  .sess-inv-item {
+    margin: 0 16px 8px;
+    padding: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+  .sess-inv-item:active { background: var(--bg); }
+  .sess-inv-date {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+  .sess-inv-sub {
+    font-size: 12px;
+    color: var(--ink-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .sess-inv-status {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .sess-inv-status.exported {
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+  }
+  .sess-inv-status.not-exported {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .sess-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-2);
+    font-size: 14px;
+  }
+
+  /* Champ input générique */
+  .field-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--ink);
+    box-sizing: border-box;
+  }
+  .field-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* Segments radio (Avant / Après) */
+  .seg-opt {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    background: var(--surface);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-2);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .seg-opt input { display: none; }
+  .seg-opt:has(input:checked) {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -480,13 +674,13 @@
   </div>
 
   <div class="view" id="vSession">
-    <div style="padding: 12px 16px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-      <div id="sessAuthInfo" style="font-size: 13px; color: var(--ink-2);">—</div>
-      <button id="btnLogout" type="button" style="background: transparent; border: 1px solid var(--border); color: var(--ink-2); font-size: 12px; padding: 6px 12px; border-radius: 8px; cursor: pointer;">Se déconnecter</button>
+    <div class="sess-header">
+      <div id="sessAuthInfo" class="sess-auth-info">—</div>
+      <button id="btnLogout" type="button" class="sess-logout-btn">Se déconnecter</button>
     </div>
-    <div class="sess-list" id="sessList">
-      <div class="prod-empty">Aucune saisie pour l'instant.<br>Retourne au catalogue pour commencer.</div>
-    </div>
+
+    <!-- Zone dynamique : rendue par renderSessionView() -->
+    <div id="sessRoot"></div>
   </div>
 
   <div class="view" id="vExport">
@@ -572,6 +766,54 @@
   <div class="estab-page-body" id="estabList"></div>
 </div>
 
+
+
+<!-- Sheet démarrer inventaire -->
+<div class="overlay" id="ovStartInv"></div>
+<div class="sheet" id="shStartInv">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title">Démarrer un inventaire</div>
+    <div class="sheet-sub">Complète les informations ci-dessous.</div>
+  </div>
+  <div class="sheet-body">
+    <div class="field">
+      <label class="field-lbl">Date</label>
+      <input type="date" id="startInvDate" class="field-input" value="">
+    </div>
+    <div class="field">
+      <label class="field-lbl">Moment</label>
+      <div style="display:flex;gap:8px;">
+        <label class="seg-opt"><input type="radio" name="startInvMoment" value="avant" checked> <span>Avant service</span></label>
+        <label class="seg-opt"><input type="radio" name="startInvMoment" value="apres"> <span>Après service</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-lbl">Nom de la personne</label>
+      <input type="text" id="startInvPersonne" class="field-input" placeholder="Ex: Victor, Paul, Sarah..." autocomplete="name">
+    </div>
+  </div>
+  <div class="sheet-foot">
+    <button type="button" class="btn-cancel" id="startInvCancel">Annuler</button>
+    <button type="button" class="btn-valid" id="startInvOk">Démarrer</button>
+  </div>
+</div>
+
+<!-- Sheet détail inventaire (depuis historique) -->
+<div class="overlay" id="ovInvDetail"></div>
+<div class="sheet" id="shInvDetail">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title" id="invDetailTitle">Inventaire</div>
+    <div class="sheet-sub" id="invDetailSub">—</div>
+  </div>
+  <div class="sheet-body" id="invDetailBody"></div>
+  <div class="sheet-foot">
+    <button type="button" class="btn-cancel" id="invDetailClose">Fermer</button>
+    <button type="button" class="btn-sec" id="invDetailDelete" style="color: var(--danger); border-color: var(--danger);">Supprimer</button>
+    <button type="button" class="btn-valid" id="invDetailResend">Renvoyer par mail</button>
+  </div>
+</div>
 <!-- Mascotte -->
 <button class="mascot-btn" id="mascotBtn" type="button" aria-label="Victor">
   <img src="./mascot.png" alt="Victor" style="width:100%;height:100%;object-fit:cover;object-position:center top;">
@@ -770,6 +1012,56 @@ const LS_CHAT = 'itm_chat_v8';
 const DEFAULT_ZONES = ['Bar', 'Cave', 'Terrasse', 'Cuisine', 'Réserve'];
 
 let state = loadState();
+
+// Proxy state.lines → state.currentInventory.lines
+// Si pas d'inventaire actif, state.lines retourne un tableau vide (lecture)
+// Les écritures sont autorisées uniquement si un inventaire est actif
+function installLinesProxy() {
+  Object.defineProperty(state, 'lines', {
+    configurable: true,
+    get() {
+      return state.currentInventory ? state.currentInventory.lines : [];
+    },
+    set(val) {
+      if (state.currentInventory) {
+        state.currentInventory.lines = val;
+      }
+    }
+  });
+}
+installLinesProxy();
+
+// Helper : y a-t-il un inventaire actif ?
+function hasActiveInventory() {
+  return state.currentInventory !== null;
+}
+
+// Démarrer un nouvel inventaire
+function startInventory(meta) {
+  state.currentInventory = {
+    id: 'inv_' + Date.now(),
+    date: meta.date || new Date().toISOString().slice(0,10),
+    moment: meta.moment || 'avant',  // 'avant' | 'apres'
+    personne: meta.personne || '',
+    startedAt: new Date().toISOString(),
+    lines: []
+  };
+  saveState();
+}
+
+// Terminer l'inventaire en cours : l'archiver dans inventories[]
+function finishInventory() {
+  if (!state.currentInventory) return null;
+  const finished = {
+    ...state.currentInventory,
+    finishedAt: new Date().toISOString(),
+    exported: false
+  };
+  state.inventories.unshift(finished);  // plus récent en haut
+  state.currentInventory = null;
+  saveState();
+  return finished;
+}
 let zones = loadZones();
 let chatMsgs = [];
 
@@ -837,7 +1129,8 @@ function closeAllSheets(){
 /* ---------- Header ---------- */
 function renderHeader(){
   const sub = document.getElementById('hSubDate');
-  sub.textContent = state.estab + ' · ' + fmtDate(state.date);
+  const dateLbl = state.currentInventory ? fmtDate(state.currentInventory.date) : fmtDate(new Date().toISOString().slice(0,10));
+  sub.textContent = state.estab + ' · ' + dateLbl;
   // Admin : cliquable. User : non cliquable.
   if (currentAuth && currentAuth.role === 'admin') {
     sub.style.cursor = 'pointer';
@@ -853,6 +1146,11 @@ function renderHeader(){
 
 /* ---------- Tabs ---------- */
 function switchTab(name){
+  // Si on veut aller au catalogue sans inventaire actif, rediriger vers session
+  if (name === 'catalogue' && !state.currentInventory) {
+    toast('Démarre un inventaire d\'abord');
+    name = 'session';
+  }
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('v' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
@@ -900,6 +1198,15 @@ function isProductSaisi(productId){
 }
 
 function renderCatalogue(){
+  // Si pas d'inventaire actif, afficher un message
+  if (!state.currentInventory) {
+    const root = document.getElementById('prodList');
+    if (root) {
+      root.innerHTML = '<div class="prod-empty">Aucun inventaire actif.<br><br>Va dans l\'onglet <b>Session</b> pour en démarrer un.</div>';
+    }
+    return;
+  }
+
   const list = searchProducts(searchTerm);
   const root = document.getElementById('prodList');
 
@@ -1351,63 +1658,65 @@ function deleteLine(){
 
 /* ---------- Session view ---------- */
 function renderSession(){
-  const root = document.getElementById('sessList');
-  if (!state.lines.length){
-    root.innerHTML = '<div class="prod-empty">Aucune saisie pour l\'instant.<br>Retourne au catalogue pour commencer.</div>';
-    return;
-  }
-
-  // Grouper par zone
-  const byZone = {};
-  state.lines.forEach(l => {
-    if (!byZone[l.zone]) byZone[l.zone] = [];
-    byZone[l.zone].push(l);
-  });
-
-  // Ordre zones : zone courante d'abord, puis les autres dans l'ordre de zones
-  const sortedZones = Object.keys(byZone).sort((a, b) => {
-    if (a === state.currentZone) return -1;
-    if (b === state.currentZone) return 1;
-    return zones.indexOf(a) - zones.indexOf(b);
-  });
+  const root = document.getElementById('sessRoot');
+  if (!root) return;
 
   let html = '';
-  sortedZones.forEach(z => {
-    const items = byZone[z];
-    html += `<div class="sess-zone">${escape(z)} <span class="sess-zone-count">${items.length}</span></div>`;
-    items.forEach(l => {
-      const p = CATALOGUE[l.productId];
-      const detail = describeLine(l, p);
-      html += `<div class="sess-item" data-lid="${l.id}" data-pid="${l.productId}">
-        <div class="sess-body">
-          <div class="sess-name">${escape(p.s)}</div>
-          <div class="sess-detail">${detail}</div>
+
+  // ===== Inventaire en cours =====
+  if (state.currentInventory) {
+    const inv = state.currentInventory;
+    const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
+    html += `<div class="sess-current">
+      <div class="sess-current-title">⚠ Inventaire en cours</div>
+      <div class="sess-current-meta"><b>${fmtDate(inv.date)}</b> · ${momentLbl}</div>
+      ${inv.personne ? `<div class="sess-current-meta">Par : <b>${escape(inv.personne)}</b></div>` : ''}
+      <div class="sess-current-count">${inv.lines.length} produit${inv.lines.length > 1 ? 's' : ''} saisi${inv.lines.length > 1 ? 's' : ''}</div>
+      <div class="sess-current-actions">
+        <button type="button" class="sess-btn-continue" id="btnContinueInv">Continuer la saisie</button>
+        <button type="button" class="sess-btn-finish" id="btnFinishInv">Terminer et exporter</button>
+      </div>
+    </div>`;
+  } else {
+    // Gros bouton de démarrage
+    html += `<button type="button" class="sess-cta" id="btnStartInv">+ Lancer un inventaire</button>`;
+  }
+
+  // ===== Historique =====
+  if (state.inventories && state.inventories.length > 0) {
+    html += `<div class="sess-history-title">Historique</div>`;
+    state.inventories.forEach(inv => {
+      const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
+      const statusClass = inv.exported ? 'exported' : 'not-exported';
+      const statusLbl = inv.exported ? '✓ Envoyé' : '⚠ Non envoyé';
+      const personLbl = inv.personne ? ` · ${escape(inv.personne)}` : '';
+      html += `<div class="sess-inv-item" data-inv="${inv.id}">
+        <div class="sess-inv-date">${fmtDate(inv.date)} · ${momentLbl}</div>
+        <div class="sess-inv-sub">
+          <span>${inv.lines.length} produit${inv.lines.length > 1 ? 's' : ''}${personLbl}</span>
+          <span class="sess-inv-status ${statusClass}">${statusLbl}</span>
         </div>
-        <button class="sess-del" data-del="${l.id}" type="button" aria-label="Supprimer">✕</button>
       </div>`;
     });
-  });
+  } else if (!state.currentInventory) {
+    html += `<div class="sess-empty">Aucun inventaire pour le moment.<br>Clique sur le bouton ci-dessus pour commencer.</div>`;
+  }
 
   root.innerHTML = html;
-  root.querySelectorAll('.sess-item').forEach(el => {
-    el.addEventListener('click', (e) => {
-      if (e.target.closest('[data-del]')) return;
-      const pid = parseInt(el.dataset.pid);
-      const lid = el.dataset.lid;
-      openProductSheet(pid, lid);
-    });
-  });
-  root.querySelectorAll('[data-del]').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const lid = el.dataset.del;
-      state.lines = state.lines.filter(l => l.id !== lid);
-      saveState();
-      renderSession();
-      renderCatalogue();
-      updateBadge();
-      toast('Supprimé');
-    });
+
+  // Handlers
+  const btnStart = document.getElementById('btnStartInv');
+  if (btnStart) btnStart.addEventListener('click', openStartInventoryDialog);
+
+  const btnContinue = document.getElementById('btnContinueInv');
+  if (btnContinue) btnContinue.addEventListener('click', () => switchTab('catalogue'));
+
+  const btnFinish = document.getElementById('btnFinishInv');
+  if (btnFinish) btnFinish.addEventListener('click', confirmFinishInventory);
+
+  // Clic sur un inventaire de l'historique → détail
+  root.querySelectorAll('.sess-inv-item').forEach(el => {
+    el.addEventListener('click', () => openInventoryDetail(el.dataset.inv));
   });
 }
 
@@ -1530,7 +1839,7 @@ function exportCsv(){
     csv += safe + ',' + fmtQty(e.total) + '\n';
   });
 
-  const fname = state.estab.replace(/\s+/g, '_') + '_' + state.date + '.csv';
+  const fname = state.estab.replace(/\s+/g, '_') + '_' + (state.currentInventory ? state.currentInventory.date : new Date().toISOString().slice(0,10)) + '.csv';
   const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1767,13 +2076,172 @@ function selectEstab(nom){
   }
 }
 
+
+/* ---------- Démarrer un inventaire ---------- */
+function openStartInventoryDialog(){
+  // Pré-remplir date avec aujourd'hui
+  document.getElementById('startInvDate').value = new Date().toISOString().slice(0,10);
+  // Reset moment à 'avant'
+  document.querySelector('input[name="startInvMoment"][value="avant"]').checked = true;
+  // Pré-remplir le nom avec ce qu'on avait la fois précédente
+  const lastName = localStorage.getItem('itm_last_personne') || '';
+  document.getElementById('startInvPersonne').value = lastName;
+  openSheet('shStartInv', 'ovStartInv');
+  setTimeout(() => document.getElementById('startInvPersonne').focus(), 200);
+}
+
+/* ---------- Clôturer l'inventaire ---------- */
+function confirmFinishInventory(){
+  if (!state.currentInventory) return;
+  if (state.currentInventory.lines.length === 0) {
+    toast('Aucun produit saisi, rien à exporter');
+    return;
+  }
+  confirmCb = () => {
+    const inv = finishInventory();
+    if (inv) {
+      // Export CSV + Mailto
+      exportAndMailInventory(inv);
+      inv.exported = true;
+      saveState();
+      renderSession();
+      renderHeader();
+      renderCatalogue();
+      toast('Inventaire terminé');
+    }
+  };
+  document.getElementById('confirmTitle').textContent = 'Terminer l\'inventaire ?';
+  document.getElementById('confirmMsg').textContent = state.currentInventory.lines.length + ' produit(s) seront archivés et envoyés.';
+  openSheet('shConfirm','ovConfirm');
+}
+
+/* ---------- Export CSV + Mailto ---------- */
+function exportAndMailInventory(inv) {
+  // Construire le CSV (agrégé par produit, somme des zones)
+  const agg = {};
+  inv.lines.forEach(l => {
+    const p = CATALOGUE[l.productId];
+    if (!p) return;
+    const key = p.y;
+    if (!agg[key]){ agg[key] = { product: p, total: 0 }; }
+    agg[key].total = round(agg[key].total + l.total, 3);
+  });
+
+  let csv = 'product_name,quantity\n';
+  Object.values(agg).forEach(e => {
+    const name = e.product.y;
+    const needsQuotes = /[,"\n]/.test(name);
+    const safe = needsQuotes ? '"' + name.replace(/"/g, '""') + '"' : name;
+    csv += safe + ',' + fmtQty(e.total) + '\n';
+  });
+
+  const momentLbl = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
+  const personneSlug = (inv.personne || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+  const fname = state.estab.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '') 
+              + '_' + inv.date + '_' + momentLbl + '_' + personneSlug + '.csv';
+
+  // 1. Télécharger le CSV
+  const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fname;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+  // 2. Ouvrir mailto avec corps pré-rempli
+  const momentLblFr = inv.moment === 'apres' ? 'Après service' : 'Avant service';
+  const subject = 'Inventaire ' + state.estab + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr;
+  const body = 'Bonjour,\n\n'
+    + 'Inventaire terminé :\n'
+    + '- Établissement : ' + state.estab + '\n'
+    + '- Date : ' + fmtDate(inv.date) + '\n'
+    + '- Moment : ' + momentLblFr + '\n'
+    + (inv.personne ? '- Par : ' + inv.personne + '\n' : '')
+    + '- Nombre de produits : ' + inv.lines.length + '\n\n'
+    + 'Le fichier CSV (' + fname + ') a été téléchargé sur le téléphone. '
+    + 'Il faut le joindre manuellement à cet e-mail avant de l\'envoyer.\n\n'
+    + 'Merci,';
+
+  const mailto = 'mailto:victor@indiegroup.fr'
+    + '?subject=' + encodeURIComponent(subject)
+    + '&body=' + encodeURIComponent(body);
+
+  // Ouvrir mailto (peut prendre une ou deux secondes sur mobile)
+  setTimeout(() => {
+    window.location.href = mailto;
+  }, 500);
+}
+
+/* ---------- Détail inventaire depuis historique ---------- */
+let currentDetailInvId = null;
+function openInventoryDetail(invId) {
+  const inv = state.inventories.find(i => i.id === invId);
+  if (!inv) return;
+  currentDetailInvId = invId;
+
+  document.getElementById('invDetailTitle').textContent = fmtDate(inv.date);
+  const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
+  const sub = momentLbl + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + inv.lines.length + ' produit(s)';
+  document.getElementById('invDetailSub').textContent = sub;
+
+  // Liste simplifiée des produits saisis
+  const body = document.getElementById('invDetailBody');
+  let html = '';
+  if (inv.lines.length === 0) {
+    html = '<div class="prod-empty">Aucun produit dans cet inventaire.</div>';
+  } else {
+    html += '<div style="padding: 0 16px;">';
+    inv.lines.forEach(l => {
+      const p = CATALOGUE[l.productId];
+      if (!p) return;
+      html += '<div style="padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">';
+      html += '<span style="font-size: 13px;">' + escape(p.s) + '</span>';
+      html += '<span class="mono" style="font-size: 12px; color: var(--ink-2);">' + fmtQty(l.total) + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  body.innerHTML = html;
+
+  openSheet('shInvDetail', 'ovInvDetail');
+}
+
+function deleteInventoryDetail() {
+  if (!currentDetailInvId) return;
+  confirmCb = () => {
+    state.inventories = state.inventories.filter(i => i.id !== currentDetailInvId);
+    saveState();
+    closeSheet('shInvDetail', 'ovInvDetail');
+    currentDetailInvId = null;
+    renderSession();
+    toast('Inventaire supprimé');
+  };
+  document.getElementById('confirmTitle').textContent = 'Supprimer cet inventaire ?';
+  document.getElementById('confirmMsg').textContent = 'Cette action est définitive.';
+  openSheet('shConfirm','ovConfirm');
+}
+
+function resendInventoryDetail() {
+  if (!currentDetailInvId) return;
+  const inv = state.inventories.find(i => i.id === currentDetailInvId);
+  if (!inv) return;
+  exportAndMailInventory(inv);
+  inv.exported = true;
+  saveState();
+  renderSession();
+  toast('CSV régénéré et mail ouvert');
+}
+
 function init(){
   // Si utilisateur connecté et pas admin, forcer son établissement
   if (currentAuth && currentAuth.role === 'user' && currentAuth.etab) {
     if (state.estab !== currentAuth.etab) {
       state.estab = currentAuth.etab;
-      // Reset les lignes si changement (pour éviter les mélanges)
-      state.lines = [];
+      // Reset l'inventaire en cours (pour éviter les mélanges)
+      state.currentInventory = null;
       saveState();
     }
   }
@@ -1781,6 +2249,11 @@ function init(){
   renderHeader();
   renderCatalogue();
   updateBadge();
+
+  // Démarrer sur l'onglet Session si pas d'inventaire actif
+  if (!state.currentInventory) {
+    switchTab('session');
+  }
 
   // Hook appelé quand catalogue.json a fini de charger (si chargement async)
   APP_READY = true;
@@ -1870,6 +2343,32 @@ function init(){
     sessAuthInfo.textContent = 'Connecté : ' + currentAuth.label;
   }
 
+
+  // Start Inventory sheet
+  document.getElementById('startInvCancel').addEventListener('click', () => closeSheet('shStartInv','ovStartInv'));
+  document.getElementById('ovStartInv').addEventListener('click', () => closeSheet('shStartInv','ovStartInv'));
+  document.getElementById('startInvOk').addEventListener('click', () => {
+    const date = document.getElementById('startInvDate').value;
+    const moment = document.querySelector('input[name="startInvMoment"]:checked').value;
+    const personne = document.getElementById('startInvPersonne').value.trim();
+    if (!date) { toast('Date requise'); return; }
+    if (!personne) { toast('Nom requis'); return; }
+    // Mémoriser le nom pour la prochaine fois
+    localStorage.setItem('itm_last_personne', personne);
+    startInventory({ date, moment, personne });
+    closeSheet('shStartInv','ovStartInv');
+    renderSession();
+    renderHeader();
+    // Basculer sur le catalogue pour commencer
+    switchTab('catalogue');
+    toast('Inventaire démarré');
+  });
+
+  // InvDetail sheet
+  document.getElementById('invDetailClose').addEventListener('click', () => closeSheet('shInvDetail','ovInvDetail'));
+  document.getElementById('ovInvDetail').addEventListener('click', () => closeSheet('shInvDetail','ovInvDetail'));
+  document.getElementById('invDetailDelete').addEventListener('click', deleteInventoryDetail);
+  document.getElementById('invDetailResend').addEventListener('click', resendInventoryDetail);
 
   // Mascotte
   const bubble = document.getElementById('mascotBubble');
