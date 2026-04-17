@@ -603,6 +603,22 @@
     color: var(--accent-dark);
     font-weight: 600;
   }
+
+  /* Bouton annuler inventaire (discret, sous les actions principales) */
+  .sess-btn-cancel {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--danger);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sess-btn-cancel:active { background: rgba(192, 67, 67, 0.1); }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -1734,6 +1750,7 @@ function renderSession(){
         <button type="button" class="sess-btn-continue" id="btnContinueInv">Continuer la saisie</button>
         <button type="button" class="sess-btn-finish" id="btnFinishInv">Terminer et exporter</button>
       </div>
+      <button type="button" class="sess-btn-cancel" id="btnCancelInv">Annuler l'inventaire</button>
     </div>`;
   } else {
     // Gros bouton de démarrage
@@ -1771,6 +1788,9 @@ function renderSession(){
 
   const btnFinish = document.getElementById('btnFinishInv');
   if (btnFinish) btnFinish.addEventListener('click', confirmFinishInventory);
+
+  const btnCancel = document.getElementById('btnCancelInv');
+  if (btnCancel) btnCancel.addEventListener('click', confirmCancelInventory);
 
   // Clic sur un inventaire de l'historique → détail
   root.querySelectorAll('.sess-inv-item').forEach(el => {
@@ -2175,6 +2195,27 @@ function confirmFinishInventory(){
   };
   document.getElementById('confirmTitle').textContent = 'Terminer l\'inventaire ?';
   document.getElementById('confirmMsg').textContent = state.currentInventory.lines.length + ' produit(s) seront archivés et envoyés.';
+  openSheet('shConfirm','ovConfirm');
+}
+
+/* ---------- Annuler l'inventaire en cours ---------- */
+function confirmCancelInventory(){
+  if (!state.currentInventory) return;
+  const nbLines = state.currentInventory.lines.length;
+  confirmCb = () => {
+    state.currentInventory = null;
+    installLinesProxy();
+    saveState();
+    renderSession();
+    renderHeader();
+    renderCatalogue();
+    updateBadge();
+    toast('Inventaire annulé');
+  };
+  document.getElementById('confirmTitle').textContent = 'Annuler l\'inventaire ?';
+  document.getElementById('confirmMsg').textContent = nbLines > 0
+    ? 'Toutes les saisies (' + nbLines + ' produit' + (nbLines > 1 ? 's' : '') + ') seront perdues. Cette action est définitive.'
+    : 'L\'inventaire en cours sera supprimé.';
   openSheet('shConfirm','ovConfirm');
 }
 
