@@ -773,6 +773,26 @@
     font-weight: 500;
     margin-left: 2px;
   }
+
+  /* Titres de zone dans la vue Saisies */
+  .saisies-zone-title {
+    padding: 16px 20px 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .saisies-zone-count {
+    font-size: 11px;
+    color: var(--ink-2);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -2003,7 +2023,6 @@ function renderExport(){
   const root = document.getElementById('exportView');
   if (!root) return;
 
-  // Si pas d'inventaire actif
   if (!state.currentInventory) {
     root.innerHTML = '<div class="prod-empty">Aucun inventaire actif.<br><br>Va dans l\'onglet <b>Session</b> pour en démarrer un.</div>';
     return;
@@ -2016,46 +2035,59 @@ function renderExport(){
     return;
   }
 
-  // En-tête avec total saisies
+  // Grouper les saisies par zone
+  const byZone = {};
+  lines.forEach(l => {
+    const z = l.zone || 'Sans zone';
+    if (!byZone[z]) byZone[z] = [];
+    byZone[z].push(l);
+  });
+
+  // En-tête
   let html = '<div class="saisies-header">' + lines.length + ' produit' + (lines.length > 1 ? 's' : '') + ' saisi' + (lines.length > 1 ? 's' : '') + '</div>';
 
-  // Liste dans l'ordre chronologique (premier en haut)
-  html += '<div class="saisies-list">';
-  lines.forEach(line => {
-    const p = CATALOGUE[line.productId];
-    if (!p) return;
-    const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
-    const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
-    const pill = '<span class="prod-tag ' + pillClass + '">' + escape(pillLabel) + '</span>';
-    const total = fmtQty(line.total);
-    const unit = (p.e === 'btl' || p.e === 'unit') ? 'pc' : 'L';
-    // Détail de saisie en texte pur (sans HTML)
-    const detailParts = [];
-    if (p.e === 'btl' || p.e === 'unit') {
-      if (line.qty > 0) detailParts.push(fmtQty(line.qty) + ' pc');
-    } else {
-      (line.details || []).forEach(d => {
-        if (d.qty > 0) detailParts.push(fmtQty(d.qty) + '×' + d.label);
-      });
-    }
-    if (line.carton && line.carton.active && line.carton.nb && line.carton.pieces) {
-      const fmtLbl = (p.e !== 'btl' && p.e !== 'unit' && line.carton.format) ? ' (' + line.carton.format + ')' : '';
-      detailParts.push(fmtQty(line.carton.nb) + ' ctn × ' + fmtQty(line.carton.pieces) + fmtLbl);
-    }
-    const detail = detailParts.join(' · ');
+  // Une section par zone, ordre d'apparition (premier arrivé en haut)
+  const zoneOrder = Object.keys(byZone);
 
-    html += '<div class="saisie-item" data-lid="' + escape(line.id) + '">';
-    html += '  <div class="saisie-main">';
-    html += '    ' + pill;
-    html += '    <div class="saisie-name">' + escape(p.s) + '</div>';
-    html += '  </div>';
-    if (detail) {
-      html += '  <div class="saisie-detail">' + escape(detail) + '</div>';
-    }
-    html += '  <div class="saisie-total"><span class="mono">' + total + '</span> <span class="saisie-unit">' + unit + '</span></div>';
+  zoneOrder.forEach(zone => {
+    html += '<div class="saisies-zone-title">' + escape(zone) + ' <span class="saisies-zone-count">' + byZone[zone].length + '</span></div>';
+    html += '<div class="saisies-list">';
+    byZone[zone].forEach(line => {
+      const p = CATALOGUE[line.productId];
+      if (!p) return;
+      const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
+      const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
+      const pill = '<span class="prod-tag ' + pillClass + '">' + escape(pillLabel) + '</span>';
+      const total = fmtQty(line.total);
+      const unit = (p.e === 'btl' || p.e === 'unit') ? 'pc' : 'L';
+      // Détail en texte pur
+      const detailParts = [];
+      if (p.e === 'btl' || p.e === 'unit') {
+        if (line.qty > 0) detailParts.push(fmtQty(line.qty) + ' pc');
+      } else {
+        (line.details || []).forEach(d => {
+          if (d.qty > 0) detailParts.push(fmtQty(d.qty) + '×' + d.label);
+        });
+      }
+      if (line.carton && line.carton.active && line.carton.nb && line.carton.pieces) {
+        const fmtLbl = (p.e !== 'btl' && p.e !== 'unit' && line.carton.format) ? ' (' + line.carton.format + ')' : '';
+        detailParts.push(fmtQty(line.carton.nb) + ' ctn × ' + fmtQty(line.carton.pieces) + fmtLbl);
+      }
+      const detail = detailParts.join(' · ');
+
+      html += '<div class="saisie-item" data-lid="' + escape(line.id) + '">';
+      html += '  <div class="saisie-main">';
+      html += '    ' + pill;
+      html += '    <div class="saisie-name">' + escape(p.s) + '</div>';
+      html += '  </div>';
+      if (detail) {
+        html += '  <div class="saisie-detail">' + escape(detail) + '</div>';
+      }
+      html += '  <div class="saisie-total"><span class="mono">' + total + '</span> <span class="saisie-unit">' + unit + '</span></div>';
+      html += '</div>';
+    });
     html += '</div>';
   });
-  html += '</div>';
 
   root.innerHTML = html;
 
