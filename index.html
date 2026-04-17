@@ -278,14 +278,6 @@
 
   .prod-tag { margin-right: 10px; min-width: 44px; text-align: center; flex-shrink: 0; }
 
-  /* Liste établissement : lignes aérées */
-  #estabList .zone-row { padding: 14px 12px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
-  #estabList .zone-row:last-child { border-bottom: none; }
-  #estabList .zone-row.on { background: var(--accent-soft); border-radius: var(--radius); }
-  #estabList .zone-row:active { background: var(--bg); }
-  #estabList .zone-row-name { font-weight: 500; flex: 1; font-size: 15px; }
-  #estabList .zone-row-count { font-size: 12px; color: var(--ink-2); background: var(--bg); padding: 2px 8px; border-radius: 10px; }
-
   /* Boutons +/- pour la saisie de quantité */
   .qty-step-btn {
     width: 40px; height: 40px;
@@ -307,8 +299,6 @@
   .field-row { display: flex; align-items: center; gap: 6px; }
   .field-row input { flex: 1; min-width: 0; }
 
-  /* Liste établissement */
-  #estabList { padding: 8px 0 16px; }
   .estab-item {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 20px; border-bottom: 1px solid var(--border);
@@ -321,6 +311,64 @@
   .estab-item:last-child { border-bottom: none; }
   .estab-name { font-size: 15px; color: var(--ink); flex: 1; }
   .estab-count { font-size: 12px; color: var(--ink-2); background: var(--bg); padding: 3px 10px; border-radius: 12px; }
+
+  /* Sheet établissement : hauteur fixe + scroll garanti */
+  #shEstab { 
+    height: 75vh; 
+    height: 75dvh; 
+    max-height: 600px;
+    min-height: 400px;
+  }
+  #shEstab .sheet-head { flex-shrink: 0; }
+  #shEstab .sheet-body { 
+    padding: 0; 
+    overflow-y: auto; 
+    flex: 1 1 auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+  }
+  #estabList { padding: 4px 0 40px; }
+
+  /* Bouton OK pour fermer le clavier */
+  .qty-ok-btn {
+    background: var(--ink);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+  .qty-ok-btn:active { background: var(--accent); }
+
+  /* Barre OK flottante au-dessus du clavier */
+  .ok-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 8px 16px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    z-index: 200;
+    display: none;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  }
+  .ok-bar.visible { display: block; }
+  .ok-bar-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .ok-bar-btn:active { background: var(--accent-dark); }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -478,6 +526,12 @@
     <button class="btn-cancel" id="confirmNo" type="button">Annuler</button>
     <button class="btn-valid" id="confirmYes" type="button">Confirmer</button>
   </div>
+</div>
+
+
+<!-- Barre OK flottante (s'affiche quand un champ nombre est actif) -->
+<div id="okBar" class="ok-bar">
+  <button type="button" id="okBarBtn" class="ok-bar-btn">OK</button>
 </div>
 
 <!-- Mascotte -->
@@ -983,15 +1037,19 @@ function renderProductSheet(){
         <div class="field">
           <label class="field-lbl">Nombre de cartons</label>
           <div class="field-row">
+            <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonNb" aria-label="Diminuer">−</button>
             <input id="fCartonNb" type="number" step="1" inputmode="numeric" value="${draft.carton.nb || ''}" placeholder="ex: 2">
+            <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonNb" aria-label="Augmenter">+</button>
             <span class="field-label-inline">cartons</span>
           </div>
         </div>
         <div class="field">
           <label class="field-lbl">Pièces par carton</label>
           <div class="field-row">
+            <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonPieces" aria-label="Diminuer">−</button>
             <input id="fCartonPieces" type="number" step="1" inputmode="numeric" value="${draft.carton.pieces || ''}" placeholder="ex: 6">
-            <span class="field-label-inline">btl/carton</span>
+            <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonPieces" aria-label="Augmenter">+</button>
+            <span class="field-label-inline">pc/carton</span>
           </div>
         </div>
         ${p.e === 'litre' ? `
@@ -1022,7 +1080,19 @@ function renderProductSheet(){
     </div>
   </div>`;
 
+  // Bouton OK global (ferme le clavier)
+  html += `<div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+    <button type="button" class="qty-ok-btn" id="btnKeyboardOk">OK — Terminer la saisie</button>
+  </div>`;
+
   body.innerHTML = html;
+
+  // OK button : ferme le clavier (blur sur l'input actif)
+  document.getElementById('btnKeyboardOk').addEventListener('click', () => {
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+  });
 
   // Attachments
   if (p.e === 'btl' || p.e === 'unit'){
@@ -1741,5 +1811,42 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<script>
+/* Barre OK : visible quand un input number de la feuille produit est focus */
+(function() {
+  const okBar = document.getElementById('okBar');
+  const okBtn = document.getElementById('okBarBtn');
+  if (!okBar || !okBtn) return;
+
+  // Au focus sur un input number dans la sheet produit
+  document.addEventListener('focusin', (e) => {
+    if (!e.target.matches('input[type="number"]')) return;
+    // Vérifier qu'on est bien dans la sheet produit (pas ailleurs)
+    const sheet = e.target.closest('#shProd');
+    if (!sheet) return;
+    okBar.classList.add('visible');
+  });
+
+  // Au blur (perte de focus), cacher la barre
+  // Mais pas instantanément pour laisser le clic sur OK se faire
+  document.addEventListener('focusout', (e) => {
+    setTimeout(() => {
+      // Si plus aucun input n'est focusé, cacher
+      if (!document.activeElement || !document.activeElement.matches('input[type="number"]')) {
+        okBar.classList.remove('visible');
+      }
+    }, 100);
+  });
+
+  // Au clic sur OK : blur l'input actif pour fermer le clavier
+  okBtn.addEventListener('click', () => {
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+    okBar.classList.remove('visible');
+  });
+})();
+</script>
+
 </body>
 </html>
