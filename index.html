@@ -676,6 +676,23 @@
     vertical-align: middle;
     margin-right: 4px;
   }
+
+  /* Produits hors carte de l'établissement (fond de cave, ancienne saison...) */
+  .prod-offmenu { opacity: 0.55; }
+  .prod-offmenu:active { opacity: 0.75; }
+  .prod-offmenu-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 1px 7px;
+    margin-left: 8px;
+    border-radius: 8px;
+    background: #E5E5E3;
+    color: #7C7A73;
+    text-transform: lowercase;
+    letter-spacing: 0.2px;
+    vertical-align: middle;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -1303,16 +1320,21 @@ const ETAB_TO_TAG = {
 function searchProducts(term){
   const t = normalize(term.trim());
   const words = t ? t.split(/\s+/).filter(Boolean) : [];
-  // Filtre établissement : si l'estab actuel est connu, on ne garde que les produits qui l'ont dans p.t
-  const currentTag = ETAB_TO_TAG[state.estab];
-  const base = currentTag
-    ? CATALOGUE.filter(p => p.t && p.t.indexOf(currentTag) >= 0)
-    : CATALOGUE;
+  // On part de TOUT le catalogue, pas seulement les produits de l'établissement courant
+  // (les produits hors carte sont affichés différemment mais restent inventoriables)
+  const base = CATALOGUE;
   if (!words.length) return base;
   return base.filter(p => {
     const s = normalize(p._search);
     return words.every(w => s.includes(w));
   });
+}
+
+// Helper : un produit est-il dans la carte de l'établissement actuel ?
+function isInCurrentEtab(product) {
+  const tag = ETAB_TO_TAG[state.estab];
+  if (!tag) return true;  // pas d'étab → tout est "à la carte"
+  return product.t && product.t.indexOf(tag) >= 0;
 }
 
 function isProductSaisi(productId){
@@ -1356,13 +1378,15 @@ function renderCatalogue(){
     html += `<div class="prod-cat-title">${escape(cat)}</div>`;
     byCat[cat].forEach(p => {
       const saisi = isProductSaisi(p.id) ? ' prod-saisi' : '';
+      const offmenu = isInCurrentEtab(p) ? '' : ' prod-offmenu';
       const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
       // Normaliser le nom de la classe CSS (½ → DEMI)
       const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
       const tag = `<span class="prod-tag ${pillClass}">${escape(pillLabel)}</span>`;
-      html += `<div class="prod${saisi}" data-pid="${p.id}">
+      const offmenuBadge = isInCurrentEtab(p) ? '' : '<span class="prod-offmenu-badge">hors carte</span>';
+      html += `<div class="prod${saisi}${offmenu}" data-pid="${p.id}">
         ${tag}
-        <div class="prod-name">${escape(p.s)}</div>
+        <div class="prod-name">${escape(p.s)}${offmenuBadge}</div>
       </div>`;
     });
   });
