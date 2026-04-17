@@ -2265,6 +2265,74 @@ function normalizePos(s) {
     .trim();
 }
 
+
+// Préfixes bouteille à retirer pour la résolution POS → catalogue
+const BOTTLE_PREFIXES = ['1/2 B.', '1/2.', 'MATHU.', 'NABU.', 'BABY.', 'MIDAS.', 'BALTHA.', 'REHO.', 'BIB.', 'COFFRET.', 'GALLON.', 'MIGNONETTE', 'B.', 'V.', 'S.', 'M.', 'J.'];
+
+function stripPrefix(name) {
+  for (const p of BOTTLE_PREFIXES) {
+    if (name.startsWith(p + ' ') || name.startsWith(p + '_')) {
+      return name.substring(p.length).replace(/^[_\s]+/, '');
+    }
+  }
+  return name;
+}
+
+function stripFormat(name) {
+  // Retirer les "70CL", "3CL", "175CL", "40°" etc.
+  let s = name;
+  s = s.replace(/\s+\d+[,.]?\d*\s*CL\b/gi, '');
+  s = s.replace(/\s+\d+[,.]?\d*\s*°\b/g, '');
+  s = s.replace(/\s+(RGE|BLC|RSE|ROS)\b/gi, '');
+  return s.trim();
+}
+
+// Résoudre un produit POS vers un produit du catalogue (inventoriable)
+function resolveToCatalog(productName) {
+  if (!productName) return null;
+  // 1. Match exact
+  let exact = CATALOGUE.find(p => p.y === productName);
+  if (exact) return exact;
+  // 2. Nettoyer et re-chercher
+  const cleaned = stripFormat(stripPrefix(productName));
+  if (!cleaned || cleaned === productName) return null;
+  // Match exact sur nom nettoyé
+  exact = CATALOGUE.find(p => p.y.toUpperCase() === cleaned.toUpperCase());
+  if (exact) return exact;
+  // Match par début
+  exact = CATALOGUE.find(p => p.y.toUpperCase().startsWith(cleaned.toUpperCase()));
+  if (exact) return exact;
+  return null;
+}
+
+// Mots-clés qui déclenchent la suggestion automatique d'un produit VERSE
+// (utile quand le produit VERSE n'a pas de touche caisse propre)
+const VERSE_KEYWORDS = [
+  { keywords: ['coca', 'cola'], product: 'COCA COLA VERSE' },
+  { keywords: ['tonic'], product: 'TONIC VERSE' },
+  { keywords: ['ginger'], product: 'GINGER BEER VERSE' },
+  { keywords: ['limonade', 'ale'], product: 'LIMONADE VERSE' },
+  { keywords: ['jus', 'ananas', 'orange', 'pomme', 'passion', 'cranberry', 'fraise', 'tomate', 'pago', 'peche'], product: 'JUS DE FRUIT VERSE' },
+];
+
+function suggestVerseProducts(normalizedQuery, queryWords) {
+  const suggestions = [];
+  for (const entry of VERSE_KEYWORDS) {
+    const hit = entry.keywords.some(k => queryWords.includes(k) || normalizedQuery.includes(k));
+    if (hit) {
+      const prod = CATALOGUE.find(p => p.y === entry.product);
+      if (prod) {
+        suggestions.push({
+          product: entry.product,
+          productRef: prod,
+          matchedKeywords: entry.keywords.filter(k => queryWords.includes(k) || normalizedQuery.includes(k))
+        });
+      }
+    }
+  }
+  return suggestions;
+}
+
 // ---------- Logique Victor ----------
 // Mapping étab → tag pour filtrer les produits du catalogue par étab
 // (réutilise ETAB_TO_TAG déjà défini)
