@@ -2260,6 +2260,44 @@ function resolveToCatalog(productName) {
   return null;
 }
 
+
+// Mots-clés qui déclenchent la suggestion automatique d'un produit VERSE
+// (utile quand le produit VERSE n'a pas de touche caisse propre)
+// Le produit est cherché par son nom exact dans le catalogue.
+const VERSE_KEYWORDS = [
+  // Coca → COCA COLA VERSE
+  { keywords: ['coca', 'cola'], product: 'COCA COLA VERSE' },
+  // Tonic → TONIC VERSE
+  { keywords: ['tonic'], product: 'TONIC VERSE' },
+  // Ginger Beer / Ginger Ale → GINGER BEER VERSE
+  { keywords: ['ginger'], product: 'GINGER BEER VERSE' },
+  // Limonade / Ale → LIMONADE VERSE
+  { keywords: ['limonade', 'ale'], product: 'LIMONADE VERSE' },
+  // Tous les jus → JUS DE FRUIT VERSE
+  { keywords: ['jus', 'ananas', 'orange', 'pomme', 'passion', 'cranberry', 'fraise', 'tomate', 'pago', 'peche'], product: 'JUS DE FRUIT VERSE' },
+];
+
+// Retourne la liste des produits VERSE à suggérer pour une requête donnée
+function suggestVerseProducts(normalizedQuery, queryWords) {
+  const suggestions = [];
+  for (const entry of VERSE_KEYWORDS) {
+    // Un mot de la requête match un mot-clé VERSE ?
+    const hit = entry.keywords.some(k => queryWords.includes(k) || normalizedQuery.includes(k));
+    if (hit) {
+      // Chercher le produit dans le catalogue
+      const prod = CATALOGUE.find(p => p.y === entry.product);
+      if (prod) {
+        suggestions.push({
+          product: entry.product,
+          productRef: prod,
+          matchedKeywords: entry.keywords.filter(k => queryWords.includes(k) || normalizedQuery.includes(k))
+        });
+      }
+    }
+  }
+  return suggestions;
+}
+
 function victorRespond(msg) {
   const n = normalizePos(msg);
 
@@ -2320,6 +2358,9 @@ function victorRespond(msg) {
     return { text: "Je ne trouve rien qui ressemble à \"" + msg + "\" dans les fiches techniques. Tu peux reformuler ou chercher directement dans le catalogue." };
   }
 
+  // Ajouter d'abord les suggestions VERSE automatiques (pour softs/jus qui n'ont pas de touche caisse)
+  const verseHits = suggestVerseProducts(n, words);
+
   // On prend les 5 meilleurs (au lieu de 3) pour couvrir les bouteilles + verres
   const top = sorted.slice(0, 5);
   // Résoudre chaque produit POS vers un produit du catalogue (inventoriable)
@@ -2327,6 +2368,22 @@ function victorRespond(msg) {
   // - Sinon, enlever préfixe (B./V./S./M./J./etc.) et format (70CL, 3CL...) et re-chercher
   const seen = new Set();  // pour dédoublonner
   const suggestions = [];
+  
+  // Ajouter les suggestions VERSE en premier (elles sont "inférées" et non issues de POS)
+  verseHits.forEach(v => {
+    if (v.productRef && !seen.has(v.productRef.id)) {
+      seen.add(v.productRef.id);
+      suggestions.push({
+        productId: v.productRef.id,
+        name: v.productRef.s,
+        yokitup: v.productRef.y,
+        pos_examples: [],
+        inCatalogue: true,
+        viaVerseLogic: true  // flag pour afficher un badge différent
+      });
+    }
+  });
+  
   top.forEach(m => {
     const resolved = resolveToCatalog(m.product);
     if (resolved && !seen.has(resolved.id)) {

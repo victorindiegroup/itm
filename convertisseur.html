@@ -202,13 +202,21 @@ function stripPrefix(name) {
   return name;
 }
 
-function makeShort(yk) {
+function makeShort(yk, type_) {
+  // Règle : garder le CL en fin pour BTL/UNIT (indicateur de format important)
+  // retirer pour LITRE (compté en cL à la verse, pas d'info utile)
   let s = stripPrefix(yk);
+  // Retirer "_RGE/_BLC/_RSE/_ROS_XXCL" (vins)
   s = s.replace(/[_\s]+(RGE|BLC|RSE|ROS)[_\s]+\d+[,.]?\d*\s*CL\s*$/i, '');
-  s = s.replace(/[_\s]+\d+[,.]?\d*\s*CL\s*$/i, '');
+  // Retirer "_RGE/_BLC/_RSE/_ROS" seul
   s = s.replace(/[_\s]+(RGE|BLC|RSE|ROS)\s*$/i, '');
+  // Retirer le "XXCL" final UNIQUEMENT pour les produits LITRE
+  if (type_ === 'litre') {
+    s = s.replace(/[_\s]+\d+[,.]?\d*\s*CL\s*$/i, '');
+  }
   s = s.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
   s = s.replace(/[,;\s]+$/, '');
+  if (!s) s = yk;
   return s;
 }
 
@@ -294,7 +302,7 @@ function convertCSV(text) {
 
     const product = {
       y: name,
-      s: makeShort(name),
+      s: makeShort(name, typeInfo.type),
       c: categorie,
       q: qty,
       u: unit,
