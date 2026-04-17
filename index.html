@@ -1277,6 +1277,7 @@ function switchTab(name){
   document.getElementById('v' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
   if (name === 'session') renderSession();
   if (name === 'export') renderExport();
+  if (name === 'catalogue') renderCatalogue();
   // scroll reset
   document.querySelector('main').scrollTop = 0;
 }
