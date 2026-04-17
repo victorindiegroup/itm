@@ -645,6 +645,37 @@
   .chat-suggestion-sub { 
     font-size: 11px; color: var(--ink-2); font-weight: 400;
   }
+
+  .chat-suggestion-missing {
+    background: #FEF4E5;
+    border-color: #E8B663;
+    opacity: 0.85;
+  }
+  .chat-suggestion-missing b { color: #854F0B; }
+  .chat-suggestion-badge {
+    display: inline-block;
+    background: #E8B663;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 8px;
+    margin-left: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+  }
+
+  .chat-suggestion-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 8px;
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -2186,6 +2217,49 @@ function normalizePos(s) {
 
 // ---------- Logique Victor ----------
 // Intention utilisateur : on détecte si l'utilisateur cherche une bouteille/marque
+
+// Préfixes bouteille à retirer pour la résolution
+const BOTTLE_PREFIXES = ['1/2 B.', '1/2.', 'MATHU.', 'NABU.', 'BABY.', 'MIDAS.', 'BALTHA.', 'REHO.', 'BIB.', 'COFFRET.', 'GALLON.', 'MIGNONETTE', 'B.', 'V.', 'S.', 'M.', 'J.'];
+
+function stripPrefix(name) {
+  for (const p of BOTTLE_PREFIXES) {
+    if (name.startsWith(p + ' ') || name.startsWith(p + '_')) {
+      return name.substring(p.length).replace(/^[_\s]+/, '');
+    }
+  }
+  return name;
+}
+
+function stripFormat(name) {
+  // Retirer les "70CL", "3CL", "175CL", "40°" etc.
+  let s = name;
+  s = s.replace(/\s+\d+[,.]?\d*\s*CL\b/gi, '');
+  s = s.replace(/\s+\d+[,.]?\d*\s*°\b/g, '');
+  s = s.replace(/\s+(RGE|BLC|RSE|ROS)\b/gi, '');
+  return s.trim();
+}
+
+// Résoudre un produit POS vers un produit du catalogue (inventoriable)
+// 1. Match exact
+// 2. Nom nettoyé (sans préfixe ni format)
+// 3. Si rien : null
+function resolveToCatalog(productName) {
+  if (!productName) return null;
+  // 1. Match exact
+  let exact = CATALOGUE.find(p => p.y === productName);
+  if (exact) return exact;
+  // 2. Nettoyer et re-chercher
+  const cleaned = stripFormat(stripPrefix(productName));
+  if (!cleaned || cleaned === productName) return null;
+  // Match exact sur nom nettoyé
+  exact = CATALOGUE.find(p => p.y.toUpperCase() === cleaned.toUpperCase());
+  if (exact) return exact;
+  // Match par début
+  exact = CATALOGUE.find(p => p.y.toUpperCase().startsWith(cleaned.toUpperCase()));
+  if (exact) return exact;
+  return null;
+}
+
 function victorRespond(msg) {
   const n = normalizePos(msg);
 
@@ -2246,18 +2320,36 @@ function victorRespond(msg) {
     return { text: "Je ne trouve rien qui ressemble à \"" + msg + "\" dans les fiches techniques. Tu peux reformuler ou chercher directement dans le catalogue." };
   }
 
-  // On prend les 3 meilleurs et on cherche ces produits dans le catalogue actuel
-  const top = sorted.slice(0, 3);
+  // On prend les 5 meilleurs (au lieu de 3) pour couvrir les bouteilles + verres
+  const top = sorted.slice(0, 5);
+  // Résoudre chaque produit POS vers un produit du catalogue (inventoriable)
+  // - Si match exact → OK
+  // - Sinon, enlever préfixe (B./V./S./M./J./etc.) et format (70CL, 3CL...) et re-chercher
+  const seen = new Set();  // pour dédoublonner
   const suggestions = [];
   top.forEach(m => {
-    // Chercher un produit du catalogue qui correspond (même nom exact ou similaire)
-    const exact = CATALOGUE.find(p => p.y === m.product);
-    if (exact) {
-      suggestions.push({ productId: exact.id, name: exact.s, yokitup: exact.y, pos_examples: m.pos_examples });
-    } else {
-      // Pas de match exact — proposer quand même en affichant le nom brut
-      suggestions.push({ productId: null, name: m.product, yokitup: m.product, pos_examples: m.pos_examples });
+    const resolved = resolveToCatalog(m.product);
+    if (resolved && !seen.has(resolved.id)) {
+      seen.add(resolved.id);
+      suggestions.push({
+        productId: resolved.id,
+        name: resolved.s,
+        yokitup: resolved.y,
+        pos_examples: m.pos_examples,
+        inCatalogue: true,
+        originallyFrom: m.product !== resolved.y ? m.product : null
+      });
+    } else if (!resolved) {
+      // Produit vraiment introuvable dans le catalogue
+      suggestions.push({
+        productId: null,
+        name: m.product,
+        yokitup: m.product,
+        pos_examples: m.pos_examples,
+        inCatalogue: false
+      });
     }
+    // sinon : doublon (déjà vu), on ignore
   });
 
   let text;
@@ -2283,17 +2375,35 @@ function renderProductSuggestions(suggestions) {
   suggestions.forEach(s => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'chat-suggestion';
-    btn.innerHTML = '<b>' + escape(s.name) + '</b>' 
-      + (s.pos_examples && s.pos_examples.length ? '<br><span class="chat-suggestion-sub">' + escape(s.pos_examples.slice(0, 2).join(' · ')) + '</span>' : '');
+    btn.className = 'chat-suggestion' + (s.inCatalogue === false ? ' chat-suggestion-missing' : '');
+    
+    // Récupérer le produit complet pour avoir la pill
+    let pillHtml = '';
+    if (s.productId !== null && s.productId !== undefined) {
+      const prod = CATALOGUE[s.productId];
+      if (prod && prod.p) {
+        const pillCls = 'pill-' + (prod.p === '½' ? 'DEMI' : prod.p);
+        pillHtml = '<span class="chat-suggestion-pill ' + pillCls + '">' + escape(prod.p) + '</span> ';
+      }
+    }
+    
+    let innerHtml = pillHtml + '<b>' + escape(s.name) + '</b>';
+    if (s.inCatalogue === false) {
+      innerHtml += ' <span class="chat-suggestion-badge">non trouvé</span>';
+    }
+    if (s.pos_examples && s.pos_examples.length) {
+      innerHtml += '<br><span class="chat-suggestion-sub">Caisse : ' + escape(s.pos_examples.slice(0, 2).join(' · ')) + '</span>';
+    }
+    btn.innerHTML = innerHtml;
+    
     if (s.productId !== null && s.productId !== undefined) {
       btn.addEventListener('click', () => {
         closeChat();
         openProductSheet(s.productId);
       });
     } else {
-      btn.style.opacity = '0.6';
       btn.style.cursor = 'default';
+      btn.disabled = true;
     }
     wrap.appendChild(btn);
   });
