@@ -312,22 +312,7 @@
   .estab-name { font-size: 15px; color: var(--ink); flex: 1; }
   .estab-count { font-size: 12px; color: var(--ink-2); background: var(--bg); padding: 3px 10px; border-radius: 12px; }
 
-  /* Sheet établissement : hauteur fixe + scroll garanti */
-  #shEstab { 
-    height: 75vh; 
-    height: 75dvh; 
-    max-height: 600px;
-    min-height: 400px;
-  }
-  #shEstab .sheet-head { flex-shrink: 0; }
-  #shEstab .sheet-body { 
-    padding: 0; 
-    overflow-y: auto; 
-    flex: 1 1 auto;
-    -webkit-overflow-scrolling: touch;
-    min-height: 0;
-  }
-  #estabList { padding: 4px 0 40px; }
+
 
   /* Bouton OK pour fermer le clavier */
   .qty-ok-btn {
@@ -344,31 +329,76 @@
   }
   .qty-ok-btn:active { background: var(--accent); }
 
-  /* Barre OK flottante au-dessus du clavier */
-  .ok-bar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    padding: 8px 16px;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
-    z-index: 200;
-    display: none;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
-  }
-  .ok-bar.visible { display: block; }
-  .ok-bar-btn {
-    width: 100%;
-    padding: 12px;
+  /* Bouton OK dans les champs de saisie */
+  .qty-ok-btn {
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
     background: var(--accent);
     color: white;
     border: none;
-    border-radius: 10px;
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, transform 0.1s;
+    flex-shrink: 0;
   }
-  .ok-bar-btn:active { background: var(--accent-dark); }
+  .qty-ok-btn:active { background: var(--accent-dark); transform: scale(0.94); }
+
+  /* === VUE PLEIN ÉCRAN : SÉLECTION ÉTABLISSEMENT === */
+  .estab-page {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 60;
+    display: none;
+    flex-direction: column;
+  }
+  .estab-page.open { display: flex; }
+  .estab-page-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    padding-top: calc(12px + env(safe-area-inset-top));
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .estab-page-back {
+    width: 36px; height: 36px;
+    display: grid; place-items: center;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .estab-page-back:active { background: var(--bg); }
+  .estab-page-title {
+    font-size: 16px; font-weight: 600; color: var(--ink);
+  }
+  .estab-page-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 0;
+  }
+  .estab-page-body .estab-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+  .estab-page-body .estab-item:active { background: var(--accent-soft); }
+  .estab-page-body .estab-item.on { background: var(--accent-soft); }
+  .estab-page-body .estab-item.on .estab-name { color: var(--accent-dark); font-weight: 600; }
+  .estab-page-body .estab-name { font-size: 15px; color: var(--ink); flex: 1; }
+  .estab-page-body .estab-count { font-size: 12px; color: var(--ink-2); background: var(--bg); padding: 4px 10px; border-radius: 12px; }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -474,15 +504,6 @@
     <div class="sheet-title">Zone de comptage</div>
     <div class="sheet-sub">Sert à organiser la saisie. N'apparaît pas dans l'export.</div>
   </div>
-<div class="overlay" id="ovEstab"></div>
-<div class="sheet" id="shEstab" role="dialog" aria-label="Choisir un établissement">
-  <div class="sheet-head">
-    <div class="sheet-handle"></div>
-    <div class="sheet-title">Établissement</div>
-  </div>
-  <div class="sheet-body" id="estabList"></div>
-</div>
-
   <div class="sheet-body">
     <div class="zone-list" id="zoneList"></div>
     <div style="margin-top: 14px;">
@@ -529,9 +550,16 @@
 </div>
 
 
-<!-- Barre OK flottante (s'affiche quand un champ nombre est actif) -->
-<div id="okBar" class="ok-bar">
-  <button type="button" id="okBarBtn" class="ok-bar-btn">OK</button>
+
+<!-- Vue plein écran : sélection d'établissement -->
+<div id="estabPage" class="estab-page">
+  <header class="estab-page-head">
+    <button type="button" class="estab-page-back" id="estabPageClose" aria-label="Retour">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M14 4l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="estab-page-title">Choisir un établissement</div>
+  </header>
+  <div class="estab-page-body" id="estabList"></div>
 </div>
 
 <!-- Mascotte -->
@@ -989,6 +1017,7 @@ function renderProductSheet(){
           <button type="button" class="qty-step-btn" data-step="-1" data-target="fQty" aria-label="Diminuer">−</button>
           <input id="fQty" type="number" step="0.1" inputmode="decimal" value="${draft.qty || ''}" placeholder="ex: 2.5">
           <button type="button" class="qty-step-btn" data-step="1" data-target="fQty" aria-label="Augmenter">+</button>
+          <button type="button" class="qty-ok-btn" data-ok="fQty" aria-label="Valider">OK</button>
           <span class="field-label-inline" id="fQtyUnit">pc</span>
         </div>
       </div>
@@ -1002,6 +1031,7 @@ function renderProductSheet(){
           <button type="button" class="qty-step-btn" data-step="-1" data-target="fQty" aria-label="Diminuer">−</button>
           <input id="fQty" type="number" step="1" inputmode="numeric" value="${draft.qty || ''}" placeholder="ex: 12">
           <button type="button" class="qty-step-btn" data-step="1" data-target="fQty" aria-label="Augmenter">+</button>
+          <button type="button" class="qty-ok-btn" data-ok="fQty" aria-label="Valider">OK</button>
           <span class="field-label-inline">unit.</span>
         </div>
       </div>
@@ -1018,6 +1048,7 @@ function renderProductSheet(){
           <button type="button" class="qty-step-btn" data-step="-1" data-target-fmt="${f.label}" aria-label="Diminuer">−</button>
           <input type="number" step="0.1" inputmode="decimal" data-format="${f.label}" value="${detail.qty || ''}" placeholder="0">
           <button type="button" class="qty-step-btn" data-step="1" data-target-fmt="${f.label}" aria-label="Augmenter">+</button>
+          <button type="button" class="qty-ok-btn" data-ok-fmt="${f.label}" aria-label="Valider">OK</button>
           <div class="qty-format-sub" data-sub="${f.label}">—</div>
         </div>
       `;
@@ -1040,6 +1071,7 @@ function renderProductSheet(){
             <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonNb" aria-label="Diminuer">−</button>
             <input id="fCartonNb" type="number" step="1" inputmode="numeric" value="${draft.carton.nb || ''}" placeholder="ex: 2">
             <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonNb" aria-label="Augmenter">+</button>
+            <button type="button" class="qty-ok-btn" data-ok="fCartonNb" aria-label="Valider">OK</button>
             <span class="field-label-inline">cartons</span>
           </div>
         </div>
@@ -1049,6 +1081,7 @@ function renderProductSheet(){
             <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonPieces" aria-label="Diminuer">−</button>
             <input id="fCartonPieces" type="number" step="1" inputmode="numeric" value="${draft.carton.pieces || ''}" placeholder="ex: 6">
             <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonPieces" aria-label="Augmenter">+</button>
+            <button type="button" class="qty-ok-btn" data-ok="fCartonPieces" aria-label="Valider">OK</button>
             <span class="field-label-inline">pc/carton</span>
           </div>
         </div>
@@ -1102,6 +1135,19 @@ function renderProductSheet(){
       el.addEventListener('input', updateDraftFromInputs);
     });
   }
+
+  // Boutons OK : ferme le clavier natif
+  body.querySelectorAll('.qty-ok-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      let input;
+      if (btn.dataset.ok) {
+        input = document.getElementById(btn.dataset.ok);
+      } else if (btn.dataset.okFmt) {
+        input = body.querySelector(`input[data-format="${btn.dataset.okFmt}"]`);
+      }
+      if (input && input.blur) input.blur();
+    });
+  });
 
   // Boutons +/- : incrément/décrément de la quantité
   body.querySelectorAll('.qty-step-btn').forEach(btn => {
@@ -1648,14 +1694,19 @@ function openEstabSheet(){
     const isActive = state.estab === nom;
     html += `<div class="estab-item${isActive ? ' on' : ''}" data-estab="${escape(nom)}">
       <span class="estab-name">${escape(nom)}</span>
-      <span class="estab-count">${count}</span>
+      <span class="estab-count">${count} produits</span>
     </div>`;
   });
   list.innerHTML = html;
   list.querySelectorAll('[data-estab]').forEach(el => {
     el.addEventListener('click', () => selectEstab(el.dataset.estab));
   });
-  openSheet('shEstab','ovEstab');
+  // Ouvrir la vue plein écran
+  document.getElementById('estabPage').classList.add('open');
+}
+
+function closeEstabPage() {
+  document.getElementById('estabPage').classList.remove('open');
 }
 
 function selectEstab(nom){
@@ -1666,7 +1717,7 @@ function selectEstab(nom){
     saveState();
     renderHeader();
     renderCatalogue();
-    closeSheet('shEstab','ovEstab');
+    closeEstabPage();
     toast('Établissement : ' + nom);
   };
   if (hasLines) {
@@ -1769,6 +1820,8 @@ function init(){
 
   // Établissement
   document.getElementById('hSubDate').addEventListener('click', openEstabSheet);
+  const estabBack = document.getElementById('estabPageClose');
+  if (estabBack) estabBack.addEventListener('click', closeEstabPage);
 
   // Bouton déconnexion (si présent dans la session view)
   const btnLogout = document.getElementById('btnLogout');
@@ -1784,7 +1837,7 @@ function init(){
   if (sessAuthInfo && currentAuth) {
     sessAuthInfo.textContent = 'Connecté : ' + currentAuth.label;
   }
-  document.getElementById('ovEstab').addEventListener('click', () => closeSheet('shEstab','ovEstab'));
+
 
   // Mascotte
   const bubble = document.getElementById('mascotBubble');
@@ -1810,43 +1863,5 @@ if ('serviceWorker' in navigator) {
       .catch((err) => console.warn('SW registration failed:', err));
   });
 }
-</script>
-<script>
-/* Barre OK : visible quand un input number de la feuille produit est focus */
-(function() {
-  const okBar = document.getElementById('okBar');
-  const okBtn = document.getElementById('okBarBtn');
-  if (!okBar || !okBtn) return;
-
-  // Au focus sur un input number dans la sheet produit
-  document.addEventListener('focusin', (e) => {
-    if (!e.target.matches('input[type="number"]')) return;
-    // Vérifier qu'on est bien dans la sheet produit (pas ailleurs)
-    const sheet = e.target.closest('#shProd');
-    if (!sheet) return;
-    okBar.classList.add('visible');
-  });
-
-  // Au blur (perte de focus), cacher la barre
-  // Mais pas instantanément pour laisser le clic sur OK se faire
-  document.addEventListener('focusout', (e) => {
-    setTimeout(() => {
-      // Si plus aucun input n'est focusé, cacher
-      if (!document.activeElement || !document.activeElement.matches('input[type="number"]')) {
-        okBar.classList.remove('visible');
-      }
-    }, 100);
-  });
-
-  // Au clic sur OK : blur l'input actif pour fermer le clavier
-  okBtn.addEventListener('click', () => {
-    if (document.activeElement && document.activeElement.blur) {
-      document.activeElement.blur();
-    }
-    okBar.classList.remove('visible');
-  });
-})();
-</script>
-
-</body>
+</script></body>
 </html>
