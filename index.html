@@ -2169,9 +2169,8 @@ function confirmFinishInventory(){
     renderSession();
     renderHeader();
     renderCatalogue();
-    toast('Inventaire terminé');
 
-    // 4. Export CSV + ouverture mailto (dernier, peut interrompre)
+    // 4. Export CSV + partage (dernier, peut être async)
     exportAndMailInventory(inv);
   };
   document.getElementById('confirmTitle').textContent = 'Terminer l\'inventaire ?';
@@ -2180,14 +2179,14 @@ function confirmFinishInventory(){
 }
 
 /* ---------- Export CSV + Mailto ---------- */
-function exportAndMailInventory(inv) {
-  // Construire le CSV (agrégé par produit, somme des zones)
+async function exportAndMailInventory(inv) {
+  // ==== 1. Construire le CSV ====
   const agg = {};
   inv.lines.forEach(l => {
     const p = CATALOGUE[l.productId];
     if (!p) return;
     const key = p.y;
-    if (!agg[key]){ agg[key] = { product: p, total: 0 }; }
+    if (!agg[key]) agg[key] = { product: p, total: 0 };
     agg[key].total = round(agg[key].total + l.total, 3);
   });
 
@@ -2199,14 +2198,49 @@ function exportAndMailInventory(inv) {
     csv += safe + ',' + fmtQty(e.total) + '\n';
   });
 
-  const momentLbl = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
+  // ==== 2. Préparer les métadonnées du fichier ====
+  const momentLblSlug = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
+  const momentLblFr = inv.moment === 'apres' ? 'Après service' : 'Avant service';
   const personneSlug = (inv.personne || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-  const fname = state.estab.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '') 
-              + '_' + inv.date + '_' + momentLbl + '_' + personneSlug + '.csv';
+  const estabSlug = state.estab.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+  const fname = estabSlug + '_' + inv.date + '_' + momentLblSlug + '_' + personneSlug + '.csv';
 
-  // 1. Télécharger le CSV
-  const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
+  const subject = 'Inventaire ' + state.estab + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr;
+  const body = 'Inventaire terminé :\n'
+    + '- Établissement : ' + state.estab + '\n'
+    + '- Date : ' + fmtDate(inv.date) + '\n'
+    + '- Moment : ' + momentLblFr + '\n'
+    + (inv.personne ? '- Par : ' + inv.personne + '\n' : '')
+    + '- Nombre de produits : ' + inv.lines.length + '\n';
+
+  // ==== 3. Tentative 1 : Partage natif avec pièce jointe (iOS 15+, Android récent) ====
+  const csvBlob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const csvFile = new File([csvBlob], fname, { type: 'text/csv' });
+
+  // Vérifier si le navigateur supporte le partage avec fichier
+  if (navigator.canShare && navigator.canShare({ files: [csvFile] })) {
+    try {
+      await navigator.share({
+        title: subject,
+        text: body,
+        files: [csvFile]
+      });
+      toast('Inventaire partagé');
+      return; // Succès : on s'arrête là
+    } catch (err) {
+      // L'utilisateur a annulé ou erreur : on fallback
+      if (err.name === 'AbortError') {
+        toast('Envoi annulé');
+        return;
+      }
+      // Autre erreur : on continue vers le fallback
+      console.warn('navigator.share a échoué:', err);
+    }
+  }
+
+  // ==== 4. Fallback : télécharger CSV + ouvrir mailto ====
+  // Téléchargement CSV
+  const url = URL.createObjectURL(csvBlob);
   const a = document.createElement('a');
   a.href = url;
   a.download = fname;
@@ -2215,28 +2249,14 @@ function exportAndMailInventory(inv) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-  // 2. Ouvrir mailto avec corps pré-rempli
-  const momentLblFr = inv.moment === 'apres' ? 'Après service' : 'Avant service';
-  const subject = 'Inventaire ' + state.estab + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr;
-  const body = 'Bonjour,\n\n'
-    + 'Inventaire terminé :\n'
-    + '- Établissement : ' + state.estab + '\n'
-    + '- Date : ' + fmtDate(inv.date) + '\n'
-    + '- Moment : ' + momentLblFr + '\n'
-    + (inv.personne ? '- Par : ' + inv.personne + '\n' : '')
-    + '- Nombre de produits : ' + inv.lines.length + '\n\n'
+  // Mailto avec indication qu'il faut joindre le fichier
+  const bodyMailto = body + '\n'
     + 'Le fichier CSV (' + fname + ') a été téléchargé sur le téléphone. '
-    + 'Il faut le joindre manuellement à cet e-mail avant de l\'envoyer.\n\n'
-    + 'Merci,';
-
+    + 'Il faut le joindre manuellement à cet e-mail avant de l\'envoyer.';
   const mailto = 'mailto:victor@indiegroup.fr'
     + '?subject=' + encodeURIComponent(subject)
-    + '&body=' + encodeURIComponent(body);
-
-  // Ouvrir mailto (peut prendre une ou deux secondes sur mobile)
-  setTimeout(() => {
-    window.location.href = mailto;
-  }, 500);
+    + '&body=' + encodeURIComponent(bodyMailto);
+  setTimeout(() => { window.location.href = mailto; }, 500);
 }
 
 /* ---------- Détail inventaire depuis historique ---------- */
@@ -2292,11 +2312,12 @@ function resendInventoryDetail() {
   if (!currentDetailInvId) return;
   const inv = state.inventories.find(i => i.id === currentDetailInvId);
   if (!inv) return;
-  exportAndMailInventory(inv);
+  // Marquer comme envoyé et sauver avant le partage (au cas où l'exécution s'interrompe)
   inv.exported = true;
   saveState();
   renderSession();
-  toast('CSV régénéré et mail ouvert');
+  // Lancer le partage (async, non bloquant)
+  exportAndMailInventory(inv);
 }
 
 
