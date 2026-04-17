@@ -3304,33 +3304,33 @@ async function exportAndMailInventory(inv) {
     + (inv.personne ? '- Par : ' + inv.personne + '\n' : '')
     + '- Nombre de produits : ' + inv.lines.length + '\n';
 
-  // ==== 3. Tentative 1 : Partage natif avec pièce jointe (iOS 15+, Android récent) ====
+  // ==== 3. Partage natif avec pièce jointe (iOS 15+, Android récent) ====
   const csvBlob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
   const csvFile = new File([csvBlob], fname, { type: 'text/csv' });
 
-  // Vérifier si le navigateur supporte le partage avec fichier
+  // On ajoute l'adresse destinataire TOUT EN HAUT du message
+  // (navigator.share ne permet pas de fixer un destinataire, l'utilisateur doit la taper/copier)
+  const bodyShare = 'Envoyer à : victor@indiegroup.fr\n\n' + body;
+
   if (navigator.canShare && navigator.canShare({ files: [csvFile] })) {
     try {
       await navigator.share({
         title: subject,
-        text: body,
+        text: bodyShare,
         files: [csvFile]
       });
       toast('Inventaire partagé');
-      return; // Succès : on s'arrête là
+      return;
     } catch (err) {
-      // L'utilisateur a annulé ou erreur : on fallback
       if (err.name === 'AbortError') {
         toast('Envoi annulé');
         return;
       }
-      // Autre erreur : on continue vers le fallback
       console.warn('navigator.share a échoué:', err);
     }
   }
 
   // ==== 4. Fallback : télécharger CSV + ouvrir mailto ====
-  // Téléchargement CSV
   const url = URL.createObjectURL(csvBlob);
   const a = document.createElement('a');
   a.href = url;
@@ -3340,10 +3340,9 @@ async function exportAndMailInventory(inv) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-  // Mailto avec indication qu'il faut joindre le fichier
   const bodyMailto = body + '\n'
-    + 'Le fichier CSV (' + fname + ') a été téléchargé sur le téléphone. '
-    + 'Il faut le joindre manuellement à cet e-mail avant de l\'envoyer.';
+    + 'Le fichier CSV (' + fname + ') a été téléchargé. '
+    + 'Il faut le joindre manuellement avant d\'envoyer.';
   const mailto = 'mailto:victor@indiegroup.fr'
     + '?subject=' + encodeURIComponent(subject)
     + '&body=' + encodeURIComponent(bodyMailto);
