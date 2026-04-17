@@ -153,20 +153,23 @@
 <script>
 'use strict';
 
+// ATTENTION : les préfixes sont triés du plus long au plus court dans le code
+// pour que '1/2 B.' soit détecté avant 'B.'
 const PREFIXES = [
-  { pfx: 'B.',      type: 'btl',   pill: 'BTL' },
-  { pfx: 'M.',      type: 'btl',   pill: 'MAG' },
-  { pfx: 'J.',      type: 'btl',   pill: 'JERO' },
-  { pfx: 'MATHU.',  type: 'btl',   pill: 'MATHU' },
-  { pfx: 'NABU.',   type: 'btl',   pill: 'NABU' },
+  { pfx: '1/2 B.',  type: 'btl',   pill: '½' },
   { pfx: '1/2.',    type: 'btl',   pill: '½' },
-  { pfx: 'BABY.',   type: 'btl',   pill: 'BABY' },
-  { pfx: 'MIDAS.',  type: 'btl',   pill: 'MIDAS' },
-  { pfx: 'BALTHA.', type: 'btl',   pill: 'BALTHA' },
-  { pfx: 'REHO.',   type: 'btl',   pill: 'REHO' },
-  { pfx: 'BIB.',    type: 'btl',   pill: 'BIB' },
   { pfx: 'COFFRET.',type: 'btl',   pill: 'COFF' },
   { pfx: 'GALLON.', type: 'btl',   pill: 'GAL' },
+  { pfx: 'BALTHA.', type: 'btl',   pill: 'BALTHA' },
+  { pfx: 'MATHU.',  type: 'btl',   pill: 'MATHU' },
+  { pfx: 'MIDAS.',  type: 'btl',   pill: 'MIDAS' },
+  { pfx: 'NABU.',   type: 'btl',   pill: 'NABU' },
+  { pfx: 'BABY.',   type: 'btl',   pill: 'BABY' },
+  { pfx: 'REHO.',   type: 'btl',   pill: 'REHO' },
+  { pfx: 'BIB.',    type: 'btl',   pill: 'BIB' },
+  { pfx: 'M.',      type: 'btl',   pill: 'MAG' },
+  { pfx: 'J.',      type: 'btl',   pill: 'JERO' },
+  { pfx: 'B.',      type: 'btl',   pill: 'BTL' },
 ];
 
 const OVERRIDES = {

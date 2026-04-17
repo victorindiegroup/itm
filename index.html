@@ -306,6 +306,21 @@
   .qty-format-row input { flex: 1; min-width: 0; }
   .field-row { display: flex; align-items: center; gap: 6px; }
   .field-row input { flex: 1; min-width: 0; }
+
+  /* Liste établissement */
+  #estabList { padding: 8px 0 16px; }
+  .estab-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+  .estab-item:active { background: var(--accent-soft); }
+  .estab-item.on { background: var(--accent-soft); }
+  .estab-item.on .estab-name { color: var(--accent-dark); font-weight: 600; }
+  .estab-item:last-child { border-bottom: none; }
+  .estab-name { font-size: 15px; color: var(--ink); flex: 1; }
+  .estab-count { font-size: 12px; color: var(--ink-2); background: var(--bg); padding: 3px 10px; border-radius: 12px; }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -377,6 +392,10 @@
   </div>
 
   <div class="view" id="vSession">
+    <div style="padding: 12px 16px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+      <div id="sessAuthInfo" style="font-size: 13px; color: var(--ink-2);">—</div>
+      <button id="btnLogout" type="button" style="background: transparent; border: 1px solid var(--border); color: var(--ink-2); font-size: 12px; padding: 6px 12px; border-radius: 8px; cursor: pointer;">Se déconnecter</button>
+    </div>
     <div class="sess-list" id="sessList">
       <div class="prod-empty">Aucune saisie pour l'instant.<br>Retourne au catalogue pour commencer.</div>
     </div>
@@ -896,14 +915,11 @@ function renderProductSheet(){
   document.getElementById('shProdName').textContent = p.s;
   const sub = document.getElementById('shProdSub');
   const modeChip = editingLineId ? '<span class="edit-chip">Modification</span>' : '';
+  // Pill avec le VRAI conditionnement du produit
   let tag;
-  if (p.e === 'btl') {
-    tag = '<span class="prod-tag tag-btl">Export : bouteilles</span>';
-  } else if (p.e === 'unit') {
-    tag = '<span class="prod-tag tag-unit">Export : unités</span>';
-  } else {
-    tag = '<span class="prod-tag tag-lit">Export : litres</span>';
-  }
+  const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : p.e === 'unit' ? 'UNIT' : 'LITRE');
+  const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
+  tag = `<span class="prod-tag ${pillClass}">${escape(pillLabel)}</span>`;
   sub.innerHTML = `${tag} · Zone : <strong style="color:var(--ink)">${escape(draft.zone)}</strong> ${modeChip}`;
 
   // Body
@@ -914,12 +930,12 @@ function renderProductSheet(){
     // Un seul champ quantité (bouteilles)
     html += `
       <div class="field">
-        <label class="field-lbl">Quantité (bouteilles)</label>
+        <label class="field-lbl">Quantité (pièces)</label>
         <div class="field-row">
           <button type="button" class="qty-step-btn" data-step="-1" data-target="fQty" aria-label="Diminuer">−</button>
           <input id="fQty" type="number" step="0.1" inputmode="decimal" value="${draft.qty || ''}" placeholder="ex: 2.5">
           <button type="button" class="qty-step-btn" data-step="1" data-target="fQty" aria-label="Augmenter">+</button>
-          <span class="field-label-inline">btl</span>
+          <span class="field-label-inline" id="fQtyUnit">pc</span>
         </div>
       </div>
     `;
@@ -1143,8 +1159,8 @@ function renderTotal(){
   const t = draft.total;
   if (!t) { el.textContent = '—'; return; }
   let unit;
-  if (p.e === 'btl') unit = ' btl';
-  else if (p.e === 'unit') unit = ' unit.';
+  if (p.e === 'btl') unit = ' pc';
+  else if (p.e === 'unit') unit = ' pc';
   else unit = ' L';
   el.textContent = fmtQty(t) + unit;
 }
@@ -1251,7 +1267,7 @@ function describeLine(l, p){
   let parts = [];
 
   if (p.e === 'btl' || p.e === 'unit'){
-    const unitLabel = p.e === 'btl' ? 'btl' : 'unit.';
+    const unitLabel = 'pc';
     const base = l.qty || 0;
     if (base > 0) parts.push(`<span class="mono">${fmtQty(base)} ${unitLabel}</span>`);
     if (l.carton && l.carton.active && l.carton.nb && l.carton.pieces){
@@ -1269,8 +1285,8 @@ function describeLine(l, p){
   }
 
   let totalLabel;
-  if (p.e === 'btl') totalLabel = 'btl';
-  else if (p.e === 'unit') totalLabel = 'unit.';
+  if (p.e === 'btl') totalLabel = 'pc';
+  else if (p.e === 'unit') totalLabel = 'pc';
   else totalLabel = 'L';
   const total = `<span class="summary-strong mono">= ${fmtQty(l.total)} ${totalLabel}</span>`;
 
@@ -1325,9 +1341,7 @@ function renderExport(){
       <button class="btn-sec" id="btnResetSession" style="flex:1" type="button">Terminer & réinitialiser</button>
     </div>
 
-    <div style="text-align:center; margin-bottom: 16px;">
-      <button class="logout-btn" id="btnLogout" type="button">Se déconnecter (<span id="logoutLabel">—</span>)</button>
-    </div>
+
 
     <div class="prod-cat-title" style="padding-left:0">Aperçu des lignes exportées</div>
   `;
@@ -1553,7 +1567,7 @@ Réponds en français, tutoie, maximum 2-3 phrases, ton direct et terrain. Pas d
 function openEstabSheet(){
   // Seul l'admin peut changer d'établissement
   if (!currentAuth || currentAuth.role !== 'admin') {
-    return; // silencieux, ne rien faire
+    return;
   }
   const list = document.getElementById('estabList');
   const allEtabs = Object.keys(ETAB_TO_TAG);
@@ -1562,9 +1576,9 @@ function openEstabSheet(){
     const tag = ETAB_TO_TAG[nom];
     const count = CATALOGUE.filter(p => p.t && p.t.indexOf(tag) >= 0).length;
     const isActive = state.estab === nom;
-    html += `<div class="zone-row${isActive ? ' on' : ''}" data-estab="${escape(nom)}" style="cursor:pointer">
-      <div class="zone-row-name">${escape(nom)}</div>
-      <div class="zone-row-count">${count} produits</div>
+    html += `<div class="estab-item${isActive ? ' on' : ''}" data-estab="${escape(nom)}">
+      <span class="estab-name">${escape(nom)}</span>
+      <span class="estab-count">${count}</span>
     </div>`;
   });
   list.innerHTML = html;
@@ -1696,9 +1710,9 @@ function init(){
     });
   }
   // Afficher le label du compte connecté
-  const logoutLabel = document.getElementById('logoutLabel');
-  if (logoutLabel && currentAuth) {
-    logoutLabel.textContent = currentAuth.label;
+  const sessAuthInfo = document.getElementById('sessAuthInfo');
+  if (sessAuthInfo && currentAuth) {
+    sessAuthInfo.textContent = 'Connecté : ' + currentAuth.label;
   }
   document.getElementById('ovEstab').addEventListener('click', () => closeSheet('shEstab','ovEstab'));
 
