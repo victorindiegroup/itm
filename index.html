@@ -619,6 +619,32 @@
     -webkit-tap-highlight-color: transparent;
   }
   .sess-btn-cancel:active { background: rgba(192, 67, 67, 0.1); }
+
+  /* Suggestions produits dans le chat */
+  .chat-suggestions {
+    margin: 8px 12px 8px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .chat-suggestion {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    color: var(--ink);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+    font-family: inherit;
+  }
+  .chat-suggestion:active { background: var(--accent-soft); }
+  .chat-suggestion b { color: var(--accent-dark); font-weight: 600; }
+  .chat-suggestion-sub { 
+    font-size: 11px; color: var(--ink-2); font-weight: 400;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -2038,7 +2064,7 @@ function openChat(){
   document.getElementById('chatPanel').classList.add('open');
   document.getElementById('mascotBubble').classList.remove('open');
   if (!chatMsgs.length){
-    addChatMsg('assistant', "Salut, moi c'est Victor 👋 Je suis là pour t'aider pendant ton inventaire. Une question ?");
+    addChatMsg('assistant', "Salut, moi c'est Victor 👋\n\nSi tu ne trouves pas une bouteille dans le catalogue, dis-moi son nom (ex: \"je trouve pas Tanqueray\") et je te dis sous quel produit la compter.");
   }
 }
 function closeChat(){ document.getElementById('chatPanel').classList.remove('open'); }
@@ -2054,48 +2080,225 @@ function addChatMsg(role, text){
   return div;
 }
 
-async function sendChat(){
+function sendChat(){
   const input = document.getElementById('chatInput');
   const txt = input.value.trim();
   if (!txt) return;
   input.value = '';
   addChatMsg('user', txt);
 
-  // Typing indicator
-  const root = document.getElementById('chatMsgs');
-  const t = document.createElement('div');
-  t.className = 'msg msg-a typing';
-  t.innerHTML = '<span></span><span></span><span></span>';
-  root.appendChild(t);
-  root.scrollTop = root.scrollHeight;
+  // Victor répond en local (sans API) via la base des touches POS
+  setTimeout(() => {
+    const reply = victorRespond(txt);
+    addChatMsg('assistant', reply.text);
+    // S'il y a des suggestions de produits, les afficher sous forme de boutons
+    if (reply.suggestions && reply.suggestions.length) {
+      renderProductSuggestions(reply.suggestions);
+    }
+  }, 250);
+}
 
-  const system = `Tu es Victor, l'assistant ITM pour Indie Group (groupe de restaurants Saint-Tropez, Paris, Saint-Barth, Megève, Courchevel).
-L'utilisateur fait un inventaire sur le terrain. Tu l'aides sur :
-- les règles de comptage (bouteilles pleines + entamées en décimal)
-- les formats de bouteilles (50/70/75/100cl)
-- la logique cartons
-- les conditionnements (Magnum = 150cl, Jéroboam = 300cl, Mathusalem = 600cl, Nabuchodonosor = 1500cl)
-Réponds en français, tutoie, maximum 2-3 phrases, ton direct et terrain. Pas de politesse inutile.`;
+// ---------- Base de données POS (chargée depuis pos_<etab>.csv) ----------
+let POS_DATA = null;  // { etab: [{pos, product, posStatus}] }
 
-  try {
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 250,
-        system: system,
-        messages: chatMsgs.slice(-6).map(m => ({role: m.role, content: m.text}))
-      })
-    });
-    const data = await r.json();
-    t.remove();
-    const reply = data.content?.[0]?.text || 'Désolé, je n\'ai pas pu répondre.';
-    addChatMsg('assistant', reply);
-  } catch (e) {
-    t.remove();
-    addChatMsg('assistant', 'Connexion impossible. Réessaie dans un instant.');
+function loadPosData() {
+  // Déterminer quel fichier charger selon l'établissement actif
+  const etabFiles = {
+    'Pablo (Saint-Tropez)': 'pos_pablo.csv',
+    // Autres à venir :
+    // 'Indie Beach': 'pos_indie.csv',
+    // ...
+  };
+  const fname = etabFiles[state.estab];
+  if (!fname) {
+    POS_DATA = { loaded: true, links: [] };
+    return;
   }
+  fetch('./' + fname, { cache: 'no-cache' })
+    .then(r => r.ok ? r.text() : Promise.reject('HTTP ' + r.status))
+    .then(text => {
+      POS_DATA = { loaded: true, links: parsePosCsv(text) };
+    })
+    .catch(err => {
+      console.warn('Chargement POS échoué:', err);
+      POS_DATA = { loaded: true, links: [] };
+    });
+}
+
+function parsePosCsv(text) {
+  // Parser CSV simple (gère les guillemets)
+  const rows = [];
+  let i = 0, field = '', row = [], inQuotes = false;
+  while (i < text.length) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i+1] === '"') { field += '"'; i += 2; continue; }
+        inQuotes = false; i++;
+      } else { field += c; i++; }
+    } else {
+      if (c === '"') { inQuotes = true; i++; }
+      else if (c === ',') { row.push(field); field = ''; i++; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i+1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.length > 1 || row[0] !== '') rows.push(row);
+        row = []; i++;
+      } else { field += c; i++; }
+    }
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+
+  if (rows.length < 2) return [];
+
+  // Parser header
+  const header = rows[0];
+  const iPosName = header.indexOf('POS Product Name');
+  const iPosStatus = header.indexOf('POS Product Status');
+  const iProdName = header.indexOf('Product Name');
+  const iAction = header.indexOf('Action Type');
+
+  if (iPosName < 0 || iProdName < 0) return [];
+
+  const links = [];
+  for (let k = 1; k < rows.length; k++) {
+    const r = rows[k];
+    const posName = r[iPosName];
+    const prodName = r[iProdName];
+    const action = r[iAction];
+    const posStatus = r[iPosStatus];
+    if (!posName || !prodName) continue;
+    if (action !== 'increase') continue;
+    if (posStatus !== 'enabled') continue;
+    links.push({ pos: posName, product: prodName });
+  }
+  return links;
+}
+
+// Normalisation pour comparaison : enlève accents, ponctuation, casse
+function normalizePos(s) {
+  return (s || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+// ---------- Logique Victor ----------
+// Intention utilisateur : on détecte si l'utilisateur cherche une bouteille/marque
+function victorRespond(msg) {
+  const n = normalizePos(msg);
+
+  // Si le message est très court (< 2 mots) on considère que c'est une recherche de marque
+  // Sinon on regarde les mots-clés
+  const helpKeywords = ['trouve', 'trouver', 'cherche', 'chercher', 'ou est', 'ou sont', 'quel', 'quelle', 'comment', 'sous quoi', 'compter', 'aide'];
+  const looksLikeHelpRequest = helpKeywords.some(k => n.includes(k));
+
+  // Si l'utilisateur dit "bonjour", "salut", etc. : petit message d'accueil
+  if (/^(bonjour|salut|hello|coucou|hey|yo)\b/i.test(msg.trim())) {
+    return { text: 'Salut ! Dis-moi ce que tu cherches — par exemple "je trouve pas Tanqueray" et je te dis sous quel produit le compter.' };
+  }
+
+  // Extraire les mots "significatifs" pour chercher dans POS
+  // On vire les mots comme "je", "ne", "pas", "trouve", etc.
+  const stopWords = new Set([
+    'je','ne','pas','tu','il','elle','nous','vous','ils','elles',
+    'le','la','les','un','une','des','du','de','au','aux',
+    'trouve','trouver','cherche','chercher','sais','pas','aide','peux',
+    'est','sont','avec','pour','dans','sur','mais','ou','et','que','qui',
+    'quoi','comment','sous','bouteille','btl','stp','svp','aide',
+    'a','à','ai','as','ont','été','veut','veux','faut','faudrait',
+    'quel','quelle','quels','quelles','mon','ma','mes','ton','ta','tes',
+    'ce','cette','ces','y','en','la','lui','moi','toi'
+  ]);
+  const words = n.split(/\s+/).filter(w => w && !stopWords.has(w) && w.length >= 2);
+  
+  if (words.length === 0) {
+    return { text: "Dis-moi quelle bouteille ou quelle marque tu cherches, je te dis sous quel produit la compter." };
+  }
+
+  // Chercher dans les touches POS
+  if (!POS_DATA || !POS_DATA.loaded) {
+    return { text: "Je charge encore les données… Réessaie dans un instant." };
+  }
+  if (POS_DATA.links.length === 0) {
+    return { text: "Je n'ai pas encore les fiches techniques pour cet établissement. Je peux seulement t'aider sur le catalogue direct pour l'instant." };
+  }
+
+  // Recherche : pour chaque lien POS, calculer un score de match avec les mots de la recherche
+  const matches = new Map();  // product -> {product, score, pos_examples:[]}
+  for (const link of POS_DATA.links) {
+    const posNorm = normalizePos(link.pos);
+    let score = 0;
+    for (const w of words) {
+      if (posNorm.includes(w)) score += w.length;  // mots plus longs = plus de poids
+    }
+    if (score > 0) {
+      const existing = matches.get(link.product) || { product: link.product, score: 0, pos_examples: [] };
+      existing.score = Math.max(existing.score, score);
+      if (existing.pos_examples.length < 3) existing.pos_examples.push(link.pos);
+      matches.set(link.product, existing);
+    }
+  }
+
+  const sorted = Array.from(matches.values()).sort((a, b) => b.score - a.score);
+  if (sorted.length === 0) {
+    return { text: "Je ne trouve rien qui ressemble à \"" + msg + "\" dans les fiches techniques. Tu peux reformuler ou chercher directement dans le catalogue." };
+  }
+
+  // On prend les 3 meilleurs et on cherche ces produits dans le catalogue actuel
+  const top = sorted.slice(0, 3);
+  const suggestions = [];
+  top.forEach(m => {
+    // Chercher un produit du catalogue qui correspond (même nom exact ou similaire)
+    const exact = CATALOGUE.find(p => p.y === m.product);
+    if (exact) {
+      suggestions.push({ productId: exact.id, name: exact.s, yokitup: exact.y, pos_examples: m.pos_examples });
+    } else {
+      // Pas de match exact — proposer quand même en affichant le nom brut
+      suggestions.push({ productId: null, name: m.product, yokitup: m.product, pos_examples: m.pos_examples });
+    }
+  });
+
+  let text;
+  if (suggestions.length === 1) {
+    const s = suggestions[0];
+    text = "D'après les fiches techniques, c'est compté dans : **" + s.name + "**";
+    if (s.pos_examples.length > 0) {
+      text += " (touches caisse : " + s.pos_examples.join(', ') + ")";
+    }
+  } else {
+    text = "Voici les produits qui pourraient correspondre :";
+  }
+
+  return { text, suggestions };
+}
+
+// Afficher les suggestions comme des boutons cliquables dans le chat
+function renderProductSuggestions(suggestions) {
+  const root = document.getElementById('chatMsgs');
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-suggestions';
+
+  suggestions.forEach(s => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chat-suggestion';
+    btn.innerHTML = '<b>' + escape(s.name) + '</b>' 
+      + (s.pos_examples && s.pos_examples.length ? '<br><span class="chat-suggestion-sub">' + escape(s.pos_examples.slice(0, 2).join(' · ')) + '</span>' : '');
+    if (s.productId !== null && s.productId !== undefined) {
+      btn.addEventListener('click', () => {
+        closeChat();
+        openProductSheet(s.productId);
+      });
+    } else {
+      btn.style.opacity = '0.6';
+      btn.style.cursor = 'default';
+    }
+    wrap.appendChild(btn);
+  });
+  root.appendChild(wrap);
+  root.scrollTop = root.scrollHeight;
 }
 
 /* ---------- Init ---------- */
@@ -2135,6 +2338,7 @@ function selectEstab(nom){
   const go = () => {
     state.estab = nom;
     saveState();
+    loadPosData();  // Recharger POS pour le nouvel établissement
     renderHeader();
     renderCatalogue();
     closeEstabPage();
@@ -2383,6 +2587,9 @@ window.debugITM = function() {
   return 'Debug logged in console';
 };
 function init(){
+  // Charger les données POS pour l'établissement actif
+  loadPosData();
+
   // Si utilisateur connecté et pas admin, forcer son établissement
   if (currentAuth && currentAuth.role === 'user' && currentAuth.etab) {
     if (state.estab !== currentAuth.etab) {

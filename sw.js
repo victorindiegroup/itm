@@ -1,6 +1,6 @@
 // ITM Service Worker — offline-first
 // Change la version à chaque mise à jour du code pour forcer le re-téléchargement
-const CACHE_VERSION = 'itm-v17';
+const CACHE_VERSION = 'itm-v18';
 const CACHE_NAME = `itm-cache-${CACHE_VERSION}`;
 
 // Ressources à mettre en cache dès l'installation
@@ -11,7 +11,8 @@ const CORE_ASSETS = [
   './icon-192.png',
   './icon-512.png',
   './catalogue.json',
-  './mascot.png'
+  './mascot.png',
+  './pos_pablo.csv'
 ];
 
 // Installation : met en cache les ressources essentielles
@@ -46,8 +47,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Pour catalogue.json : network-first (pour que les màj arrivent vite)
-  if (url.pathname.endsWith('/catalogue.json') || url.pathname === '/catalogue.json') {
+  // Pour catalogue.json et pos_*.csv : network-first (pour que les màj arrivent vite)
+  if (url.pathname.endsWith('/catalogue.json') || url.pathname === '/catalogue.json'
+      || /\/pos_[a-z_]+\.csv$/.test(url.pathname)) {
     event.respondWith(
       fetch(event.request, { cache: 'no-cache' })
         .then((response) => {
