@@ -693,6 +693,19 @@
     letter-spacing: 0.2px;
     vertical-align: middle;
   }
+
+  .chat-suggestion-badge-other {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 8px;
+    margin-left: 4px;
+    letter-spacing: 0.2px;
+    vertical-align: middle;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -2154,32 +2167,43 @@ function sendChat(){
   }, 250);
 }
 
-// ---------- Base de données POS (chargée depuis pos_<etab>.csv) ----------
-let POS_DATA = null;  // { etab: [{pos, product, posStatus}] }
+// ---------- Base de données POS (chargée depuis tous les pos_<etab>.csv) ----------
+// Chaque lien porte son "etab" d'origine pour que Victor sache quel resto
+let POS_DATA = null;  // { loaded, links: [{pos, product, etab}] }
+
+// Mapping nom d'établissement → fichier CSV
+const POS_FILES = {
+  'Pablo (Saint-Tropez)':    'pos_pablo.csv',
+  'Pablo (Saint-Barthélemy)':'pos_pablo_sbh.csv',
+  // À compléter au fur et à mesure :
+  // 'Indie Beach':           'pos_indie.csv',
+  // 'Café de l\'Ormeau':     'pos_ormeau.csv',
+  // 'La Sauvageonne (Ramatuelle)': 'pos_sauvageonne.csv',
+  // 'Playamigos':            'pos_playamigos.csv',
+  // 'Cherry (Saint-Tropez)': 'pos_cherry.csv',
+  // 'Cat Club (Courchevel)': 'pos_catclub.csv',
+  // 'La Sauvageonne (Megève)': 'pos_imountain.csv',
+  // 'Cherry (Paris)':        'pos_cherry_paris.csv',
+};
 
 function loadPosData() {
-  // Déterminer quel fichier charger selon l'établissement actif
-  const etabFiles = {
-    'Pablo (Saint-Tropez)': 'pos_pablo.csv',
-    'Pablo (Saint-Barthélemy)': 'pos_pablo_sbh.csv',
-    // Autres à venir :
-    // 'Indie Beach': 'pos_indie.csv',
-    // ...
-  };
-  const fname = etabFiles[state.estab];
-  if (!fname) {
-    POS_DATA = { loaded: true, links: [] };
-    return;
-  }
-  fetch('./' + fname, { cache: 'no-cache' })
-    .then(r => r.ok ? r.text() : Promise.reject('HTTP ' + r.status))
-    .then(text => {
-      POS_DATA = { loaded: true, links: parsePosCsv(text) };
-    })
-    .catch(err => {
-      console.warn('Chargement POS échoué:', err);
-      POS_DATA = { loaded: true, links: [] };
-    });
+  POS_DATA = { loaded: false, links: [] };
+  // Charger TOUS les fichiers disponibles en parallèle
+  const entries = Object.entries(POS_FILES);
+  const fetches = entries.map(([etab, fname]) =>
+    fetch('./' + fname, { cache: 'no-cache' })
+      .then(r => r.ok ? r.text() : null)
+      .then(text => {
+        if (!text) return [];
+        return parsePosCsv(text).map(link => ({ ...link, etab }));
+      })
+      .catch(() => [])
+  );
+  Promise.all(fetches).then(arrays => {
+    const all = [].concat(...arrays);
+    POS_DATA = { loaded: true, links: all };
+    console.log('POS chargé: ' + all.length + ' liaisons sur ' + arrays.filter(a => a.length).length + ' établissement(s)');
+  });
 }
 
 function parsePosCsv(text) {
@@ -2242,214 +2266,253 @@ function normalizePos(s) {
 }
 
 // ---------- Logique Victor ----------
-// Intention utilisateur : on détecte si l'utilisateur cherche une bouteille/marque
+// Mapping étab → tag pour filtrer les produits du catalogue par étab
+// (réutilise ETAB_TO_TAG déjà défini)
 
-// Préfixes bouteille à retirer pour la résolution
-const BOTTLE_PREFIXES = ['1/2 B.', '1/2.', 'MATHU.', 'NABU.', 'BABY.', 'MIDAS.', 'BALTHA.', 'REHO.', 'BIB.', 'COFFRET.', 'GALLON.', 'MIGNONETTE', 'B.', 'V.', 'S.', 'M.', 'J.'];
+// Détecter si l'utilisateur pose une question "inverse" : quelles bouteilles dans X ?
+function detectInverseQuery(msg) {
+  const n = normalizePos(msg);
+  // Patterns d'intentions inverses
+  const patterns = [
+    /quelles? bouteilles? (dans|pour|sous|de|du)/,
+    /quelles? bouteilles? (verse|compter|compte)/,
+    /qu(est|\s*est)\s*ce qu.?il y a dans/,
+    /quoi dans/,
+    /(verse|composent|contient|compose|comprend)(?!.*je)/,
+    /contenu de/,
+    /listes? (des?|les?) bouteilles?/
+  ];
+  const hasInverseVerb = patterns.some(p => p.test(n));
+  if (!hasInverseVerb) return null;
+  // Extraire le produit cible : on cherche un "verse" dans la requête,
+  // ou on prend tous les mots significatifs comme cible
+  // Priorité : mots après "dans", "de", "du"
+  const afterMatch = n.match(/(?:dans|pour|sous|de|du|contenu de|compose|compri)\s+(.+)$/);
+  const targetRaw = afterMatch ? afterMatch[1] : msg;
+  return { targetRaw };
+}
 
-function stripPrefix(name) {
-  for (const p of BOTTLE_PREFIXES) {
-    if (name.startsWith(p + ' ') || name.startsWith(p + '_')) {
-      return name.substring(p.length).replace(/^[_\s]+/, '');
+// Chercher les touches caisse qui décrémentent un produit donné
+function findPosForProduct(productName, etabPrefer) {
+  if (!POS_DATA || !POS_DATA.loaded) return [];
+  const nTarget = normalizePos(productName);
+  const results = [];
+  for (const link of POS_DATA.links) {
+    if (normalizePos(link.product) === nTarget) {
+      results.push(link);
     }
   }
-  return name;
+  // Trier : d'abord étab préféré, puis les autres
+  results.sort((a, b) => {
+    const aMine = a.etab === etabPrefer ? 0 : 1;
+    const bMine = b.etab === etabPrefer ? 0 : 1;
+    return aMine - bMine;
+  });
+  return results;
 }
 
-function stripFormat(name) {
-  // Retirer les "70CL", "3CL", "175CL", "40°" etc.
-  let s = name;
-  s = s.replace(/\s+\d+[,.]?\d*\s*CL\b/gi, '');
-  s = s.replace(/\s+\d+[,.]?\d*\s*°\b/g, '');
-  s = s.replace(/\s+(RGE|BLC|RSE|ROS)\b/gi, '');
-  return s.trim();
-}
-
-// Résoudre un produit POS vers un produit du catalogue (inventoriable)
-// 1. Match exact
-// 2. Nom nettoyé (sans préfixe ni format)
-// 3. Si rien : null
-function resolveToCatalog(productName) {
-  if (!productName) return null;
-  // 1. Match exact
-  let exact = CATALOGUE.find(p => p.y === productName);
-  if (exact) return exact;
-  // 2. Nettoyer et re-chercher
-  const cleaned = stripFormat(stripPrefix(productName));
-  if (!cleaned || cleaned === productName) return null;
-  // Match exact sur nom nettoyé
-  exact = CATALOGUE.find(p => p.y.toUpperCase() === cleaned.toUpperCase());
-  if (exact) return exact;
-  // Match par début
-  exact = CATALOGUE.find(p => p.y.toUpperCase().startsWith(cleaned.toUpperCase()));
-  if (exact) return exact;
-  return null;
-}
-
-
-// Mots-clés qui déclenchent la suggestion automatique d'un produit VERSE
-// (utile quand le produit VERSE n'a pas de touche caisse propre)
-// Le produit est cherché par son nom exact dans le catalogue.
-const VERSE_KEYWORDS = [
-  // Coca → COCA COLA VERSE
-  { keywords: ['coca', 'cola'], product: 'COCA COLA VERSE' },
-  // Tonic → TONIC VERSE
-  { keywords: ['tonic'], product: 'TONIC VERSE' },
-  // Ginger Beer / Ginger Ale → GINGER BEER VERSE
-  { keywords: ['ginger'], product: 'GINGER BEER VERSE' },
-  // Limonade / Ale → LIMONADE VERSE
-  { keywords: ['limonade', 'ale'], product: 'LIMONADE VERSE' },
-  // Tous les jus → JUS DE FRUIT VERSE
-  { keywords: ['jus', 'ananas', 'orange', 'pomme', 'passion', 'cranberry', 'fraise', 'tomate', 'pago', 'peche'], product: 'JUS DE FRUIT VERSE' },
-];
-
-// Retourne la liste des produits VERSE à suggérer pour une requête donnée
-function suggestVerseProducts(normalizedQuery, queryWords) {
-  const suggestions = [];
-  for (const entry of VERSE_KEYWORDS) {
-    // Un mot de la requête match un mot-clé VERSE ?
-    const hit = entry.keywords.some(k => queryWords.includes(k) || normalizedQuery.includes(k));
-    if (hit) {
-      // Chercher le produit dans le catalogue
-      const prod = CATALOGUE.find(p => p.y === entry.product);
-      if (prod) {
-        suggestions.push({
-          product: entry.product,
-          productRef: prod,
-          matchedKeywords: entry.keywords.filter(k => queryWords.includes(k) || normalizedQuery.includes(k))
-        });
-      }
-    }
-  }
-  return suggestions;
+// Nettoyer un nom de touche caisse pour l'afficher proprement
+// V. TANQUERAY DIR → Tanqueray
+// S. BELVEDERE OFFERT → Belvedere
+function prettyPosName(posName) {
+  let s = posName;
+  // Retirer les préfixes d'action POS courants
+  s = s.replace(/^(V\.?|S\.?|B\.?|M\.?|J\.?|BTL|MAG|MATHU|NABU|ADD)\s+/i, '');
+  // Retirer les suffixes "DIR", "OFFERT", "L", etc.
+  s = s.replace(/\s+(DIR|OFFERT|L|DIRTY BREW|OFFER)\b/gi, '');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s || posName;
 }
 
 function victorRespond(msg) {
   const n = normalizePos(msg);
+  const currentEtab = state.estab;
 
-  // Si le message est très court (< 2 mots) on considère que c'est une recherche de marque
-  // Sinon on regarde les mots-clés
-  const helpKeywords = ['trouve', 'trouver', 'cherche', 'chercher', 'ou est', 'ou sont', 'quel', 'quelle', 'comment', 'sous quoi', 'compter', 'aide'];
-  const looksLikeHelpRequest = helpKeywords.some(k => n.includes(k));
-
-  // Si l'utilisateur dit "bonjour", "salut", etc. : petit message d'accueil
+  // Salut rapide
   if (/^(bonjour|salut|hello|coucou|hey|yo)\b/i.test(msg.trim())) {
-    return { text: 'Salut ! Dis-moi ce que tu cherches — par exemple "je trouve pas Tanqueray" et je te dis sous quel produit le compter.' };
+    return { text: 'Salut ! Dis-moi ce que tu cherches — par exemple "je trouve pas Tanqueray" et je te dis sous quel produit le compter. Tu peux aussi me demander "quelles bouteilles dans gin verse" pour voir ce qu\'il y a dans un produit.' };
   }
 
-  // Extraire les mots "significatifs" pour chercher dans POS
-  // On vire les mots comme "je", "ne", "pas", "trouve", etc.
+  // ========== DÉTECTION QUESTION INVERSE ==========
+  const inverse = detectInverseQuery(msg);
+  if (inverse) {
+    // L'utilisateur demande "quelles bouteilles dans X"
+    // On cherche un produit du catalogue qui matche la cible
+    const targetWords = normalizePos(inverse.targetRaw).split(' ').filter(w => w.length >= 2);
+    if (targetWords.length === 0) {
+      return { text: "Dis-moi de quel produit tu veux connaître les bouteilles. Ex: \"quelles bouteilles dans gin verse\"." };
+    }
+    // Trouver le meilleur produit du catalogue par score (mots qui matchent)
+    let bestProduct = null;
+    let bestScore = 0;
+    for (const p of CATALOGUE) {
+      const pn = normalizePos(p.y);
+      let score = 0;
+      for (const w of targetWords) {
+        if (pn.includes(w)) score += w.length;
+      }
+      if (score > bestScore) { bestScore = score; bestProduct = p; }
+    }
+    if (!bestProduct) {
+      return { text: "Je ne trouve pas le produit \"" + inverse.targetRaw + "\" dans le catalogue." };
+    }
+    // Chercher toutes les touches caisse qui pointent vers ce produit
+    const links = findPosForProduct(bestProduct.y, currentEtab);
+    if (links.length === 0) {
+      return { text: "Aucune touche caisse ne décrémente \"" + bestProduct.s + "\" dans les établissements que j\'ai." };
+    }
+    // Grouper par étab
+    const byEtab = {};
+    links.forEach(l => {
+      if (!byEtab[l.etab]) byEtab[l.etab] = [];
+      byEtab[l.etab].push(prettyPosName(l.pos));
+    });
+    // Dédoublonner dans chaque groupe
+    for (const e of Object.keys(byEtab)) {
+      byEtab[e] = Array.from(new Set(byEtab[e]));
+    }
+    // Construire la réponse
+    let text = "Dans **" + bestProduct.s + "** on retrouve :\n";
+    // D'abord l'étab actuel
+    if (byEtab[currentEtab]) {
+      text += "\n• Ici (" + currentEtab + ") : " + byEtab[currentEtab].slice(0, 8).join(', ');
+      delete byEtab[currentEtab];
+    }
+    // Puis les autres
+    const others = Object.keys(byEtab);
+    if (others.length > 0) {
+      text += "\n\nDans d\'autres étabs :";
+      others.forEach(e => {
+        text += "\n• " + e + " : " + byEtab[e].slice(0, 6).join(', ');
+      });
+    }
+    return { text, suggestions: [] };
+  }
+
+  // ========== RECHERCHE NORMALE (bouteille → produit) ==========
   const stopWords = new Set([
     'je','ne','pas','tu','il','elle','nous','vous','ils','elles',
     'le','la','les','un','une','des','du','de','au','aux',
-    'trouve','trouver','cherche','chercher','sais','pas','aide','peux',
+    'trouve','trouver','cherche','chercher','sais','aide','peux',
     'est','sont','avec','pour','dans','sur','mais','ou','et','que','qui',
     'quoi','comment','sous','bouteille','btl','stp','svp','aide',
     'a','à','ai','as','ont','été','veut','veux','faut','faudrait',
     'quel','quelle','quels','quelles','mon','ma','mes','ton','ta','tes',
-    'ce','cette','ces','y','en','la','lui','moi','toi'
+    'ce','cette','ces','y','en','lui','moi','toi'
   ]);
   const words = n.split(/\s+/).filter(w => w && !stopWords.has(w) && w.length >= 2);
-  
   if (words.length === 0) {
     return { text: "Dis-moi quelle bouteille ou quelle marque tu cherches, je te dis sous quel produit la compter." };
   }
 
-  // Chercher dans les touches POS
   if (!POS_DATA || !POS_DATA.loaded) {
     return { text: "Je charge encore les données… Réessaie dans un instant." };
   }
   if (POS_DATA.links.length === 0) {
-    return { text: "Je n'ai pas encore les fiches techniques pour cet établissement. Je peux seulement t'aider sur le catalogue direct pour l'instant." };
+    return { text: "Je n\'ai pas encore les fiches techniques pour cet établissement." };
   }
 
-  // Recherche : pour chaque lien POS, calculer un score de match avec les mots de la recherche
-  const matches = new Map();  // product -> {product, score, pos_examples:[]}
+  // Suggestions VERSE automatiques (softs/jus qui n'ont pas de touche caisse directe)
+  const verseHits = suggestVerseProducts(n, words);
+
+  // Recherche dans les touches POS : SCORE + préférence étab actuel
+  // score = points pour chaque mot qui matche
+  // bonus si match sur l'étab actuel
+  const matches = new Map();
   for (const link of POS_DATA.links) {
     const posNorm = normalizePos(link.pos);
     let score = 0;
     for (const w of words) {
-      if (posNorm.includes(w)) score += w.length;  // mots plus longs = plus de poids
+      if (posNorm.includes(w)) score += w.length;
     }
     if (score > 0) {
-      const existing = matches.get(link.product) || { product: link.product, score: 0, pos_examples: [] };
-      existing.score = Math.max(existing.score, score);
+      // Bonus si étab = étab actuel
+      const isMine = link.etab === currentEtab;
+      const effectiveScore = score + (isMine ? 100 : 0);
+      const key = link.product;
+      const existing = matches.get(key) || {
+        product: link.product,
+        score: 0,
+        pos_examples: [],
+        etabs: new Set(),
+        fromCurrentEtab: false
+      };
+      existing.score = Math.max(existing.score, effectiveScore);
+      existing.etabs.add(link.etab);
+      if (isMine) existing.fromCurrentEtab = true;
       if (existing.pos_examples.length < 3) existing.pos_examples.push(link.pos);
-      matches.set(link.product, existing);
+      matches.set(key, existing);
     }
   }
 
   const sorted = Array.from(matches.values()).sort((a, b) => b.score - a.score);
-  if (sorted.length === 0) {
-    return { text: "Je ne trouve rien qui ressemble à \"" + msg + "\" dans les fiches techniques. Tu peux reformuler ou chercher directement dans le catalogue." };
+  if (sorted.length === 0 && verseHits.length === 0) {
+    return { text: "Je ne trouve rien qui ressemble à \"" + msg + "\". Tu peux reformuler ou chercher directement dans le catalogue." };
   }
 
-  // Ajouter d'abord les suggestions VERSE automatiques (pour softs/jus qui n'ont pas de touche caisse)
-  const verseHits = suggestVerseProducts(n, words);
+  // Séparer les matches de l'étab actuel et des autres
+  const fromMine = sorted.filter(m => m.fromCurrentEtab).slice(0, 5);
+  const fromOthers = sorted.filter(m => !m.fromCurrentEtab).slice(0, 3);
 
-  // On prend les 5 meilleurs (au lieu de 3) pour couvrir les bouteilles + verres
-  const top = sorted.slice(0, 5);
-  // Résoudre chaque produit POS vers un produit du catalogue (inventoriable)
-  // - Si match exact → OK
-  // - Sinon, enlever préfixe (B./V./S./M./J./etc.) et format (70CL, 3CL...) et re-chercher
-  const seen = new Set();  // pour dédoublonner
+  const seen = new Set();
   const suggestions = [];
-  
-  // Ajouter les suggestions VERSE en premier (elles sont "inférées" et non issues de POS)
+
+  // VERSE en tête
   verseHits.forEach(v => {
     if (v.productRef && !seen.has(v.productRef.id)) {
       seen.add(v.productRef.id);
       suggestions.push({
-        productId: v.productRef.id,
-        name: v.productRef.s,
-        yokitup: v.productRef.y,
-        pos_examples: [],
-        inCatalogue: true,
-        viaVerseLogic: true  // flag pour afficher un badge différent
+        productId: v.productRef.id, name: v.productRef.s, yokitup: v.productRef.y,
+        pos_examples: [], inCatalogue: true, viaVerseLogic: true
       });
     }
   });
-  
-  top.forEach(m => {
+
+  // Étab actuel
+  fromMine.forEach(m => {
     const resolved = resolveToCatalog(m.product);
     if (resolved && !seen.has(resolved.id)) {
       seen.add(resolved.id);
       suggestions.push({
-        productId: resolved.id,
-        name: resolved.s,
-        yokitup: resolved.y,
-        pos_examples: m.pos_examples,
-        inCatalogue: true,
-        originallyFrom: m.product !== resolved.y ? m.product : null
+        productId: resolved.id, name: resolved.s, yokitup: resolved.y,
+        pos_examples: m.pos_examples, inCatalogue: true
       });
     } else if (!resolved) {
-      // Produit vraiment introuvable dans le catalogue
       suggestions.push({
-        productId: null,
-        name: m.product,
-        yokitup: m.product,
-        pos_examples: m.pos_examples,
-        inCatalogue: false
+        productId: null, name: m.product, yokitup: m.product,
+        pos_examples: m.pos_examples, inCatalogue: false
       });
     }
-    // sinon : doublon (déjà vu), on ignore
   });
 
+  // Autres étabs si peu de résultats dans l'étab actuel
+  if (suggestions.length < 3) {
+    fromOthers.forEach(m => {
+      const resolved = resolveToCatalog(m.product);
+      if (resolved && !seen.has(resolved.id)) {
+        seen.add(resolved.id);
+        const etabsList = Array.from(m.etabs);
+        suggestions.push({
+          productId: resolved.id, name: resolved.s, yokitup: resolved.y,
+          pos_examples: m.pos_examples, inCatalogue: true,
+          fromOtherEtab: etabsList.join(', ')
+        });
+      }
+    });
+  }
+
+  // Texte de réponse
   let text;
   if (suggestions.length === 1) {
     const s = suggestions[0];
-    text = "D'après les fiches techniques, c'est compté dans : **" + s.name + "**";
-    if (s.pos_examples.length > 0) {
-      text += " (touches caisse : " + s.pos_examples.join(', ') + ")";
-    }
+    text = "D\'après les fiches techniques, c\'est compté dans : **" + s.name + "**";
   } else {
     text = "Voici les produits qui pourraient correspondre :";
   }
-
   return { text, suggestions };
 }
 
-// Afficher les suggestions comme des boutons cliquables dans le chat
+
 function renderProductSuggestions(suggestions) {
   const root = document.getElementById('chatMsgs');
   const wrap = document.createElement('div');
@@ -2473,6 +2536,9 @@ function renderProductSuggestions(suggestions) {
     let innerHtml = pillHtml + '<b>' + escape(s.name) + '</b>';
     if (s.inCatalogue === false) {
       innerHtml += ' <span class="chat-suggestion-badge">non trouvé</span>';
+    }
+    if (s.fromOtherEtab) {
+      innerHtml += ' <span class="chat-suggestion-badge-other">chez ' + escape(s.fromOtherEtab) + '</span>';
     }
     if (s.pos_examples && s.pos_examples.length) {
       innerHtml += '<br><span class="chat-suggestion-sub">Caisse : ' + escape(s.pos_examples.slice(0, 2).join(' · ')) + '</span>';
