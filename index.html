@@ -1014,9 +1014,9 @@ const DEFAULT_ZONES = ['Bar', 'Cave', 'Terrasse', 'Cuisine', 'Réserve'];
 let state = loadState();
 
 // Proxy state.lines → state.currentInventory.lines
-// Si pas d'inventaire actif, state.lines retourne un tableau vide (lecture)
-// Les écritures sont autorisées uniquement si un inventaire est actif
 function installLinesProxy() {
+  // Au cas où une propriété normale 'lines' existerait (sécurité)
+  try { delete state.lines; } catch(e) {}
   Object.defineProperty(state, 'lines', {
     configurable: true,
     get() {
@@ -1052,8 +1052,16 @@ function startInventory(meta) {
 // Terminer l'inventaire en cours : l'archiver dans inventories[]
 function finishInventory() {
   if (!state.currentInventory) return null;
+  // Garantie : state.inventories existe
+  if (!Array.isArray(state.inventories)) state.inventories = [];
+  // Copier proprement les lignes (sans proxy)
   const finished = {
-    ...state.currentInventory,
+    id: state.currentInventory.id,
+    date: state.currentInventory.date,
+    moment: state.currentInventory.moment,
+    personne: state.currentInventory.personne,
+    startedAt: state.currentInventory.startedAt,
+    lines: [...state.currentInventory.lines],
     finishedAt: new Date().toISOString(),
     exported: false
   };
@@ -1084,7 +1092,11 @@ function loadZones(){
   } catch(e){}
   return DEFAULT_ZONES.slice();
 }
-function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+function saveState(){
+  // Sérialisation : on exclut 'lines' (qui est un proxy vers currentInventory.lines, déjà dans le JSON)
+  const { lines, ...snapshot } = state;
+  localStorage.setItem(LS_KEY, JSON.stringify(snapshot));
+}
 function saveZones(){ localStorage.setItem(LS_ZONES, JSON.stringify(zones)); }
 
 /* ---------- Utils ---------- */
@@ -2098,17 +2110,22 @@ function confirmFinishInventory(){
     return;
   }
   confirmCb = () => {
+    // 1. Archiver l'inventaire dans state.inventories + clear currentInventory
     const inv = finishInventory();
-    if (inv) {
-      // Export CSV + Mailto
-      exportAndMailInventory(inv);
-      inv.exported = true;
-      saveState();
-      renderSession();
-      renderHeader();
-      renderCatalogue();
-      toast('Inventaire terminé');
-    }
+    if (!inv) return;
+
+    // 2. Marquer exporté + sauver AVANT tout (pour que le localStorage soit fiable)
+    inv.exported = true;
+    saveState();
+
+    // 3. Re-render l'UI avant le mailto (qui peut suspendre l'exécution)
+    renderSession();
+    renderHeader();
+    renderCatalogue();
+    toast('Inventaire terminé');
+
+    // 4. Export CSV + ouverture mailto (dernier, peut interrompre)
+    exportAndMailInventory(inv);
   };
   document.getElementById('confirmTitle').textContent = 'Terminer l\'inventaire ?';
   document.getElementById('confirmMsg').textContent = state.currentInventory.lines.length + ' produit(s) seront archivés et envoyés.';
