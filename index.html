@@ -1380,7 +1380,7 @@ function renderProductSheet(){
         <label class="field-lbl">Quantité (pièces)</label>
         <div class="field-row">
           <button type="button" class="qty-step-btn" data-step="-1" data-target="fQty" aria-label="Diminuer">−</button>
-          <input id="fQty" type="number" step="0.1" inputmode="decimal" value="${draft.qty || ''}" placeholder="ex: 2.5">
+          <input id="fQty" type="number" step="0.1" inputmode="decimal" value="${draft.qty || ''}" placeholder="">
           <button type="button" class="qty-step-btn" data-step="1" data-target="fQty" aria-label="Augmenter">+</button>
           <button type="button" class="qty-ok-btn" data-ok="fQty" aria-label="Valider">OK</button>
           <span class="field-label-inline" id="fQtyUnit">pc</span>
@@ -1394,7 +1394,7 @@ function renderProductSheet(){
         <label class="field-lbl">Quantité (unités)</label>
         <div class="field-row">
           <button type="button" class="qty-step-btn" data-step="-1" data-target="fQty" aria-label="Diminuer">−</button>
-          <input id="fQty" type="number" step="1" inputmode="numeric" value="${draft.qty || ''}" placeholder="ex: 12">
+          <input id="fQty" type="number" step="1" inputmode="numeric" value="${draft.qty || ''}" placeholder="">
           <button type="button" class="qty-step-btn" data-step="1" data-target="fQty" aria-label="Augmenter">+</button>
           <button type="button" class="qty-ok-btn" data-ok="fQty" aria-label="Valider">OK</button>
           <span class="field-label-inline">unit.</span>
@@ -1411,7 +1411,7 @@ function renderProductSheet(){
         <div class="qty-format-row">
           <div class="qty-format-label">× ${f.label}</div>
           <button type="button" class="qty-step-btn" data-step="-1" data-target-fmt="${f.label}" aria-label="Diminuer">−</button>
-          <input type="number" step="0.1" inputmode="decimal" data-format="${f.label}" value="${detail.qty || ''}" placeholder="0">
+          <input type="number" step="0.1" inputmode="decimal" data-format="${f.label}" value="${detail.qty || ''}" placeholder="">
           <button type="button" class="qty-step-btn" data-step="1" data-target-fmt="${f.label}" aria-label="Augmenter">+</button>
           <button type="button" class="qty-ok-btn" data-ok-fmt="${f.label}" aria-label="Valider">OK</button>
           <div class="qty-format-sub" data-sub="${f.label}">—</div>
@@ -1434,7 +1434,7 @@ function renderProductSheet(){
           <label class="field-lbl">Nombre de cartons</label>
           <div class="field-row">
             <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonNb" aria-label="Diminuer">−</button>
-            <input id="fCartonNb" type="number" step="1" inputmode="numeric" value="${draft.carton.nb || ''}" placeholder="ex: 2">
+            <input id="fCartonNb" type="number" step="1" inputmode="numeric" value="${draft.carton.nb || ''}" placeholder="">
             <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonNb" aria-label="Augmenter">+</button>
             <button type="button" class="qty-ok-btn" data-ok="fCartonNb" aria-label="Valider">OK</button>
             <span class="field-label-inline">cartons</span>
@@ -1444,7 +1444,7 @@ function renderProductSheet(){
           <label class="field-lbl">Pièces par carton</label>
           <div class="field-row">
             <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonPieces" aria-label="Diminuer">−</button>
-            <input id="fCartonPieces" type="number" step="1" inputmode="numeric" value="${draft.carton.pieces || ''}" placeholder="ex: 6">
+            <input id="fCartonPieces" type="number" step="1" inputmode="numeric" value="${draft.carton.pieces || ''}" placeholder="">
             <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonPieces" aria-label="Augmenter">+</button>
             <button type="button" class="qty-ok-btn" data-ok="fCartonPieces" aria-label="Valider">OK</button>
             <span class="field-label-inline">pc/carton</span>
