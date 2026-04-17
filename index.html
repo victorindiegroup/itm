@@ -329,7 +329,7 @@
   }
   .qty-ok-btn:active { background: var(--accent); }
 
-  /* Bouton OK dans les champs de saisie */
+  /* Bouton OK dans les champs de saisie (caché par défaut) */
   .qty-ok-btn {
     height: 40px;
     padding: 0 14px;
@@ -341,9 +341,12 @@
     font-weight: 600;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.1s, transform 0.1s;
+    transition: background 0.1s, transform 0.1s, opacity 0.15s, transform 0.15s;
     flex-shrink: 0;
+    /* Masqué par défaut */
+    display: none;
   }
+  .qty-ok-btn.visible { display: inline-block; }
   .qty-ok-btn:active { background: var(--accent-dark); transform: scale(0.94); }
 
   /* === VUE PLEIN ÉCRAN : SÉLECTION ÉTABLISSEMENT === */
@@ -1136,9 +1139,10 @@ function renderProductSheet(){
     });
   }
 
-  // Boutons OK : ferme le clavier natif
+  // Boutons OK : ferment le clavier et valident toute la ligne
   body.querySelectorAll('.qty-ok-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      // Fermer le clavier d'abord
       let input;
       if (btn.dataset.ok) {
         input = document.getElementById(btn.dataset.ok);
@@ -1146,6 +1150,9 @@ function renderProductSheet(){
         input = body.querySelector(`input[data-format="${btn.dataset.okFmt}"]`);
       }
       if (input && input.blur) input.blur();
+      // Forcer la mise à jour du draft puis valider
+      updateDraftFromInputs();
+      saveLine();
     });
   });
 
@@ -1229,6 +1236,24 @@ function updateDraftFromInputs(){
   computeTotal();
   renderSubs();
   renderTotal();
+  updateOkButtonsVisibility();
+}
+
+// Affiche ou cache les boutons OK selon la valeur saisie
+function updateOkButtonsVisibility() {
+  const body = document.getElementById('shProdBody');
+  if (!body) return;
+  body.querySelectorAll('.qty-ok-btn').forEach(btn => {
+    let input;
+    if (btn.dataset.ok) {
+      input = document.getElementById(btn.dataset.ok);
+    } else if (btn.dataset.okFmt) {
+      input = body.querySelector(`input[data-format="${btn.dataset.okFmt}"]`);
+    }
+    if (!input) return;
+    const val = parseFloat(input.value) || 0;
+    btn.classList.toggle('visible', val > 0);
+  });
 }
 
 function computeTotal(){
