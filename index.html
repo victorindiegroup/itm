@@ -329,7 +329,8 @@
   }
   .qty-ok-btn:active { background: var(--accent); }
 
-  /* Bouton OK dans les champs de saisie (caché par défaut) */
+  /* Bouton OK dans les champs de saisie */
+  /* L'espace est toujours réservé (même invisible) pour que le layout ne bouge pas */
   .qty-ok-btn {
     height: 40px;
     padding: 0 14px;
@@ -341,12 +342,18 @@
     font-weight: 600;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.1s, transform 0.1s, opacity 0.15s, transform 0.15s;
+    transition: background 0.1s, transform 0.1s, opacity 0.15s;
     flex-shrink: 0;
-    /* Masqué par défaut */
-    display: none;
+    /* Invisible par défaut mais occupe sa place */
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
   }
-  .qty-ok-btn.visible { display: inline-block; }
+  .qty-ok-btn.visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
   .qty-ok-btn:active { background: var(--accent-dark); transform: scale(0.94); }
 
   /* === VUE PLEIN ÉCRAN : SÉLECTION ÉTABLISSEMENT === */
