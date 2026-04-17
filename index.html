@@ -983,6 +983,10 @@
   }
   .batch-breakdown-name { color: var(--ink); flex: 1; overflow: hidden; text-overflow: ellipsis; }
   .batch-breakdown-qty { color: var(--accent-dark); font-weight: 600; margin-left: 8px; }
+
+  /* Confirmation : z-index au-dessus des vues plein écran (estab-page, batch editor...) */
+  #shConfirm { z-index: 100; }
+  #ovConfirm { z-index: 99; }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -3463,6 +3467,29 @@ function closeBatchEditor() {
   currentBatch = null;
 }
 
+
+// Met à jour uniquement l'affichage du total utilisé vs capacité (pas de re-render complet)
+function updateBatchEditorTotals() {
+  if (!currentBatch) return;
+  const totalUsed = (currentBatch.compo || []).reduce((s, c) => s + (parseFloat(c.qty) || 0), 0);
+  const cap = parseFloat(currentBatch.capacity) || 0;
+  const isOver = cap > 0 && totalUsed > cap;
+  // Trouver le div et le remettre à jour
+  const body = document.getElementById('batchEditorBody');
+  if (!body) return;
+  const totalDiv = body.querySelector('.batch-total-used');
+  if (!totalDiv) return;
+  let html = 'Total utilisé : ' + fmtQty(totalUsed) + ' / ' + fmtQty(cap) + ' ' + escape(currentBatch.unit || '');
+  if (isOver) {
+    html += ' — <b>dépasse la capacité !</b>';
+  } else if (cap > 0) {
+    const free = cap - totalUsed;
+    html += ' (libre : ' + fmtQty(free) + ' ' + escape(currentBatch.unit || '') + ')';
+  }
+  totalDiv.innerHTML = html;
+  totalDiv.classList.toggle('over', isOver);
+}
+
 function renderBatchEditor() {
   const body = document.getElementById('batchEditorBody');
   if (!body || !currentBatch) return;
@@ -3535,33 +3562,21 @@ function renderBatchEditor() {
   // Capacité
   document.getElementById('batchCapacity').addEventListener('input', (e) => {
     currentBatch.capacity = parseFloat(e.target.value) || 0;
-    renderBatchEditor();
+    updateBatchEditorTotals();
   });
 
-  // Unité
+  // Unité : ne re-render pas, juste mettre à jour l'affichage du total
   document.getElementById('batchUnit').addEventListener('input', (e) => {
     currentBatch.unit = e.target.value.trim();
-    // Mettre à jour l'unité des ingrédients existants qui héritent
-    (currentBatch.compo || []).forEach(c => {
-      if (!c.unitLocked) c.unit = currentBatch.unit;
-    });
-    renderBatchEditor();
+    updateBatchEditorTotals();
   });
 
-  // Quantité de chaque ingrédient
+  // Quantité de chaque ingrédient : mise à jour ciblée sans re-render
   body.querySelectorAll('.batch-ingr-qty-input').forEach(input => {
     input.addEventListener('input', (e) => {
       const idx = parseInt(e.target.dataset.idx);
       currentBatch.compo[idx].qty = parseFloat(e.target.value) || 0;
-      // Re-render pour mettre à jour le total affiché
-      // Mais on garde le focus sur l'input
-      const active = document.activeElement;
-      const activeIdx = active && active.dataset ? active.dataset.idx : null;
-      renderBatchEditor();
-      if (activeIdx !== null) {
-        const newInput = body.querySelector('.batch-ingr-qty-input[data-idx="' + activeIdx + '"]');
-        if (newInput) { newInput.focus(); newInput.setSelectionRange(newInput.value.length, newInput.value.length); }
-      }
+      updateBatchEditorTotals();
     });
   });
 
