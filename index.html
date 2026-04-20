@@ -4173,7 +4173,7 @@ function finishBlindQuestions(ctx) {
 
   if (bestProduct) {
     return {
-      text: "D'après ce que tu me dis, essaie de le compter sous : **" + bestProduct.s + "**. J'ai aussi transmis ta demande à l'admin pour qu'il crée une association définitive.",
+      text: "D'après ce que tu me dis, essaie de le compter sous : **" + bestProduct.s + "**. J'ai aussi transmis ta demande à Victor pour qu'il crée une association définitive.",
       suggestions: [{
         productId: bestProduct.id, name: bestProduct.s, yokitup: bestProduct.y,
         pos_examples: [], inCatalogue: true, viaDeduction: true
@@ -4181,7 +4181,7 @@ function finishBlindQuestions(ctx) {
     };
   } else {
     return {
-      text: "Je n'arrive pas à te donner une suggestion précise. J'ai noté ta demande pour l'admin, il va s'en occuper et créer l'association. En attendant, cherche directement dans le catalogue."
+      text: "Je n'arrive pas à te donner une suggestion précise. J'ai noté ta demande pour Victor, il va s'en occuper et créer l'association. En attendant, cherche directement dans le catalogue."
     };
   }
 }
