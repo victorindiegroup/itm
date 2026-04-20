@@ -52,8 +52,30 @@
   .zone-pill:active { opacity: .7; }
 
   /* TABS */
-  .tabs { display: flex; gap: 4px; padding: 0 16px; background: var(--bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-  .tab { padding: 12px 14px; font-size: 14px; font-weight: 500; color: var(--ink-2); border-bottom: 2px solid transparent; margin-bottom: -1px; position: relative; }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-2);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    position: relative;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
   .tab.active { color: var(--ink); border-bottom-color: var(--accent); }
   .tab .badge { display: inline-block; margin-left: 6px; padding: 1px 7px; font-size: 11px; font-weight: 500; background: var(--accent); color: #fff; border-radius: 10px; min-width: 20px; text-align: center; }
   .tab:not(.active) .badge { background: var(--border-strong); color: var(--ink-2); }
