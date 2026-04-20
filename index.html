@@ -1786,6 +1786,25 @@ async function clearAllLogsOnBackend(adminToken) {
   return data.deleted || 0;
 }
 
+// Envoyer un email pour une alerte spécifique (déclenché manuellement par admin)
+async function sendEmailAlert(logId, adminToken) {
+  const response = await fetch(BACKEND_URL + '/email-alert', {
+    method: 'POST',
+    headers: {
+      'X-Admin-Token': adminToken,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ logId }),
+    signal: AbortSignal.timeout(15000)
+  });
+  if (response.status === 401) throw new Error('Token admin invalide');
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || ('HTTP ' + response.status));
+  }
+  return true;
+}
+
 
 let zones = loadZones();
 let chatMsgs = [];
@@ -2107,6 +2126,34 @@ async function renderAlerts() {
     });
   });
 
+  // Bouton "envoyer par mail" sur chaque carte
+  root.querySelectorAll('.alert-email-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Envoi...';
+      try {
+        await sendEmailAlert(id, loadAdminToken());
+        btn.textContent = '✓ Envoyé';
+        btn.style.color = 'var(--accent-dark)';
+        btn.style.borderColor = 'var(--accent)';
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.color = '';
+          btn.style.borderColor = '';
+          btn.disabled = false;
+        }, 3000);
+        toast('Email envoyé à victor@indiegroup.fr');
+      } catch (err) {
+        btn.textContent = originalText;
+        btn.disabled = false;
+        toast('Erreur : ' + err.message);
+      }
+    });
+  });
+
   // Bouton "créer une liaison" sur chaque carte
   root.querySelectorAll('.alert-createlink-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -2158,6 +2205,7 @@ function renderAlertCard(log) {
 
   html += '  <div style="display:flex; gap:6px; flex-wrap:wrap;">';
   html += '    <button type="button" class="alert-createlink-btn" data-query="' + escape(log.query) + '" style="padding:6px 12px; font-size:12px; background:var(--accent); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:500;">+ Créer liaison</button>';
+  html += '    <button type="button" class="alert-email-btn" data-id="' + escape(log.id) + '" style="padding:6px 12px; font-size:12px; background:transparent; color:var(--ink); border:1px solid var(--border); border-radius:8px; cursor:pointer;">📧 Me l\'envoyer par mail</button>';
   html += '    <button type="button" class="alert-delete-btn" data-id="' + escape(log.id) + '" style="padding:6px 12px; font-size:12px; background:transparent; color:var(--danger); border:1px solid var(--danger); border-radius:8px; cursor:pointer;">Supprimer</button>';
   html += '  </div>';
   html += '</div>';
