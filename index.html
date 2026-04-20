@@ -1000,6 +1000,35 @@
     letter-spacing: 0.2px;
     vertical-align: middle;
   }
+
+  .chat-quickreplies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 12px 4px;
+    justify-content: flex-end;
+  }
+  .chat-qr-btn {
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    border: 1px solid var(--accent);
+    border-radius: 18px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+  }
+  .chat-qr-btn:active {
+    background: var(--accent);
+    color: white;
+  }
+  .chat-qr-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -1060,6 +1089,8 @@
   <button class="tab" data-tab="session">Session <span class="badge" id="badgeSess">0</span></button>
       <button class="tab" data-tab="batches">Batchs</button>
       <button class="tab admin-only" data-tab="liaisons" style="display:none;">Liaisons</button>
+      <button class="tab admin-only" data-tab="alerts" style="display:none;">Alertes</button>
+      <button class="tab admin-only" data-tab="demandes" style="display:none;">Demandes <span id="adminBadge" class="badge" style="display:none; background:var(--danger); color:white;">0</span></button>
   <button class="tab" data-tab="export">Saisies</button>
 </div>
 
@@ -1080,6 +1111,14 @@
 
     <!-- Zone dynamique : rendue par renderSessionView() -->
     <div id="sessRoot"></div>
+  </div>
+
+  <div class="view" id="vDemandes">
+    <div id="demandesView"></div>
+  </div>
+
+  <div class="view" id="vAlerts">
+    <div id="alertsView"></div>
   </div>
 
   <div class="view" id="vLiaisons">
@@ -1638,6 +1677,117 @@ function getLiaisonsForCurrentEtab() {
 function uidLiaison() { return 'lnk_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
 
+// ============================================================
+// BACKEND CLOUDFLARE : envoi de logs + récupération par admin
+// ============================================================
+const BACKEND_URL = 'https://itm-backend.victor-659.workers.dev';
+const ADMIN_TOKEN_LS_KEY = 'itm_admin_token_v1';
+const LOG_QUEUE_LS_KEY = 'itm_log_queue_v1';
+
+function loadAdminToken() {
+  return localStorage.getItem(ADMIN_TOKEN_LS_KEY) || '';
+}
+
+function saveAdminToken(token) {
+  localStorage.setItem(ADMIN_TOKEN_LS_KEY, token);
+}
+
+// File d'attente : si offline, on stocke, on retente plus tard
+function loadLogQueue() {
+  try {
+    const raw = localStorage.getItem(LOG_QUEUE_LS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e){}
+  return [];
+}
+
+function saveLogQueue(queue) {
+  localStorage.setItem(LOG_QUEUE_LS_KEY, JSON.stringify(queue));
+}
+
+// Envoie un log au backend. En cas d'échec (offline), stocke dans la file.
+// Pas de retour utilisateur (c'est silencieux/non bloquant).
+async function sendLogToBackend(logData) {
+  const record = {
+    etab: state.estab || 'inconnu',
+    personne: (currentAuth && currentAuth.role === 'admin') ? 'admin' : (state.estab || 'chef'),
+    query: logData.query || '',
+    type: logData.type || 'unknown',
+    details: logData.details || {}
+  };
+  try {
+    const response = await fetch(BACKEND_URL + '/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record),
+      // On met un timeout court pour ne pas bloquer l'UI si le backend est down
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+  } catch (e) {
+    // Offline ou erreur : on met en file
+    const queue = loadLogQueue();
+    queue.push(record);
+    if (queue.length > 100) queue.shift(); // limite la croissance
+    saveLogQueue(queue);
+  }
+}
+
+// Traiter la file d'attente (appelée au démarrage et quand connexion revient)
+async function flushLogQueue() {
+  const queue = loadLogQueue();
+  if (queue.length === 0) return;
+  const remaining = [];
+  for (const record of queue) {
+    try {
+      const response = await fetch(BACKEND_URL + '/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(record),
+        signal: AbortSignal.timeout(5000)
+      });
+      if (!response.ok) remaining.push(record);
+    } catch (e) {
+      remaining.push(record);
+    }
+  }
+  saveLogQueue(remaining);
+}
+
+// Récupérer les logs (admin seulement)
+async function fetchLogsFromBackend(adminToken) {
+  const response = await fetch(BACKEND_URL + '/logs', {
+    headers: { 'X-Admin-Token': adminToken },
+    signal: AbortSignal.timeout(10000)
+  });
+  if (response.status === 401) throw new Error('Token admin invalide');
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  const data = await response.json();
+  return data.logs || [];
+}
+
+async function deleteLogOnBackend(id, adminToken) {
+  const response = await fetch(BACKEND_URL + '/log/' + encodeURIComponent(id), {
+    method: 'DELETE',
+    headers: { 'X-Admin-Token': adminToken },
+    signal: AbortSignal.timeout(5000)
+  });
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  return true;
+}
+
+async function clearAllLogsOnBackend(adminToken) {
+  const response = await fetch(BACKEND_URL + '/logs', {
+    method: 'DELETE',
+    headers: { 'X-Admin-Token': adminToken },
+    signal: AbortSignal.timeout(10000)
+  });
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  const data = await response.json();
+  return data.deleted || 0;
+}
+
+
 let zones = loadZones();
 let chatMsgs = [];
 
@@ -1771,6 +1921,8 @@ function switchTab(name){
   if (name === 'catalogue') renderCatalogue();
   if (name === 'batches') renderBatches();
   if (name === 'liaisons') renderLiaisons();
+  if (name === 'alerts') renderAlerts();
+  if (name === 'demandes') renderDemandes();
   // scroll reset
   document.querySelector('main').scrollTop = 0;
 }
@@ -1869,6 +2021,184 @@ function renderBatches() {
 // ============================================================
 // RENDU : vue Liaisons (admin uniquement)
 // ============================================================
+
+// ============================================================
+// RENDU : vue Alertes (admin uniquement)
+// ============================================================
+let alertsCache = [];  // logs en mémoire
+let alertsLoading = false;
+
+async function renderAlerts() {
+  const root = document.getElementById('alertsView');
+  if (!root) return;
+
+  if (!currentAuth || currentAuth.role !== 'admin') {
+    root.innerHTML = '<div class="prod-empty">Accès réservé à l\'admin.</div>';
+    return;
+  }
+
+  const token = loadAdminToken();
+
+  // Si pas de token : prompt
+  if (!token) {
+    root.innerHTML = `
+      <div class="batches-header">
+        <div class="batches-header-info">Pour voir les alertes remontées depuis les téléphones des chefs, renseigne le <b>token admin</b> configuré dans le Worker Cloudflare.</div>
+        <input type="password" id="adminTokenInput" class="field-input" placeholder="Colle ton token admin..." style="width:100%; margin-bottom:8px;">
+        <button type="button" id="saveAdminTokenBtn" class="batches-add-btn" style="width:100%;">Enregistrer et charger les alertes</button>
+      </div>
+    `;
+    document.getElementById('saveAdminTokenBtn').addEventListener('click', () => {
+      const v = document.getElementById('adminTokenInput').value.trim();
+      if (!v) { toast('Token vide'); return; }
+      saveAdminToken(v);
+      toast('Token enregistré');
+      renderAlerts();
+    });
+    return;
+  }
+
+  // Token présent : render avec bouton refresh
+  let html = '';
+  html += '<div class="batches-header">';
+  html += '  <div class="batches-header-info">Remontées des chefs de bar quand Victor hésite ou ne trouve pas. <b>' + alertsCache.length + '</b> alerte' + (alertsCache.length > 1 ? 's' : '') + '.</div>';
+  html += '  <div style="display:flex; gap:8px; flex-wrap:wrap;">';
+  html += '    <button type="button" id="refreshAlertsBtn" class="batches-add-btn" style="flex:1; min-width:160px;">🔄 Rafraîchir</button>';
+  html += '    <button type="button" id="clearAllAlertsBtn" style="padding:12px 16px; background:var(--surface); color:var(--danger); border:1px solid var(--danger); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">🗑 Tout effacer</button>';
+  html += '    <button type="button" id="resetAdminTokenBtn" style="padding:12px 16px; background:var(--surface); color:var(--ink-2); border:1px solid var(--border); border-radius:10px; font-size:13px; cursor:pointer;">Changer le token</button>';
+  html += '  </div>';
+  html += '</div>';
+
+  if (alertsLoading) {
+    html += '<div class="prod-empty">Chargement…</div>';
+  } else if (alertsCache.length === 0) {
+    html += '<div class="prod-empty">Aucune alerte pour le moment.<br>Clique sur 🔄 Rafraîchir pour aller les chercher.</div>';
+  } else {
+    html += '<div class="alerts-list" style="padding: 0 16px 40px;">';
+    alertsCache.forEach(log => {
+      html += renderAlertCard(log);
+    });
+    html += '</div>';
+  }
+
+  root.innerHTML = html;
+
+  document.getElementById('refreshAlertsBtn').addEventListener('click', refreshAlerts);
+  document.getElementById('clearAllAlertsBtn').addEventListener('click', clearAllAlerts);
+  document.getElementById('resetAdminTokenBtn').addEventListener('click', () => {
+    saveAdminToken('');
+    alertsCache = [];
+    toast('Token effacé');
+    renderAlerts();
+  });
+
+  // Bouton supprimer sur chaque carte
+  root.querySelectorAll('.alert-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      try {
+        await deleteLogOnBackend(id, loadAdminToken());
+        alertsCache = alertsCache.filter(l => l.id !== id);
+        renderAlerts();
+        toast('Supprimé');
+      } catch (err) {
+        toast('Erreur : ' + err.message);
+      }
+    });
+  });
+
+  // Bouton "créer une liaison" sur chaque carte
+  root.querySelectorAll('.alert-createlink-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const query = btn.dataset.query;
+      // Ouvre l'éditeur de liaison avec le keyword pré-rempli
+      openLiaisonEditor(null);
+      // Attendre le render puis pré-remplir
+      setTimeout(() => {
+        if (currentLiaison) {
+          currentLiaison.keyword = query;
+          renderLiaisonEditor();
+        }
+      }, 100);
+    });
+  });
+}
+
+function renderAlertCard(log) {
+  const typeLabels = {
+    'low_confidence': { label: 'Incertitude', color: 'var(--warn)', bg: 'var(--warn-soft)' },
+    'zero_result': { label: 'Aucun résultat', color: 'var(--danger)', bg: '#FEE4E4' },
+    'resolved_by_dialogue': { label: 'Résolu via questions', color: 'var(--accent-dark)', bg: 'var(--accent-soft)' },
+    'user_confirmed_unknown': { label: 'Pas trouvé (abandonné)', color: 'var(--danger)', bg: '#FEE4E4' }
+  };
+  const typeInfo = typeLabels[log.type] || { label: log.type || 'unknown', color: 'var(--ink-2)', bg: 'var(--bg)' };
+
+  const date = log.timestamp ? new Date(log.timestamp) : null;
+  const dateStr = date ? date.toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+
+  let html = '<div class="alert-card" style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px;">';
+  html += '  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px;">';
+  html += '    <span style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; background:' + typeInfo.bg + '; color:' + typeInfo.color + ';">' + escape(typeInfo.label) + '</span>';
+  html += '    <span style="font-size:11px; color:var(--ink-2);">' + escape(dateStr) + '</span>';
+  html += '  </div>';
+  html += '  <div style="font-size:15px; font-weight:600; margin-bottom:4px;">"' + escape(log.query) + '"</div>';
+  html += '  <div style="font-size:12px; color:var(--ink-2); margin-bottom:8px;">' + escape(log.etab || '—') + ' · ' + escape(log.personne || '—') + '</div>';
+
+  // Détails si présents
+  if (log.details) {
+    const d = log.details;
+    if (d.resolved_to) {
+      html += '  <div style="font-size:12px; color:var(--accent-dark); margin-bottom:8px;">→ résolu vers : <b>' + escape(d.resolved_to) + '</b></div>';
+    }
+    if (d.num_results !== undefined) {
+      html += '  <div style="font-size:11px; color:var(--ink-2); margin-bottom:8px;">' + d.num_results + ' résultats avant désambiguïsation</div>';
+    }
+  }
+
+  html += '  <div style="display:flex; gap:6px; flex-wrap:wrap;">';
+  html += '    <button type="button" class="alert-createlink-btn" data-query="' + escape(log.query) + '" style="padding:6px 12px; font-size:12px; background:var(--accent); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:500;">+ Créer liaison</button>';
+  html += '    <button type="button" class="alert-delete-btn" data-id="' + escape(log.id) + '" style="padding:6px 12px; font-size:12px; background:transparent; color:var(--danger); border:1px solid var(--danger); border-radius:8px; cursor:pointer;">Supprimer</button>';
+  html += '  </div>';
+  html += '</div>';
+  return html;
+}
+
+async function refreshAlerts() {
+  alertsLoading = true;
+  renderAlerts();
+  try {
+    alertsCache = await fetchLogsFromBackend(loadAdminToken());
+    toast(alertsCache.length + ' alerte' + (alertsCache.length > 1 ? 's' : '') + ' chargée' + (alertsCache.length > 1 ? 's' : ''));
+  } catch (err) {
+    toast('Erreur : ' + err.message);
+    if (err.message.includes('Token')) {
+      saveAdminToken('');
+    }
+  } finally {
+    alertsLoading = false;
+    renderAlerts();
+  }
+}
+
+function clearAllAlerts() {
+  if (alertsCache.length === 0) { toast('Aucune alerte à effacer'); return; }
+  confirmCb = async () => {
+    try {
+      const n = await clearAllLogsOnBackend(loadAdminToken());
+      alertsCache = [];
+      toast(n + ' alerte' + (n > 1 ? 's' : '') + ' supprimée' + (n > 1 ? 's' : ''));
+      renderAlerts();
+    } catch (err) {
+      toast('Erreur : ' + err.message);
+    }
+  };
+  document.getElementById('confirmTitle').textContent = 'Effacer TOUTES les alertes ?';
+  document.getElementById('confirmMsg').textContent = 'Action définitive. Les ' + alertsCache.length + ' alertes seront supprimées du backend.';
+  openSheet('shConfirm','ovConfirm');
+}
+
 function renderLiaisons() {
   const root = document.getElementById('liaisonsView');
   if (!root) return;
@@ -1962,6 +2292,153 @@ function exportLiaisonsJson() {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   toast('Fichier téléchargé — upload sur GitHub pour partager');
+}
+
+
+// ============================================================
+// RENDU : onglet Demandes (admin) — requêtes non-résolues des chefs
+// ============================================================
+function renderDemandes() {
+  const root = document.getElementById('demandesView');
+  if (!root) return;
+
+  if (!currentAuth || currentAuth.role !== 'admin') {
+    root.innerHTML = '<div class="prod-empty">Accès réservé à l\'admin.</div>';
+    return;
+  }
+
+  const list = loadVictorQueue();
+  const pending = list.filter(r => r.status === 'pending');
+  const resolved = list.filter(r => r.status !== 'pending');
+
+  let html = '';
+  html += '<div class="batches-header">';
+  html += '  <div class="batches-header-info">Demandes en attente des chefs (quand Victor n\'a pas trouvé).</div>';
+  html += '  <div style="display:flex; gap:8px;">';
+  html += '    <button type="button" id="demandesRefresh" style="flex:1; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:10px; font-size:13px; cursor:pointer;">🔄 Actualiser</button>';
+  if (resolved.length > 0) {
+    html += '    <button type="button" id="demandesClearResolved" style="padding:10px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; font-size:12px; color:var(--ink-2); cursor:pointer;">Purger (' + resolved.length + ')</button>';
+  }
+  html += '  </div>';
+  html += '</div>';
+
+  if (pending.length === 0) {
+    html += '<div class="prod-empty">Aucune demande en attente. Les chefs ne t\'ont pas signalé de produit manquant pour l\'instant.</div>';
+  } else {
+    html += '<div class="batches-list">';
+    pending.forEach(req => {
+      html += renderDemandeCard(req);
+    });
+    html += '</div>';
+  }
+
+  root.innerHTML = html;
+
+  // Bindings
+  const refreshBtn = document.getElementById('demandesRefresh');
+  if (refreshBtn) refreshBtn.addEventListener('click', renderDemandes);
+  const clearBtn = document.getElementById('demandesClearResolved');
+  if (clearBtn) clearBtn.addEventListener('click', () => {
+    const filtered = loadVictorQueue().filter(r => r.status === 'pending');
+    saveVictorQueue(filtered);
+    renderDemandes();
+    toast('Demandes résolues purgées');
+  });
+  root.querySelectorAll('[data-req-action]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const rid = el.dataset.rid;
+      const action = el.dataset.reqAction;
+      if (action === 'create-liaison') {
+        createLiaisonFromRequest(rid);
+      } else if (action === 'mark-resolved') {
+        markRequestResolved(rid);
+      } else if (action === 'delete') {
+        deleteRequest(rid);
+      }
+    });
+  });
+}
+
+function renderDemandeCard(req) {
+  const ctx = req.context || {};
+  const ans = ctx.answers || {};
+  const when = new Date(req.createdAt);
+  const whenStr = when.toLocaleDateString('fr-FR') + ' ' + when.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+
+  let detail = '';
+  if (ans.category) {
+    detail += 'Catégorie: <b>' + escape(ans.category) + '</b>';
+    if (ans.color) detail += ' · Couleur: <b>' + escape(ans.color) + '</b>';
+    if (ans.bullesType) detail += ' · Type: <b>' + escape(ans.bullesType) + '</b>';
+    if (ans.spiritType) detail += ' · Type: <b>' + escape(ans.spiritType) + '</b>';
+  }
+
+  let proposed = '';
+  if (ctx.proposedProduct) {
+    const p = CATALOGUE.find(pr => pr.y === ctx.proposedProduct);
+    proposed = p ? ('Proposé: <b>' + escape(p.s) + '</b>') : '';
+  }
+
+  let html = '<div class="batch-item" style="cursor:default;">';
+  html += '  <div class="batch-item-head">';
+  html += '    <div class="batch-item-name">🔎 "' + escape(req.query) + '"</div>';
+  html += '    <div class="batch-item-cap">' + escape(whenStr) + '</div>';
+  html += '  </div>';
+  html += '  <div style="font-size:12px; color:var(--ink-2); margin-bottom:4px;">Demandé par <b>' + escape(req.personne || 'inconnu') + '</b> à <b>' + escape(req.etab || '') + '</b></div>';
+  if (detail) {
+    html += '  <div style="font-size:12px; color:var(--ink); margin-bottom:4px;">' + detail + '</div>';
+  }
+  if (proposed) {
+    html += '  <div style="font-size:12px; color:var(--accent-dark); margin-bottom:8px;">' + proposed + '</div>';
+  }
+  html += '  <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">';
+  html += '    <button type="button" data-rid="' + escape(req.id) + '" data-req-action="create-liaison" style="flex:1; min-width:140px; padding:8px 12px; background:var(--accent); color:white; border:none; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">+ Créer liaison</button>';
+  html += '    <button type="button" data-rid="' + escape(req.id) + '" data-req-action="mark-resolved" style="padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; font-size:12px; cursor:pointer;">✓ Traité</button>';
+  html += '    <button type="button" data-rid="' + escape(req.id) + '" data-req-action="delete" style="padding:8px 12px; background:transparent; border:none; color:var(--danger); font-size:12px; cursor:pointer;">Supprimer</button>';
+  html += '  </div>';
+  html += '</div>';
+  return html;
+}
+
+function createLiaisonFromRequest(rid) {
+  const queue = loadVictorQueue();
+  const req = queue.find(r => r.id === rid);
+  if (!req) return;
+  // Pré-remplir une nouvelle liaison
+  currentLiaison = {
+    id: uidLiaison(),
+    keyword: req.query,
+    productYokitup: (req.context && req.context.proposedProduct) || '',
+    etabs: ['*'],
+    createdAt: new Date().toISOString(),
+    fromRequestId: rid  // pour marquer comme résolue après save
+  };
+  liaisonInlineSearch = '';
+  document.getElementById('liaisonEditorTitle').textContent = 'Créer depuis demande';
+  document.getElementById('liaisonEditorDelete').style.display = 'none';
+  renderLiaisonEditor();
+  document.getElementById('liaisonEditor').classList.add('open');
+}
+
+function markRequestResolved(rid) {
+  const queue = loadVictorQueue();
+  const req = queue.find(r => r.id === rid);
+  if (req) {
+    req.status = 'resolved';
+    saveVictorQueue(queue);
+    renderDemandes();
+    updateAdminBadge();
+    toast('Marqué comme traité');
+  }
+}
+
+function deleteRequest(rid) {
+  const queue = loadVictorQueue().filter(r => r.id !== rid);
+  saveVictorQueue(queue);
+  renderDemandes();
+  updateAdminBadge();
+  toast('Supprimé');
 }
 
 function renderCatalogue(){
@@ -2842,9 +3319,13 @@ function sendChat(){
   setTimeout(() => {
     const reply = victorRespond(txt);
     addChatMsg('assistant', reply.text);
-    // S'il y a des suggestions de produits, les afficher sous forme de boutons
+    // Suggestions de produits (boutons)
     if (reply.suggestions && reply.suggestions.length) {
       renderProductSuggestions(reply.suggestions);
+    }
+    // Quick replies (boutons de désambiguïsation)
+    if (reply.quickReplies && reply.quickReplies.length) {
+      renderQuickReplies(reply.quickReplies);
     }
   }, 250);
 }
@@ -3015,6 +3496,200 @@ function suggestVerseProducts(normalizedQuery, queryWords) {
   return suggestions;
 }
 
+
+
+// ============================================================
+// VICTOR : état conversationnel + file d'attente des demandes admin
+// ============================================================
+let victorContext = null;  // stocke le contexte du dialogue en cours
+
+// Stockage des demandes non-résolues (pour admin)
+const VICTOR_QUEUE_KEY = 'itm_victor_queue_v1';
+
+function loadVictorQueue() {
+  try {
+    const raw = localStorage.getItem(VICTOR_QUEUE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e){}
+  return [];
+}
+
+function saveVictorQueue(list) {
+  localStorage.setItem(VICTOR_QUEUE_KEY, JSON.stringify(list));
+}
+
+function addVictorRequest(query, context, etab, personne) {
+  // Local : garde une trace dans le téléphone (fallback, debug)
+  const list = loadVictorQueue();
+  list.push({
+    id: 'req_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    query: query,
+    context: context || {},
+    etab: etab || state.estab,
+    personne: personne || (state.currentInventory ? state.currentInventory.personne : ''),
+    createdAt: new Date().toISOString(),
+    status: 'pending'
+  });
+  saveVictorQueue(list);
+  updateAdminBadge();
+
+  // Backend : envoie en arrière-plan (type = résolu via questions ou abandonné)
+  const hasProposed = context && context.proposedProduct;
+  sendLogToBackend({
+    query: query,
+    type: hasProposed ? 'resolved_by_dialogue' : 'user_confirmed_unknown',
+    details: {
+      answers: context ? context.answers : null,
+      resolved_to: hasProposed ? context.proposedProduct : null
+    }
+  });
+}
+
+function updateAdminBadge() {
+  // Badge numérique sur l'onglet Liaisons pour l'admin si des demandes en attente
+  const pending = loadVictorQueue().filter(r => r.status === 'pending').length;
+  const badge = document.getElementById('adminBadge');
+  if (badge) {
+    if (pending > 0) {
+      badge.textContent = pending;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+}
+
+function resetVictorContext() {
+  victorContext = null;
+}
+
+// ============================================================
+// HELPERS VICTOR AVANCÉ : scoring fin, Levenshtein, catégorisation
+// ============================================================
+
+// Distance de Levenshtein (nombre d'éditions entre 2 chaînes)
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b[i-1] === a[j-1]) {
+        matrix[i][j] = matrix[i-1][j-1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i-1][j-1] + 1,
+          matrix[i][j-1] + 1,
+          matrix[i-1][j] + 1
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+// Score raffiné : bonus start-of-word, malus sub-string bidon
+function scoreMatch(queryWord, text) {
+  if (!text || !queryWord) return 0;
+  // Exact match d'un mot entier : gros bonus
+  const words = text.split(' ');
+  for (const w of words) {
+    if (w === queryWord) return queryWord.length * 3;  // exact
+    if (w.startsWith(queryWord)) return queryWord.length * 2;  // début de mot
+  }
+  // Match en sous-chaîne : OK si la query fait >= 4 chars (évite 'gin' dans 'ginger')
+  if (queryWord.length >= 4 && text.includes(queryWord)) return queryWord.length;
+  // Match en sous-chaîne court : seulement si la query représente plus de 60% du mot cible
+  for (const w of words) {
+    if (w.includes(queryWord) && queryWord.length / w.length >= 0.6) {
+      return queryWord.length * 0.5;
+    }
+  }
+  return 0;
+}
+
+// Propositions "did you mean?" basées sur Levenshtein
+// Parcourt les touches caisse uniques et le catalogue, retourne les plus proches
+function findSimilarNames(query, maxResults) {
+  maxResults = maxResults || 3;
+  const q = query.toLowerCase().trim();
+  if (q.length < 3) return [];
+  
+  const candidates = new Set();
+  // Touches caisse uniques (nettoyées)
+  if (POS_DATA && POS_DATA.loaded) {
+    POS_DATA.links.forEach(l => {
+      const clean = prettyPosName(l.pos).toLowerCase();
+      // Seulement les mots du nom caisse qui pourraient être une marque
+      clean.split(' ').forEach(w => {
+        if (w.length >= 4) candidates.add(w);
+      });
+    });
+  }
+  // Mots du catalogue (partie discriminante)
+  CATALOGUE.slice(0, 500).forEach(p => {
+    p.s.toLowerCase().split(' ').forEach(w => {
+      if (w.length >= 4 && !/^\d/.test(w)) candidates.add(w);
+    });
+  });
+  
+  // Scorer par distance
+  const scored = [];
+  candidates.forEach(c => {
+    const d = levenshtein(q, c);
+    // Accepte si distance <= 2 pour les mots de 4-6 chars, <= 3 pour les plus longs
+    const maxDist = c.length <= 6 ? 2 : 3;
+    if (d <= maxDist) scored.push({ word: c, distance: d });
+  });
+  scored.sort((a, b) => a.distance - b.distance);
+  return scored.slice(0, maxResults).map(s => s.word);
+}
+
+// Catégoriser un produit du catalogue (spiritueux / vin / bière / soft / autre)
+function categorizeProduct(product) {
+  if (!product) return 'autre';
+  const cat = (product.c || '').toLowerCase();
+  const name = (product.y || '').toLowerCase();
+  
+  // Vins
+  if (cat.includes('vin') || cat.includes('champagne') || cat.includes('crémant') || cat.includes('prosecco')) return 'vin';
+  if (name.includes('champagne') || name.includes('prosecco')) return 'vin-bulles';
+  
+  // Spiritueux
+  if (cat.includes('spiritueux') || cat.includes('alcool') || cat.includes('gin') || cat.includes('vodka') 
+      || cat.includes('rhum') || cat.includes('whisky') || cat.includes('tequila') 
+      || cat.includes('cognac') || cat.includes('liqueur')) return 'spiritueux';
+  
+  // Bières
+  if (cat.includes('bière') || cat.includes('biere') || cat.includes('beer')) return 'biere';
+  
+  // Softs / boissons non-alcoolisées
+  if (cat.includes('soft') || cat.includes('soda') || cat.includes('jus') 
+      || cat.includes('eau') || cat.includes('boisson')) return 'soft';
+  
+  // Cocktails
+  if (cat.includes('cocktail')) return 'cocktail';
+  
+  return 'autre';
+}
+
+function categoryLabel(cat) {
+  const labels = {
+    'vin': 'Vin',
+    'vin-bulles': 'Vin effervescent',
+    'spiritueux': 'Spiritueux',
+    'biere': 'Bière',
+    'soft': 'Soft / Jus',
+    'cocktail': 'Cocktail',
+    'autre': 'Autre'
+  };
+  return labels[cat] || cat;
+}
+
+
 // ---------- Logique Victor ----------
 // Mapping étab → tag pour filtrer les produits du catalogue par étab
 // (réutilise ETAB_TO_TAG déjà défini)
@@ -3074,93 +3749,86 @@ function prettyPosName(posName) {
   return s || posName;
 }
 
+
+// Gère les questions inverses "quelles bouteilles dans X"
+function handleInverseQuery(inverse) {
+  const currentEtab = state.estab;
+  const targetWords = normalizePos(inverse.targetRaw).split(' ').filter(w => w.length >= 2);
+  if (targetWords.length === 0) {
+    return { text: "Dis-moi de quel produit tu veux connaître les bouteilles. Ex: \"quelles bouteilles dans gin verse\"." };
+  }
+  let bestProduct = null;
+  let bestScore = 0;
+  for (const p of CATALOGUE) {
+    const pn = normalizePos(p.y);
+    let score = 0;
+    for (const w of targetWords) {
+      if (pn.includes(w)) score += w.length;
+    }
+    if (score > bestScore) { bestScore = score; bestProduct = p; }
+  }
+  if (!bestProduct) {
+    return { text: "Je ne trouve pas le produit \"" + inverse.targetRaw + "\" dans le catalogue." };
+  }
+  const links = findPosForProduct(bestProduct.y, currentEtab);
+  if (links.length === 0) {
+    return { text: "Aucune touche caisse ne décrémente \"" + bestProduct.s + "\" dans les établissements que j'ai." };
+  }
+  const byEtab = {};
+  links.forEach(l => {
+    if (!byEtab[l.etab]) byEtab[l.etab] = [];
+    byEtab[l.etab].push(prettyPosName(l.pos));
+  });
+  for (const e of Object.keys(byEtab)) {
+    byEtab[e] = Array.from(new Set(byEtab[e]));
+  }
+  let text = "Dans **" + bestProduct.s + "** on retrouve :\n";
+  if (byEtab[currentEtab]) {
+    text += "\n• Ici (" + currentEtab + ") : " + byEtab[currentEtab].slice(0, 8).join(', ');
+    delete byEtab[currentEtab];
+  }
+  const others = Object.keys(byEtab);
+  if (others.length > 0) {
+    text += "\n\nDans d'autres étabs :";
+    others.forEach(e => {
+      text += "\n• " + e + " : " + byEtab[e].slice(0, 6).join(', ');
+    });
+  }
+  return { text, suggestions: [] };
+}
+
 function victorRespond(msg) {
   const n = normalizePos(msg);
   const currentEtab = state.estab;
 
+  // ========== RÉPONSE À UNE QUESTION DE DÉSAMBIGUÏSATION ==========
+  // Si Victor attendait une réponse à une question (victorContext.awaiting), traiter ici
+  if (victorContext && victorContext.awaiting) {
+    return handleContextualReply(msg);
+  }
+
   // Salut rapide
   if (/^(bonjour|salut|hello|coucou|hey|yo)\b/i.test(msg.trim())) {
-    return { text: 'Salut ! Dis-moi ce que tu cherches — par exemple "je trouve pas Tanqueray" et je te dis sous quel produit le compter. Tu peux aussi me demander "quelles bouteilles dans gin verse" pour voir ce qu\'il y a dans un produit.' };
+    return { text: 'Salut ! Dis-moi ce que tu cherches — par exemple "je trouve pas Tanqueray". Si je ne trouve pas direct, je te guiderai.' };
   }
 
   // ========== DÉTECTION QUESTION INVERSE ==========
   const inverse = detectInverseQuery(msg);
   if (inverse) {
-    // L'utilisateur demande "quelles bouteilles dans X"
-    // On cherche un produit du catalogue qui matche la cible
-    const targetWords = normalizePos(inverse.targetRaw).split(' ').filter(w => w.length >= 2);
-    if (targetWords.length === 0) {
-      return { text: "Dis-moi de quel produit tu veux connaître les bouteilles. Ex: \"quelles bouteilles dans gin verse\"." };
-    }
-    // Trouver le meilleur produit du catalogue par score (mots qui matchent)
-    let bestProduct = null;
-    let bestScore = 0;
-    for (const p of CATALOGUE) {
-      const pn = normalizePos(p.y);
-      let score = 0;
-      for (const w of targetWords) {
-        if (pn.includes(w)) score += w.length;
-      }
-      if (score > bestScore) { bestScore = score; bestProduct = p; }
-    }
-    if (!bestProduct) {
-      return { text: "Je ne trouve pas le produit \"" + inverse.targetRaw + "\" dans le catalogue." };
-    }
-    // Chercher toutes les touches caisse qui pointent vers ce produit
-    const links = findPosForProduct(bestProduct.y, currentEtab);
-    if (links.length === 0) {
-      return { text: "Aucune touche caisse ne décrémente \"" + bestProduct.s + "\" dans les établissements que j\'ai." };
-    }
-    // Grouper par étab
-    const byEtab = {};
-    links.forEach(l => {
-      if (!byEtab[l.etab]) byEtab[l.etab] = [];
-      byEtab[l.etab].push(prettyPosName(l.pos));
-    });
-    // Dédoublonner dans chaque groupe
-    for (const e of Object.keys(byEtab)) {
-      byEtab[e] = Array.from(new Set(byEtab[e]));
-    }
-    // Construire la réponse
-    let text = "Dans **" + bestProduct.s + "** on retrouve :\n";
-    // D'abord l'étab actuel
-    if (byEtab[currentEtab]) {
-      text += "\n• Ici (" + currentEtab + ") : " + byEtab[currentEtab].slice(0, 8).join(', ');
-      delete byEtab[currentEtab];
-    }
-    // Puis les autres
-    const others = Object.keys(byEtab);
-    if (others.length > 0) {
-      text += "\n\nDans d\'autres étabs :";
-      others.forEach(e => {
-        text += "\n• " + e + " : " + byEtab[e].slice(0, 6).join(', ');
-      });
-    }
-    return { text, suggestions: [] };
+    return handleInverseQuery(inverse);
   }
 
-  // ========== VÉRIFICATION LIAISONS MANUELLES ==========
-  // Si la query matche un mot-clé de liaison manuelle, on la privilégie
-  const liaisonsHits = [];
-  const liaisonsList = getLiaisonsForCurrentEtab();
-  for (const l of liaisonsList) {
-    const kw = normalizePos(l.keyword);
-    if (!kw) continue;
-    // Match si la query contient les mots du keyword, OU si le keyword contient la query
-    const nQuery = n;
-    const kwWords = kw.split(' ').filter(w => w.length >= 2);
-    const queryWords = nQuery.split(' ').filter(w => w.length >= 2);
-    const allKwInQuery = kwWords.length > 0 && kwWords.every(w => nQuery.includes(w));
-    const allQueryInKw = queryWords.length > 0 && queryWords.every(w => kw.includes(w));
-    if (allKwInQuery || allQueryInKw) {
-      const prod = CATALOGUE.find(p => p.y === l.productYokitup);
-      if (prod) {
-        liaisonsHits.push({ liaison: l, prod });
-      }
-    }
-  }
+  // ========== CHEMIN PRINCIPAL ==========
+  resetVictorContext();
+  return searchAndRespond(msg);
+}
 
-  // ========== RECHERCHE NORMALE (bouteille → produit) ==========
+// Recherche normale + gestion des cas 1-4
+function searchAndRespond(msg) {
+  const n = normalizePos(msg);
+  const currentEtab = state.estab;
+
+  // Mots stop
   const stopWords = new Set([
     'je','ne','pas','tu','il','elle','nous','vous','ils','elles',
     'le','la','les','un','une','des','du','de','au','aux',
@@ -3173,40 +3841,47 @@ function victorRespond(msg) {
   ]);
   const words = n.split(/\s+/).filter(w => w && !stopWords.has(w) && w.length >= 2);
   if (words.length === 0) {
-    return { text: "Dis-moi quelle bouteille ou quelle marque tu cherches, je te dis sous quel produit la compter." };
+    return { text: "Dis-moi ce que tu cherches, même une marque ou un nom partiel." };
   }
 
   if (!POS_DATA || !POS_DATA.loaded) {
     return { text: "Je charge encore les données… Réessaie dans un instant." };
   }
-  if (POS_DATA.links.length === 0) {
-    return { text: "Je n\'ai pas encore les fiches techniques pour cet établissement." };
+
+  // 1. Liaisons manuelles (priorité absolue si match)
+  const liaisonsHits = [];
+  const liaisonsList = getLiaisonsForCurrentEtab();
+  for (const l of liaisonsList) {
+    const kw = normalizePos(l.keyword);
+    if (!kw) continue;
+    const kwWords = kw.split(' ').filter(w => w.length >= 2);
+    const queryWords = n.split(' ').filter(w => w.length >= 2);
+    const allKwInQuery = kwWords.length > 0 && kwWords.every(w => n.includes(w));
+    const allQueryInKw = queryWords.length > 0 && queryWords.every(w => kw.includes(w));
+    if (allKwInQuery || allQueryInKw) {
+      const prod = CATALOGUE.find(p => p.y === l.productYokitup);
+      if (prod) liaisonsHits.push({ liaison: l, prod });
+    }
   }
 
-  // Suggestions VERSE automatiques (softs/jus qui n'ont pas de touche caisse directe)
+  // 2. VERSE (jus / softs sans touche caisse dédiée)
   const verseHits = suggestVerseProducts(n, words);
 
-  // Recherche dans les touches POS : SCORE + préférence étab actuel
-  // score = points pour chaque mot qui matche
-  // bonus si match sur l'étab actuel
+  // 3. Recherche POS avec SCORING AMÉLIORÉ
   const matches = new Map();
   for (const link of POS_DATA.links) {
     const posNorm = normalizePos(link.pos);
     let score = 0;
     for (const w of words) {
-      if (posNorm.includes(w)) score += w.length;
+      score += scoreMatch(w, posNorm);
     }
     if (score > 0) {
-      // Bonus si étab = étab actuel
       const isMine = link.etab === currentEtab;
       const effectiveScore = score + (isMine ? 100 : 0);
       const key = link.product;
       const existing = matches.get(key) || {
-        product: link.product,
-        score: 0,
-        pos_examples: [],
-        etabs: new Set(),
-        fromCurrentEtab: false
+        product: link.product, score: 0, pos_examples: [],
+        etabs: new Set(), fromCurrentEtab: false
       };
       existing.score = Math.max(existing.score, effectiveScore);
       existing.etabs.add(link.etab);
@@ -3215,20 +3890,66 @@ function victorRespond(msg) {
       matches.set(key, existing);
     }
   }
-
   const sorted = Array.from(matches.values()).sort((a, b) => b.score - a.score);
-  if (sorted.length === 0 && verseHits.length === 0) {
-    return { text: "Je ne trouve rien qui ressemble à \"" + msg + "\". Tu peux reformuler ou chercher directement dans le catalogue." };
+
+  // ========== DÉCISION : QUEL CAS ? ==========
+
+  // CAS A : liaisons manuelles → priorité absolue
+  if (liaisonsHits.length > 0) {
+    return buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentEtab);
   }
 
-  // Séparer les matches de l'étab actuel et des autres
+  // CAS B : résultats assez précis (1-3 matches sérieux)
+  const goodMatches = sorted.filter(m => m.score >= 8);
+  if (goodMatches.length >= 1 && goodMatches.length <= 5) {
+    return buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentEtab);
+  }
+
+  // CAS C : BEAUCOUP de résultats → proposer de préciser par catégorie
+  if (sorted.length >= 6) {
+    sendLogToBackend({
+      query: msg,
+      type: 'low_confidence',
+      details: { num_results: sorted.length, reason: 'too_many_matches' }
+    });
+    return buildDisambiguationByCategory(msg, sorted);
+  }
+
+  // CAS D : ZÉRO résultat → did you mean + questions
+  if (sorted.length === 0 && verseHits.length === 0) {
+    const similar = findSimilarNames(msg);
+    if (similar.length > 0) {
+      sendLogToBackend({
+        query: msg,
+        type: 'low_confidence',
+        details: { num_results: 0, reason: 'typo_suspected', suggestions: similar.slice(0,3).map(s => s.label || s) }
+      });
+      return {
+        text: "Aucun résultat pour \"" + msg + "\". Tu voulais peut-être dire ?",
+        quickReplies: similar.slice(0, 3)
+      };
+    }
+    // Rien de proche → questions guidées
+    sendLogToBackend({
+      query: msg,
+      type: 'zero_result',
+      details: { num_results: 0, reason: 'no_match_and_no_similar' }
+    });
+    return startCategoryQuestions(msg);
+  }
+
+  // Cas par défaut : proposer ce qu'on a
+  return buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentEtab);
+}
+
+// Construit la réponse avec les suggestions
+function buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentEtab) {
   const fromMine = sorted.filter(m => m.fromCurrentEtab).slice(0, 5);
   const fromOthers = sorted.filter(m => !m.fromCurrentEtab).slice(0, 3);
 
   const seen = new Set();
   const suggestions = [];
 
-  // LIAISONS MANUELLES en tout premier (admin a créé des mappings explicites)
   liaisonsHits.forEach(h => {
     if (h.prod && !seen.has(h.prod.id)) {
       seen.add(h.prod.id);
@@ -3240,7 +3961,6 @@ function victorRespond(msg) {
     }
   });
 
-  // VERSE en tête
   verseHits.forEach(v => {
     if (v.productRef && !seen.has(v.productRef.id)) {
       seen.add(v.productRef.id);
@@ -3251,7 +3971,6 @@ function victorRespond(msg) {
     }
   });
 
-  // Étab actuel
   fromMine.forEach(m => {
     const resolved = resolveToCatalog(m.product);
     if (resolved && !seen.has(resolved.id)) {
@@ -3268,32 +3987,217 @@ function victorRespond(msg) {
     }
   });
 
-  // Autres étabs si peu de résultats dans l'étab actuel
   if (suggestions.length < 3) {
     fromOthers.forEach(m => {
       const resolved = resolveToCatalog(m.product);
       if (resolved && !seen.has(resolved.id)) {
         seen.add(resolved.id);
-        const etabsList = Array.from(m.etabs);
         suggestions.push({
           productId: resolved.id, name: resolved.s, yokitup: resolved.y,
           pos_examples: m.pos_examples, inCatalogue: true,
-          fromOtherEtab: etabsList.join(', ')
+          fromOtherEtab: Array.from(m.etabs).join(', ')
         });
       }
     });
   }
 
-  // Texte de réponse
   let text;
-  if (suggestions.length === 1) {
-    const s = suggestions[0];
-    text = "D\'après les fiches techniques, c\'est compté dans : **" + s.name + "**";
+  if (suggestions.length === 0) {
+    text = "Je ne trouve rien qui ressemble à \"" + msg + "\".";
+  } else if (suggestions.length === 1) {
+    text = "D'après les fiches techniques, c'est compté dans : **" + suggestions[0].name + "**";
   } else {
     text = "Voici les produits qui pourraient correspondre :";
   }
   return { text, suggestions };
 }
+
+// Propose de préciser par catégorie quand trop de résultats
+function buildDisambiguationByCategory(msg, sorted) {
+  // Regrouper par catégorie
+  const byCat = {};
+  sorted.slice(0, 20).forEach(m => {
+    const prod = resolveToCatalog(m.product);
+    const cat = categorizeProduct(prod);
+    if (!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(m);
+  });
+  const cats = Object.keys(byCat).filter(c => byCat[c].length > 0);
+  if (cats.length <= 1) {
+    // Une seule catégorie : inutile de désambiguïser
+    return buildSuggestionsResponse(msg, [], [], sorted, state.estab);
+  }
+
+  victorContext = {
+    awaiting: 'category',
+    originalQuery: msg,
+    matches: sorted,
+    categories: cats
+  };
+
+  const quickReplies = cats.map(c => categoryLabel(c));
+  return {
+    text: "J'ai trouvé " + sorted.length + " résultats pour \"" + msg + "\". C'est plutôt :",
+    quickReplies: quickReplies
+  };
+}
+
+// Démarre un arbre de questions quand zéro résultat
+function startCategoryQuestions(msg) {
+  victorContext = {
+    awaiting: 'category-blind',
+    originalQuery: msg,
+    answers: {}
+  };
+  return {
+    text: "\"" + msg + "\" ne me dit rien. Peux-tu me dire de quoi il s'agit ?",
+    quickReplies: ['Vin', 'Spiritueux', 'Bière', 'Soft / Jus', 'Autre']
+  };
+}
+
+// Traite une réponse contextuelle (boutons cliqués ou texte libre)
+function handleContextualReply(msg) {
+  const ctx = victorContext;
+  const low = msg.toLowerCase().trim();
+
+  // ---- Étape catégorie (après beaucoup de résultats) ----
+  if (ctx.awaiting === 'category') {
+    // Trouver la catégorie choisie
+    const chosenLabel = msg;
+    const chosenCat = ctx.categories.find(c => categoryLabel(c).toLowerCase() === low);
+    if (!chosenCat) {
+      // Non reconnu : afficher à nouveau les options
+      return {
+        text: "Je n'ai pas compris. Choisis une catégorie :",
+        quickReplies: ctx.categories.map(c => categoryLabel(c))
+      };
+    }
+    // Filtrer les matches par catégorie
+    const filtered = ctx.matches.filter(m => {
+      const prod = resolveToCatalog(m.product);
+      return categorizeProduct(prod) === chosenCat;
+    });
+    resetVictorContext();
+    return buildSuggestionsResponse(ctx.originalQuery, [], [], filtered, state.estab);
+  }
+
+  // ---- Étape category-blind (aucun résultat initial) ----
+  if (ctx.awaiting === 'category-blind') {
+    const map = { 'vin': 'vin', 'vins': 'vin', 'spiritueux': 'spiritueux', 'alcool': 'spiritueux',
+                  'bière': 'biere', 'biere': 'biere', 'soft': 'soft', 'soft / jus': 'soft', 'jus': 'soft',
+                  'autre': 'autre' };
+    const cat = map[low] || null;
+    if (!cat) {
+      return {
+        text: "Choisis une catégorie :",
+        quickReplies: ['Vin', 'Spiritueux', 'Bière', 'Soft / Jus', 'Autre']
+      };
+    }
+    ctx.answers.category = cat;
+
+    // Affiner selon catégorie
+    if (cat === 'vin') {
+      ctx.awaiting = 'vin-color';
+      return {
+        text: "Quelle couleur ?",
+        quickReplies: ['Rouge', 'Blanc', 'Rosé', 'Bulles']
+      };
+    }
+    if (cat === 'spiritueux') {
+      ctx.awaiting = 'spiritueux-type';
+      return {
+        text: "Quel type de spiritueux ?",
+        quickReplies: ['Gin', 'Vodka', 'Rhum', 'Whisky', 'Tequila', 'Autre']
+      };
+    }
+    // Pour bière, soft, autre → demander directement la création admin / fin
+    return finishBlindQuestions(ctx);
+  }
+
+  // ---- Étape vin-color ----
+  if (ctx.awaiting === 'vin-color') {
+    ctx.answers.color = low;
+    if (low === 'bulles' || low.includes('bulle')) {
+      ctx.awaiting = 'vin-bulles-type';
+      return {
+        text: "Quel type ?",
+        quickReplies: ['Champagne', 'Prosecco', 'Cava', 'Crémant', 'Autre']
+      };
+    }
+    return finishBlindQuestions(ctx);
+  }
+
+  // ---- Étape spiritueux-type ----
+  if (ctx.awaiting === 'spiritueux-type') {
+    ctx.answers.spiritType = low;
+    return finishBlindQuestions(ctx);
+  }
+
+  // ---- Étape vin-bulles-type ----
+  if (ctx.awaiting === 'vin-bulles-type') {
+    ctx.answers.bullesType = low;
+    return finishBlindQuestions(ctx);
+  }
+
+  // Par défaut, reset et recherche classique
+  resetVictorContext();
+  return searchAndRespond(msg);
+}
+
+// Propose un résultat basé sur les réponses ou enregistre une demande admin
+function finishBlindQuestions(ctx) {
+  const ans = ctx.answers;
+  let bestProduct = null;
+  let targetKeyword = '';
+
+  // Mapping réponses → produit Yokitup probable
+  if (ans.category === 'vin' && ans.color === 'bulles' && ans.bullesType) {
+    // Chercher un produit qui matche le type de bulles
+    const needle = ans.bullesType.toLowerCase();
+    bestProduct = CATALOGUE.find(p => p.y.toLowerCase().includes(needle) 
+                                       && p.y.toUpperCase().includes('VERSE'))
+               || CATALOGUE.find(p => p.y.toLowerCase().includes(needle));
+    targetKeyword = ans.bullesType;
+  } else if (ans.category === 'vin' && ans.color) {
+    // Chercher un "vin rouge verse" ou similaire
+    const colorMap = { 'rouge': 'RGE', 'blanc': 'BLC', 'rose': 'RSE', 'rosé': 'RSE' };
+    const colorCode = colorMap[ans.color] || '';
+    bestProduct = CATALOGUE.find(p => p.y.toUpperCase().includes('VERSE') 
+                                       && p.y.toUpperCase().includes(colorCode));
+    targetKeyword = 'vin ' + ans.color;
+  } else if (ans.category === 'spiritueux' && ans.spiritType) {
+    const needle = ans.spiritType.toUpperCase();
+    bestProduct = CATALOGUE.find(p => p.y === needle + ' VERSE')
+               || CATALOGUE.find(p => p.y.includes(needle + ' VERSE'))
+               || CATALOGUE.find(p => p.y.includes(needle));
+    targetKeyword = ans.spiritType;
+  }
+
+  // Enregistrer la demande pour admin (même si on propose quelque chose)
+  const personne = state.currentInventory ? state.currentInventory.personne : '';
+  addVictorRequest(ctx.originalQuery, {
+    answers: ans,
+    proposedProduct: bestProduct ? bestProduct.y : null
+  }, state.estab, personne);
+
+  resetVictorContext();
+
+  if (bestProduct) {
+    return {
+      text: "D'après ce que tu me dis, essaie de le compter sous : **" + bestProduct.s + "**. J'ai aussi transmis ta demande à Victor pour qu'il crée une association définitive.",
+      suggestions: [{
+        productId: bestProduct.id, name: bestProduct.s, yokitup: bestProduct.y,
+        pos_examples: [], inCatalogue: true, viaDeduction: true
+      }]
+    };
+  } else {
+    return {
+      text: "Je n'arrive pas à te donner une suggestion précise. J'ai noté ta demande pour Victor, il va s'en occuper et créer l'association. En attendant, cherche directement dans le catalogue."
+    };
+  }
+}
+
+
 
 
 function renderProductSuggestions(suggestions) {
@@ -3346,6 +4250,41 @@ function renderProductSuggestions(suggestions) {
   root.scrollTop = root.scrollHeight;
 }
 
+// Affiche des boutons cliquables dans le chat (désambiguïsation)
+function renderQuickReplies(replies) {
+  const chatBody = document.getElementById('chatBody');
+  if (!chatBody) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-quickreplies';
+  replies.forEach(r => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chat-qr-btn';
+    btn.textContent = r;
+    btn.addEventListener('click', () => {
+      // Désactiver tous les boutons du groupe pour éviter multi-clics
+      wrap.querySelectorAll('button').forEach(b => b.disabled = true);
+      // Simuler que le chef a tapé cette réponse
+      addChatMsg('user', r);
+      setTimeout(() => {
+        const reply = victorRespond(r);
+        addChatMsg('assistant', reply.text);
+        if (reply.suggestions && reply.suggestions.length) {
+          renderProductSuggestions(reply.suggestions);
+        }
+        if (reply.quickReplies && reply.quickReplies.length) {
+          renderQuickReplies(reply.quickReplies);
+        }
+      }, 200);
+    });
+    wrap.appendChild(btn);
+  });
+  chatBody.appendChild(wrap);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+
+
 /* ---------- Init ---------- */
 
 function openEstabSheet(){
@@ -3384,7 +4323,11 @@ function selectEstab(nom){
     state.estab = nom;
     saveState();
     loadPosData();
-  loadLiaisonsRemote();  // Recharger POS pour le nouvel établissement
+  loadLiaisonsRemote();
+  // Essayer de vider la file de logs si connexion dispo
+  flushLogQueue().catch(() => {});
+  // Retry la file toutes les 2 min
+  setInterval(() => flushLogQueue().catch(() => {}), 120000);  // Recharger POS pour le nouvel établissement
     renderHeader();
     renderCatalogue();
     closeEstabPage();
@@ -4413,6 +5356,10 @@ function saveLiaisonEditor() {
     list.push(currentLiaison);
   }
   saveLiaisonsLocal(list);
+  // Si c'était une création depuis demande, marquer la demande comme résolue
+  if (currentLiaison.fromRequestId) {
+    markRequestResolved(currentLiaison.fromRequestId);
+  }
   closeLiaisonEditor();
   renderLiaisons();
   toast('Liaison enregistrée');
@@ -4442,6 +5389,7 @@ function updateAdminUIVisibility() {
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = isAdmin ? '' : 'none';
   });
+  if (isAdmin) updateAdminBadge();
 }
 
 function init(){
