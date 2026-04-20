@@ -4139,26 +4139,57 @@ function finishBlindQuestions(ctx) {
   let bestProduct = null;
   let targetKeyword = '';
 
-  // Mapping réponses → produit Yokitup probable
+  // Helper : trouver un produit EXACT par nom Yokitup (insensible à la casse et aux espaces)
+  const findExact = (name) => CATALOGUE.find(p => p.y.toUpperCase().trim() === name.toUpperCase().trim());
+
+  // Helper : trouver un produit "générique" pour un étab, c'est-à-dire taggé pour l'étab actif
+  // et dont le nom contient le mot-clé comme MOT ENTIER (pas en sous-chaîne)
+  const findByFullWord = (keywords, mustHaveVerse) => {
+    const currentTag = ETAB_TO_TAG[state.estab];
+    const patterns = keywords.map(k => new RegExp('\\b' + k + '\\b', 'i'));
+    return CATALOGUE.find(p => {
+      const hasVerse = p.y.toUpperCase().includes('VERSE');
+      if (mustHaveVerse && !hasVerse) return false;
+      const belongsToEtab = currentTag ? (p.t && p.t.indexOf(currentTag) >= 0) : true;
+      if (!belongsToEtab) return false;
+      return patterns.every(re => re.test(p.y));
+    });
+  };
+
   if (ans.category === 'vin' && ans.color === 'bulles' && ans.bullesType) {
-    // Chercher un produit qui matche le type de bulles
-    const needle = ans.bullesType.toLowerCase();
-    bestProduct = CATALOGUE.find(p => p.y.toLowerCase().includes(needle) 
-                                       && p.y.toUpperCase().includes('VERSE'))
-               || CATALOGUE.find(p => p.y.toLowerCase().includes(needle));
+    // Ex: "Prosecco" → essayer d'abord "PROSECCO VERSE" exact, puis par mot entier
+    const needle = ans.bullesType.toUpperCase();
+    bestProduct = findExact(needle + ' VERSE')
+               || findByFullWord([needle], true)
+               || findByFullWord([needle], false);
     targetKeyword = ans.bullesType;
   } else if (ans.category === 'vin' && ans.color) {
-    // Chercher un "vin rouge verse" ou similaire
-    const colorMap = { 'rouge': 'RGE', 'blanc': 'BLC', 'rose': 'RSE', 'rosé': 'RSE' };
-    const colorCode = colorMap[ans.color] || '';
-    bestProduct = CATALOGUE.find(p => p.y.toUpperCase().includes('VERSE') 
-                                       && p.y.toUpperCase().includes(colorCode));
+    // Chercher un produit GÉNÉRIQUE type "VIN ROUGE VERSE"
+    const colorMap = { 
+      'rouge': ['ROUGE', 'RGE'], 
+      'blanc': ['BLANC', 'BLC'], 
+      'rose': ['ROSE', 'RSE', 'ROSÉ'],
+      'rosé': ['ROSE', 'RSE', 'ROSÉ']
+    };
+    const colorWords = colorMap[ans.color.toLowerCase()] || [];
+    // 1. Essai "VIN ROUGE VERSE" exact
+    for (const cw of colorWords) {
+      bestProduct = findExact('VIN ' + cw + ' VERSE');
+      if (bestProduct) break;
+    }
+    // 2. Sinon : produit qui contient à la fois VIN, la couleur, et VERSE (mots entiers)
+    if (!bestProduct) {
+      for (const cw of colorWords) {
+        bestProduct = findByFullWord(['VIN', cw], true);
+        if (bestProduct) break;
+      }
+    }
     targetKeyword = 'vin ' + ans.color;
   } else if (ans.category === 'spiritueux' && ans.spiritType) {
     const needle = ans.spiritType.toUpperCase();
-    bestProduct = CATALOGUE.find(p => p.y === needle + ' VERSE')
-               || CATALOGUE.find(p => p.y.includes(needle + ' VERSE'))
-               || CATALOGUE.find(p => p.y.includes(needle));
+    bestProduct = findExact(needle + ' VERSE')
+               || findByFullWord([needle], true)
+               || findByFullWord([needle], false);
     targetKeyword = ans.spiritType;
   }
 
