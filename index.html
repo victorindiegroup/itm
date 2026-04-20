@@ -1090,7 +1090,6 @@
       <button class="tab" data-tab="batches">Batchs</button>
       <button class="tab admin-only" data-tab="liaisons" style="display:none;">Liaisons</button>
       <button class="tab admin-only" data-tab="alerts" style="display:none;">Alertes</button>
-      <button class="tab admin-only" data-tab="demandes" style="display:none;">Demandes <span id="adminBadge" class="badge" style="display:none; background:var(--danger); color:white;">0</span></button>
   <button class="tab" data-tab="export">Saisies</button>
 </div>
 
@@ -3546,17 +3545,7 @@ function addVictorRequest(query, context, etab, personne) {
 }
 
 function updateAdminBadge() {
-  // Badge numérique sur l'onglet Liaisons pour l'admin si des demandes en attente
-  const pending = loadVictorQueue().filter(r => r.status === 'pending').length;
-  const badge = document.getElementById('adminBadge');
-  if (badge) {
-    if (pending > 0) {
-      badge.textContent = pending;
-      badge.style.display = '';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
+  // Plus de badge visuel (onglet 'Demandes' retiré au profit de 'Alertes' backend)
 }
 
 function resetVictorContext() {
@@ -4252,8 +4241,8 @@ function renderProductSuggestions(suggestions) {
 
 // Affiche des boutons cliquables dans le chat (désambiguïsation)
 function renderQuickReplies(replies) {
-  const chatBody = document.getElementById('chatBody');
-  if (!chatBody) return;
+  const container = document.getElementById('chatMsgs');
+  if (!container) return;
   const wrap = document.createElement('div');
   wrap.className = 'chat-quickreplies';
   replies.forEach(r => {
@@ -4279,8 +4268,8 @@ function renderQuickReplies(replies) {
     });
     wrap.appendChild(btn);
   });
-  chatBody.appendChild(wrap);
-  chatBody.scrollTop = chatBody.scrollHeight;
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
 }
 
 
