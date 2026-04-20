@@ -4193,6 +4193,7 @@ function deleteBatchLine() {
 // ÉDITEUR DE LIAISON MANUELLE (admin)
 // ============================================================
 let currentLiaison = null;
+let liaisonInlineSearch = '';
 let liaisonPickerSearchTerm = '';  // pour le picker produit
 
 function openLiaisonEditor(liaisonId) {
@@ -4229,7 +4230,7 @@ function renderLiaisonEditor() {
 
   const product = CATALOGUE.find(p => p.y === currentLiaison.productYokitup);
 
-  let html = '<div style="padding: 16px 20px;">';
+  let html = '<div style="padding: 16px 20px 40px;">';
 
   // Mot-clé (ce que le chef tape)
   html += '<div class="field" style="margin-bottom: 20px;">';
@@ -4242,6 +4243,7 @@ function renderLiaisonEditor() {
   html += '<div class="field" style="margin-bottom: 20px;">';
   html += '  <label class="field-lbl">→ Produit Yokitup à suggérer</label>';
   if (product) {
+    // Produit choisi : affichage avec bouton "Changer"
     const pillLabel = product.p || 'LITRE';
     const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
     html += '  <div style="padding:12px; background:var(--accent-soft); border:1px solid var(--accent); border-radius:10px; display:flex; align-items:center; gap:8px;">';
@@ -4250,7 +4252,9 @@ function renderLiaisonEditor() {
     html += '    <button type="button" id="liaisonChangeProduct" style="background:transparent; border:none; color:var(--accent-dark); font-size:12px; cursor:pointer; text-decoration:underline;">Changer</button>';
     html += '  </div>';
   } else {
-    html += '  <button type="button" id="liaisonPickProduct" style="width:100%; padding:14px; background:var(--surface); border:1px dashed var(--border); border-radius:10px; font-size:14px; color:var(--ink-2); cursor:pointer;">+ Choisir un produit</button>';
+    // Pas de produit choisi : champ recherche inline + liste de résultats
+    html += '  <input type="search" id="liaisonProductSearch" class="field-input" placeholder="Rechercher un produit..." value="' + escape(liaisonInlineSearch || '') + '">';
+    html += '  <div id="liaisonProductResults" style="margin-top:8px; max-height:400px; overflow-y:auto; border:1px solid var(--border); border-radius:10px; background:var(--surface);"></div>';
   }
   html += '</div>';
 
@@ -4286,10 +4290,28 @@ function renderLiaisonEditor() {
     currentLiaison.keyword = e.target.value;
   });
 
-  const pickBtn = document.getElementById('liaisonPickProduct');
-  const changeBtn = document.getElementById('liaisonChangeProduct');
-  if (pickBtn) pickBtn.addEventListener('click', openProductPickerForLiaison);
-  if (changeBtn) changeBtn.addEventListener('click', openProductPickerForLiaison);
+  // Si pas de produit choisi : binder la recherche inline
+  if (!product) {
+    const searchInput = document.getElementById('liaisonProductSearch');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        liaisonInlineSearch = e.target.value;
+        renderLiaisonProductResults();
+      });
+      // Render initial
+      renderLiaisonProductResults();
+    }
+  } else {
+    // Bouton "Changer"
+    const changeBtn = document.getElementById('liaisonChangeProduct');
+    if (changeBtn) {
+      changeBtn.addEventListener('click', () => {
+        currentLiaison.productYokitup = '';
+        liaisonInlineSearch = '';
+        renderLiaisonEditor();
+      });
+    }
+  }
 
   // Scope radios
   body.querySelectorAll('input[name="liaisonScope"]').forEach(r => {
@@ -4297,7 +4319,6 @@ function renderLiaisonEditor() {
       if (e.target.value === 'all') {
         currentLiaison.etabs = ['*'];
       } else {
-        // Passer en mode spécifique, vider d'abord
         currentLiaison.etabs = [];
       }
       renderLiaisonEditor();
@@ -4313,6 +4334,54 @@ function renderLiaisonEditor() {
       } else {
         currentLiaison.etabs = currentLiaison.etabs.filter(t => t !== tag);
       }
+    });
+  });
+}
+
+// Rendu inline de la liste de résultats (ne touche pas au reste de l'éditeur)
+function renderLiaisonProductResults() {
+  const div = document.getElementById('liaisonProductResults');
+  if (!div) return;
+
+  const term = normalize((liaisonInlineSearch || '').trim());
+  const words = term ? term.split(/\s+/).filter(Boolean) : [];
+
+  let matches;
+  if (words.length === 0) {
+    // Pas de recherche : afficher juste un message
+    div.innerHTML = '<div style="padding:20px; text-align:center; color:var(--ink-2); font-size:13px;">Tape pour rechercher un produit du catalogue.</div>';
+    return;
+  }
+
+  matches = CATALOGUE.filter(p => {
+    const s = normalize(p._search);
+    return words.every(w => s.includes(w));
+  }).slice(0, 30);
+
+  if (matches.length === 0) {
+    div.innerHTML = '<div style="padding:20px; text-align:center; color:var(--ink-2); font-size:13px;">Aucun produit trouvé.</div>';
+    return;
+  }
+
+  let html = '';
+  matches.forEach(p => {
+    const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
+    const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
+    html += '<div class="liaison-prod-result" data-pid="' + p.id + '" style="padding:10px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; cursor:pointer;">';
+    html += '  <span class="prod-tag ' + pillClass + '">' + escape(pillLabel) + '</span>';
+    html += '  <div style="flex:1; font-size:13px;">' + escape(p.s) + '</div>';
+    html += '</div>';
+  });
+  div.innerHTML = html;
+
+  div.querySelectorAll('.liaison-prod-result').forEach(el => {
+    el.addEventListener('click', () => {
+      const pid = parseInt(el.dataset.pid);
+      const p = CATALOGUE[pid];
+      if (!p) return;
+      currentLiaison.productYokitup = p.y;
+      liaisonInlineSearch = '';
+      renderLiaisonEditor();
     });
   });
 }
@@ -4363,18 +4432,8 @@ function deleteLiaisonEditor() {
   openSheet('shConfirm','ovConfirm');
 }
 
-// Picker produit pour liaison (réutilise le picker des batchs avec un flag)
+// Variable conservée pour compat (pickerModeForLiaison) mais plus utilisée pour les liaisons
 let pickerModeForLiaison = false;
-function openProductPickerForLiaison() {
-  pickerModeForLiaison = true;
-  batchPickerSearchTerm = '';
-  document.getElementById('batchPicker').classList.add('open');
-  renderBatchPicker();
-  setTimeout(() => {
-    const input = document.getElementById('batchPickerSearch');
-    if (input) input.focus();
-  }, 200);
-}
 
 
 // Afficher/cacher les éléments admin-only selon l'auth
