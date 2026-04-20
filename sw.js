@@ -1,6 +1,6 @@
 // ITM Service Worker — offline-first
 // Change la version à chaque mise à jour du code pour forcer le re-téléchargement
-const CACHE_VERSION = 'itm-v36';
+const CACHE_VERSION = 'itm-v37';
 const CACHE_NAME = `itm-cache-${CACHE_VERSION}`;
 
 // Ressources à mettre en cache dès l'installation
@@ -13,7 +13,8 @@ const CORE_ASSETS = [
   './catalogue.json',
   './mascot.png',
   './pos_pablo.csv',
-  './pos_pablo_sbh.csv'
+  './pos_pablo_sbh.csv',
+  './pos_ormeau.csv'
 ];
 
 // Installation : met en cache les ressources essentielles
