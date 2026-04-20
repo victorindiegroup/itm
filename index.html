@@ -3374,6 +3374,10 @@ function sendChat(){
     if (reply.quickReplies && reply.quickReplies.length) {
       renderQuickReplies(reply.quickReplies);
     }
+    // Action button (bouton d'action unique, ex: alerter admin)
+    if (reply.actionButton) {
+      renderActionButton(reply.actionButton);
+    }
   }, 250);
 }
 
@@ -3565,6 +3569,7 @@ function saveVictorQueue(list) {
   localStorage.setItem(VICTOR_QUEUE_KEY, JSON.stringify(list));
 }
 
+// Retourne une Promise qui résout vers le logId backend (pour enchaîner le bouton email)
 function addVictorRequest(query, context, etab, personne) {
   // Local : garde une trace dans le téléphone (fallback, debug)
   const list = loadVictorQueue();
@@ -3580,9 +3585,9 @@ function addVictorRequest(query, context, etab, personne) {
   saveVictorQueue(list);
   updateAdminBadge();
 
-  // Backend : envoie en arrière-plan (type = résolu via questions ou abandonné)
+  // Backend : envoie en arrière-plan
   const hasProposed = context && context.proposedProduct;
-  sendLogToBackend({
+  return sendLogToBackendReturnId({
     query: query,
     type: hasProposed ? 'resolved_by_dialogue' : 'user_confirmed_unknown',
     details: {
@@ -3590,6 +3595,52 @@ function addVictorRequest(query, context, etab, personne) {
       resolved_to: hasProposed ? context.proposedProduct : null
     }
   });
+}
+
+// Variante de sendLogToBackend qui retourne le logId backend (ou null si offline)
+async function sendLogToBackendReturnId(logData) {
+  const record = {
+    etab: state.estab || 'inconnu',
+    personne: (currentAuth && currentAuth.role === 'admin') ? 'admin' : (state.estab || 'chef'),
+    query: logData.query || '',
+    type: logData.type || 'unknown',
+    details: logData.details || {}
+  };
+  try {
+    const response = await fetch(BACKEND_URL + '/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(record),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const data = await response.json();
+    return data.id || null;
+  } catch (e) {
+    // Offline : on met en file, pas de logId disponible
+    const queue = loadLogQueue();
+    queue.push(record);
+    if (queue.length > 100) queue.shift();
+    saveLogQueue(queue);
+    return null;
+  }
+}
+
+// Fonction appelée par le bouton "alerter Victor" depuis le chat chef
+// Protégée côté serveur par vérification d'existence du logId dans KV (pas de token admin nécessaire)
+async function notifyAdminByEmail(logId) {
+  if (!logId) throw new Error('log non disponible (hors-ligne ?)');
+  const response = await fetch(BACKEND_URL + '/notify-admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ logId }),
+    signal: AbortSignal.timeout(10000)
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || ('HTTP ' + response.status));
+  }
+  return true;
 }
 
 function updateAdminBadge() {
@@ -4241,9 +4292,9 @@ function finishBlindQuestions(ctx) {
     targetKeyword = ans.spiritType;
   }
 
-  // Enregistrer la demande pour admin (même si on propose quelque chose)
+  // Enregistrer la demande pour admin (async pour récupérer le logId)
   const personne = state.currentInventory ? state.currentInventory.personne : '';
-  addVictorRequest(ctx.originalQuery, {
+  const logIdPromise = addVictorRequest(ctx.originalQuery, {
     answers: ans,
     proposedProduct: bestProduct ? bestProduct.y : null
   }, state.estab, personne);
@@ -4256,11 +4307,19 @@ function finishBlindQuestions(ctx) {
       suggestions: [{
         productId: bestProduct.id, name: bestProduct.s, yokitup: bestProduct.y,
         pos_examples: [], inCatalogue: true, viaDeduction: true
-      }]
+      }],
+      actionButton: {
+        label: '📧 Alerter Victor par mail',
+        logIdPromise: logIdPromise
+      }
     };
   } else {
     return {
-      text: "Je n'arrive pas à te donner une suggestion précise. J'ai noté ta demande pour Victor, il va s'en occuper et créer l'association. En attendant, cherche directement dans le catalogue."
+      text: "Je n'arrive pas à te donner une suggestion précise. J'ai noté ta demande pour Victor, il va s'en occuper et créer l'association. En attendant, cherche directement dans le catalogue.",
+      actionButton: {
+        label: '📧 Alerter Victor par mail',
+        logIdPromise: logIdPromise
+      }
     };
   }
 }
@@ -4343,6 +4402,9 @@ function renderQuickReplies(replies) {
         if (reply.quickReplies && reply.quickReplies.length) {
           renderQuickReplies(reply.quickReplies);
         }
+        if (reply.actionButton) {
+          renderActionButton(reply.actionButton);
+        }
       }, 200);
     });
     wrap.appendChild(btn);
@@ -4350,6 +4412,51 @@ function renderQuickReplies(replies) {
   container.appendChild(wrap);
   container.scrollTop = container.scrollHeight;
 }
+
+
+// Rendre un bouton d'action custom dans le chat (ex: "Alerter Victor par mail")
+function renderActionButton(actionButton) {
+  const container = document.getElementById('chatMsgs');
+  if (!container) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-action-wrap';
+  wrap.style.cssText = 'display:flex; justify-content:flex-start; padding: 4px 12px 8px;';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'chat-action-btn';
+  btn.style.cssText = 'background:var(--surface); color:var(--accent-dark); border:1px solid var(--accent); border-radius:18px; padding:10px 16px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent;';
+  btn.textContent = actionButton.label;
+
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    const original = btn.textContent;
+    btn.textContent = 'Envoi...';
+    try {
+      const logId = await actionButton.logIdPromise;
+      await notifyAdminByEmail(logId);
+      btn.textContent = '✓ Victor a été alerté';
+      btn.style.background = 'var(--accent-soft)';
+      btn.style.color = 'var(--accent-dark)';
+    } catch (err) {
+      btn.textContent = 'Erreur';
+      btn.style.borderColor = 'var(--danger)';
+      btn.style.color = 'var(--danger)';
+      toast('Erreur : ' + err.message);
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.disabled = false;
+        btn.style.borderColor = '';
+        btn.style.color = '';
+      }, 3000);
+    }
+  });
+
+  wrap.appendChild(btn);
+  container.appendChild(wrap);
+  container.scrollTop = container.scrollHeight;
+}
+
 
 
 
