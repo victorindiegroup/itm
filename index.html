@@ -1051,6 +1051,19 @@
     opacity: 0.5;
     cursor: default;
   }
+
+  .chat-suggestion-badge-cocktail {
+    display: inline-block;
+    background: #FEF4E5;
+    color: #B27513;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 8px;
+    margin-left: 4px;
+    letter-spacing: 0.2px;
+    vertical-align: middle;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -3544,24 +3557,32 @@ function resolveToCatalog(productName) {
 // Mots-clés qui déclenchent la suggestion automatique d'un produit VERSE
 // (utile quand le produit VERSE n'a pas de touche caisse propre)
 const VERSE_KEYWORDS = [
-  { keywords: ['coca', 'cola'], product: 'COCA COLA VERSE' },
-  { keywords: ['tonic'], product: 'TONIC VERSE' },
+  { keywords: ['coca', 'cola', 'cocacola', 'cocazero'], product: 'COCA COLA VERSE' },
+  { keywords: ['tonic', 'schweppes', 'fevertree'], product: 'TONIC VERSE' },
   { keywords: ['ginger'], product: 'GINGER BEER VERSE' },
-  { keywords: ['limonade', 'ale'], product: 'LIMONADE VERSE' },
-  { keywords: ['jus', 'ananas', 'orange', 'pomme', 'passion', 'cranberry', 'fraise', 'tomate', 'pago', 'peche'], product: 'JUS DE FRUIT VERSE' },
+  { keywords: ['limonade', 'lemonade', 'sprite', 'ale'], product: 'LIMONADE VERSE' },
+  { keywords: ['jus', 'ananas', 'orange', 'pomme', 'passion', 'cranberry', 'fraise', 'tomate', 'pago', 'peche', 'abricot', 'multifruit'], product: 'JUS DE FRUIT VERSE' },
 ];
+
+// Mots qui RENFORCENT l'intention VERSE (contenant en plastique = destiné au service au verre)
+// Si présents + un keyword soft → priorité absolue à la suggestion VERSE
+const VERSE_BOOSTERS = ['pet', 'plastique', 'verse', 'tireuse', 'fontaine', 'pompe'];
 
 function suggestVerseProducts(normalizedQuery, queryWords) {
   const suggestions = [];
+  // Détecte si la query contient un "booster" (pet, verse, plastique...)
+  const hasBooster = VERSE_BOOSTERS.some(b => queryWords.includes(b) || normalizedQuery.includes(b));
+
   for (const entry of VERSE_KEYWORDS) {
-    const hit = entry.keywords.some(k => queryWords.includes(k) || normalizedQuery.includes(k));
-    if (hit) {
+    const matchedKeywords = entry.keywords.filter(k => queryWords.includes(k) || normalizedQuery.includes(k));
+    if (matchedKeywords.length > 0) {
       const prod = CATALOGUE.find(p => p.y === entry.product);
       if (prod) {
         suggestions.push({
           product: entry.product,
           productRef: prod,
-          matchedKeywords: entry.keywords.filter(k => queryWords.includes(k) || normalizedQuery.includes(k))
+          matchedKeywords,
+          priority: hasBooster  // flag : booster présent = priorité absolue
         });
       }
     }
@@ -3907,6 +3928,109 @@ function handleInverseQuery(inverse) {
   return { text, suggestions: [] };
 }
 
+
+// ============================================================
+// COCKTAILS : rechercher les cocktails dans les touches POS
+// et extraire l'alcool associé pour proposer où compter
+// ============================================================
+
+// Liste de mots qui indiquent que c'est UN COCKTAIL (pas juste un alcool)
+const COCKTAIL_KEYWORDS = [
+  'sour', 'spritz', 'martini', 'mojito', 'margarita', 'fashionned', 'fashioned',
+  'negroni', 'daiquiri', 'manhattan', 'cosmopolitan', 'cosmo', 'moscow mule',
+  'caipirinha', 'piña colada', 'pina colada', 'colada', 'bloody mary',
+  'smash', 'fizz', 'gimlet', 'side car', 'sidecar', 'tom collins',
+  'pornstar', 'porn star', 'french 75', 'french75', 'aperitif', 'ramos',
+  'penicillin', 'godfather', 'kir royal', 'bellini', 'mimosa',
+  'eastside', 'east side', 'southside', 'hugo', 'spicy', 'clear colada'
+];
+
+function isCocktailQuery(normalizedQuery) {
+  return COCKTAIL_KEYWORDS.some(k => normalizedQuery.includes(k));
+}
+
+// Chercher tous les cocktails qui matchent le mot-clé dans POS
+function findCocktails(query, currentEtab) {
+  if (!POS_DATA || !POS_DATA.loaded) return [];
+  const qn = normalizePos(query);
+  const qWords = qn.split(' ').filter(w => w.length >= 2);
+
+  // Filtrer les liens POS dont le nom contient un mot de la query
+  const matches = [];
+  const seen = new Set();
+  for (const link of POS_DATA.links) {
+    if (link.etab !== currentEtab) continue;
+    const posN = normalizePos(link.pos);
+    // Tous les mots de la query doivent être dans le nom POS
+    if (qWords.every(w => posN.includes(w))) {
+      const key = link.pos;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      matches.push(link);
+    }
+  }
+  return matches;
+}
+
+// Depuis un cocktail (ex: MARGARITA DON JULIO 1942 → V. Tequila Verse),
+// extraire le produit Yokitup associé
+function extractAlcoholFromCocktail(cocktail) {
+  // cocktail est un link {pos, product, etab}
+  // product = produit Yokitup déjà lié. Essayer de le résoudre au catalogue
+  const prod = resolveToCatalog(cocktail.product);
+  return prod;
+}
+
+
+// Construire la réponse pour un cocktail détecté
+function buildCocktailResponse(msg, cocktails) {
+  // Limiter à 8 cocktails max
+  const limited = cocktails.slice(0, 8);
+
+  // Construire des suggestions "cocktail → alcool à compter"
+  const suggestions = [];
+  const seenProducts = new Set();
+
+  limited.forEach(c => {
+    const prod = extractAlcoholFromCocktail(c);
+    if (prod && !seenProducts.has(prod.id)) {
+      seenProducts.add(prod.id);
+      suggestions.push({
+        productId: prod.id,
+        name: prod.s,
+        yokitup: prod.y,
+        pos_examples: [c.pos],
+        inCatalogue: true,
+        viaCocktail: c.pos  // nom du cocktail qui a mené à ce produit
+      });
+    } else if (!prod) {
+      // Produit Yokitup non trouvé au catalogue : afficher quand même (non inventoriable direct)
+      const key = 'NOCAT_' + c.product;
+      if (!seenProducts.has(key)) {
+        seenProducts.add(key);
+        suggestions.push({
+          productId: null,
+          name: c.product,
+          yokitup: c.product,
+          pos_examples: [c.pos],
+          inCatalogue: false,
+          viaCocktail: c.pos
+        });
+      }
+    }
+  });
+
+  let text;
+  if (limited.length === 1) {
+    text = "J'ai trouvé **" + limited[0].pos + "** en caisse. À compter sous :";
+  } else {
+    text = "J'ai trouvé " + limited.length + " cocktail" + (limited.length > 1 ? 's' : '') + " qui correspond" + (limited.length > 1 ? 'ent' : '') + ". Chacun décrémente un produit :";
+  }
+
+  return { text, suggestions };
+}
+
+
 function victorRespond(msg) {
   const n = normalizePos(msg);
   const currentEtab = state.estab;
@@ -3958,6 +4082,16 @@ function searchAndRespond(msg) {
     return { text: "Je charge encore les données… Réessaie dans un instant." };
   }
 
+  // 0. Détection cocktail : si la query contient un mot-clé cocktail (margarita, sour, spritz...)
+  // → proposer la liste des cocktails correspondants + extraire l'alcool pour chacun
+  if (isCocktailQuery(n)) {
+    const cocktails = findCocktails(msg, currentEtab);
+    if (cocktails.length > 0) {
+      return buildCocktailResponse(msg, cocktails);
+    }
+    // Sinon, tomber dans le flux normal
+  }
+
   // 1. Liaisons manuelles (priorité absolue si match)
   const liaisonsHits = [];
   const liaisonsList = getLiaisonsForCurrentEtab();
@@ -4004,12 +4138,21 @@ function searchAndRespond(msg) {
 
   // ========== DÉCISION : QUEL CAS ? ==========
 
+  // CAS VERSE + POS combiné : si VERSE hit, on propose à la fois VERSE et les top matches POS
+  // (ex: "coca" → Coca Cola Verse ET B. Coca Cola Verre Bouteille)
+  // Le chef choisit parmi les options.
+  if (verseHits.length > 0) {
+    // Prendre les meilleurs matches POS (jusqu'à 3) pour les joindre aux VERSE
+    const topPos = sorted.slice(0, 5);
+    return buildSuggestionsResponse(msg, liaisonsHits, verseHits, topPos, currentEtab);
+  }
+
   // CAS A : liaisons manuelles → priorité absolue
   if (liaisonsHits.length > 0) {
     return buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentEtab);
   }
 
-  // CAS B : résultats assez précis (1-3 matches sérieux)
+  // CAS B : résultats précis (1-5 matches sérieux)
   const goodMatches = sorted.filter(m => m.score >= 8);
   if (goodMatches.length >= 1 && goodMatches.length <= 5) {
     return buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentEtab);
@@ -4378,6 +4521,9 @@ function renderProductSuggestions(suggestions) {
     }
     if (s.viaManualLiaison) {
       innerHtml += ' <span class="chat-suggestion-badge-manual">lié manuellement</span>';
+    }
+    if (s.viaCocktail) {
+      innerHtml += ' <span class="chat-suggestion-badge-cocktail">🍹 via ' + escape(s.viaCocktail) + '</span>';
     }
     if (s.pos_examples && s.pos_examples.length) {
       innerHtml += '<br><span class="chat-suggestion-sub">Caisse : ' + escape(s.pos_examples.slice(0, 2).join(' · ')) + '</span>';
