@@ -2156,7 +2156,7 @@ function renderDpCatalog(container) {
   html += '<div style="padding: 0 16px 80px;">';
   html += '  <div style="font-size:12px; color:var(--ink-2); margin-bottom:8px;">' + filtered.length + ' produit' + (filtered.length > 1 ? 's' : '') + '</div>';
 
-  const liaisons = loadLiaisons();
+  const liaisons = getAllLiaisons();
   const kwByProduct = new Map();
   for (const l of liaisons) {
     if (!kwByProduct.has(l.productYokitup)) kwByProduct.set(l.productYokitup, []);
@@ -2259,7 +2259,7 @@ function renderDpExport(container) {
 
 function renderDataProductEditor(root) {
   const p = dataProductSelected;
-  const liaisons = loadLiaisons();
+  const liaisons = getAllLiaisons();
   const myKw = liaisons.filter(l => l.productYokitup === p.y);
 
   let html = '';
@@ -2321,8 +2321,8 @@ function renderDataProductEditor(root) {
   root.querySelectorAll('.dp-kw-remove').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
-      const list = loadLiaisons().filter(l => l.id !== id);
-      saveLiaisons(list);
+      const list = getAllLiaisons().filter(l => l.id !== id);
+      saveLiaisonsLocal(list);
       renderDataProductEditor(root);
       toast('Mot-clé retiré');
     });
@@ -2335,7 +2335,7 @@ function renderDataProductEditor(root) {
     const kws = raw.split(',').map(s => s.trim()).filter(Boolean);
     if (kws.length === 0) { toast('Aucun mot-clé valide'); return; }
 
-    const list = loadLiaisons();
+    const list = getAllLiaisons();
     let added = 0;
     for (const kw of kws) {
       // Éviter les doublons
@@ -2353,7 +2353,7 @@ function renderDataProductEditor(root) {
         added++;
       }
     }
-    saveLiaisons(list);
+    saveLiaisonsLocal(list);
     toast(added + ' mot' + (added > 1 ? 's' : '') + '-clé' + (added > 1 ? 's' : '') + ' ajouté' + (added > 1 ? 's' : ''));
     renderDataProductEditor(root);
   });
