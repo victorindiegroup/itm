@@ -1842,6 +1842,191 @@ async function sendEmailAlert(logId, adminToken) {
   return true;
 }
 
+// ============================================================
+// SYNC CLOUDFLARE : inventaires clos, batchs par étab, liaisons admin
+// ============================================================
+
+// -------- INVENTAIRES CLOS --------
+
+// Envoyer un inventaire terminé vers Cloudflare (chef de bar)
+// Retourne { ok: true, id } ou throws
+async function sendInventoryToBackend(inventory, etab) {
+  const response = await fetch(BACKEND_URL + '/inventory', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      etab: etab,
+      inventory: inventory
+    }),
+    signal: AbortSignal.timeout(30000)
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || ('HTTP ' + response.status));
+  }
+  return await response.json();
+}
+
+// Récupérer tous les inventaires clôturés (admin)
+async function fetchInventoriesFromBackend(adminToken) {
+  const response = await fetch(BACKEND_URL + '/inventories', {
+    headers: { 'X-Admin-Token': adminToken },
+    signal: AbortSignal.timeout(15000)
+  });
+  if (response.status === 401) throw new Error('Token admin invalide');
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  const data = await response.json();
+  return data.inventories || [];
+}
+
+// Récupérer un inventaire précis (pour regénérer son CSV)
+async function fetchInventoryById(id, adminToken) {
+  const response = await fetch(BACKEND_URL + '/inventory/' + encodeURIComponent(id), {
+    headers: { 'X-Admin-Token': adminToken },
+    signal: AbortSignal.timeout(10000)
+  });
+  if (response.status === 401) throw new Error('Token admin invalide');
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  const data = await response.json();
+  return data.inventory || null;
+}
+
+// Supprimer un inventaire (admin)
+async function deleteInventoryOnBackend(id, adminToken) {
+  const response = await fetch(BACKEND_URL + '/inventory/' + encodeURIComponent(id), {
+    method: 'DELETE',
+    headers: { 'X-Admin-Token': adminToken },
+    signal: AbortSignal.timeout(5000)
+  });
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  return true;
+}
+
+// -------- BATCHS PAR ÉTAB --------
+
+const BATCHES_ETAB_SYNC_KEY_PREFIX = 'itm_batches_sync_';  // localStorage cache
+const BATCHES_ETAB_SYNC_TS = 'itm_batches_sync_ts_';       // timestamps
+const BATCHES_SYNC_TTL_MS = 5 * 60 * 1000;                 // 5 minutes
+
+function etabSlug(etab) {
+  return etab.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+// Lire les batchs depuis Cloudflare (avec cache local comme fallback offline)
+async function fetchBatchesForEtab(etab) {
+  const slug = etabSlug(etab);
+  const cacheKey = BATCHES_ETAB_SYNC_KEY_PREFIX + slug;
+  const tsKey = BATCHES_ETAB_SYNC_TS + slug;
+
+  // Retour rapide depuis cache si < 5 min
+  const ts = parseInt(localStorage.getItem(tsKey) || '0', 10);
+  const cachedRaw = localStorage.getItem(cacheKey);
+  const cacheValid = Date.now() - ts < BATCHES_SYNC_TTL_MS;
+
+  if (cacheValid && cachedRaw) {
+    try { return JSON.parse(cachedRaw); } catch(e){}
+  }
+
+  // Fetch fresh
+  try {
+    const response = await fetch(BACKEND_URL + '/batches/' + encodeURIComponent(slug), {
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const data = await response.json();
+    const batches = data.batches || [];
+    localStorage.setItem(cacheKey, JSON.stringify(batches));
+    localStorage.setItem(tsKey, String(Date.now()));
+    return batches;
+  } catch (e) {
+    // Offline ou erreur : utiliser le cache même si expiré
+    if (cachedRaw) {
+      try { return JSON.parse(cachedRaw); } catch(e2){}
+    }
+    return [];
+  }
+}
+
+// Écrire la liste complète des batchs d'un étab dans Cloudflare
+async function pushBatchesForEtab(etab, batches) {
+  const slug = etabSlug(etab);
+  const cacheKey = BATCHES_ETAB_SYNC_KEY_PREFIX + slug;
+  const tsKey = BATCHES_ETAB_SYNC_TS + slug;
+  // MAJ cache local immédiatement (optimiste)
+  localStorage.setItem(cacheKey, JSON.stringify(batches));
+  localStorage.setItem(tsKey, String(Date.now()));
+  // Push backend
+  try {
+    const response = await fetch(BACKEND_URL + '/batches/' + encodeURIComponent(slug), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ batches }),
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return true;
+  } catch (e) {
+    // Offline : on marque la sync comme pending (best effort retry plus tard)
+    const pendingKey = 'itm_batches_pending_' + slug;
+    localStorage.setItem(pendingKey, JSON.stringify(batches));
+    return false;
+  }
+}
+
+// Vider les pending batches (à appeler au démarrage et périodiquement)
+async function flushPendingBatches() {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('itm_batches_pending_')) {
+      const slug = key.replace('itm_batches_pending_', '');
+      try {
+        const batches = JSON.parse(localStorage.getItem(key));
+        const response = await fetch(BACKEND_URL + '/batches/' + encodeURIComponent(slug), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ batches }),
+          signal: AbortSignal.timeout(10000)
+        });
+        if (response.ok) {
+          localStorage.removeItem(key);
+        }
+      } catch (e) { /* retry plus tard */ }
+    }
+  }
+}
+
+// -------- LIAISONS ADMIN --------
+
+// Push les liaisons vers Cloudflare (admin)
+async function pushLiaisonsToBackend(liaisons, adminToken) {
+  const response = await fetch(BACKEND_URL + '/liaisons', {
+    method: 'PUT',
+    headers: {
+      'X-Admin-Token': adminToken,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ liaisons }),
+    signal: AbortSignal.timeout(10000)
+  });
+  if (response.status === 401) throw new Error('Token admin invalide');
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  return true;
+}
+
+// Fetch les liaisons admin depuis Cloudflare (admin only, pour sync PC↔mobile)
+async function fetchLiaisonsFromBackend(adminToken) {
+  const response = await fetch(BACKEND_URL + '/liaisons', {
+    headers: { 'X-Admin-Token': adminToken },
+    signal: AbortSignal.timeout(10000)
+  });
+  if (response.status === 401) throw new Error('Token admin invalide');
+  if (response.status === 404) return null;  // rien encore pushé
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  const data = await response.json();
+  return data.liaisons || [];
+}
+
+
 
 let zones = loadZones();
 let chatMsgs = [];
@@ -4455,6 +4640,7 @@ function buildUnifiedResponse(msg, liaisonsHits, verseHits, topResults, currentE
         pos_examples: r.pos_examples || [],
         inCatalogue: true,
         isVerseHit: r.isVerseHit,
+        viaManualLiaison: r.viaManualLiaison,
         fromCurrentEtab: r.fromCurrentEtab
       });
     } else if (r.productName) {
@@ -4648,21 +4834,41 @@ function searchAndRespond(msg) {
   // Trier tout par score décroissant
   const allArr = Array.from(allProducts.values()).sort((a, b) => b.score - a.score);
 
-  // ========== DÉCISION : QUEL CAS ? ==========
-
-  // CAS A : liaisons manuelles → priorité absolue (reste prioritaire sur tout)
-  if (liaisonsHits.length > 0) {
-    return buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentEtab);
+  // Injecter les liaisons manuelles dans allProducts avec un boost de score
+  // (elles ne court-circuitent plus le reste : elles se joignent aux autres suggestions)
+  for (const h of liaisonsHits) {
+    if (h.prod) {
+      const key = h.prod.y;
+      const existing = allProducts.get(key);
+      if (existing) {
+        existing.score = Math.max(existing.score, 500);  // boost liaison manuelle
+        existing.viaManualLiaison = true;
+      } else {
+        allProducts.set(key, {
+          product: h.prod,
+          score: 500,
+          source: 'liaison',
+          fromCurrentEtab: true,
+          pos_examples: [],
+          viaManualLiaison: true
+        });
+      }
+    }
   }
+  // Re-trier après injection
+  const allArrWithLiaisons = Array.from(allProducts.values()).sort((a, b) => b.score - a.score);
+
+  // ========== DÉCISION : QUEL CAS ? ==========
 
   // CAS FUSION : si on a des résultats (au moins 1), regrouper par catégorie principale
   // et présenter tous les groupes pertinents
-  if (allArr.length > 0) {
+  if (allArrWithLiaisons.length > 0) {
     // Filtrer les résultats faibles pour éviter les faux positifs (Cocalières pour "coca")
     // Si il existe un résultat fort, on ne garde que les résultats >= 30% du top score
-    const topScore = allArr[0] ? allArr[0].score : 0;
+    // MAIS : on garde toujours les liaisons manuelles (viaManualLiaison) quel que soit le score relatif
+    const topScore = allArrWithLiaisons[0] ? allArrWithLiaisons[0].score : 0;
     const threshold = topScore >= 30 ? Math.max(topScore * 0.3, 5) : 5;
-    const topResults = allArr.filter(r => r.score >= threshold).slice(0, 15);
+    const topResults = allArrWithLiaisons.filter(r => r.viaManualLiaison || r.score >= threshold).slice(0, 15);
 
     if (topResults.length === 0) {
       // Scores trop faibles : tomber dans did-you-mean
@@ -4676,7 +4882,7 @@ function searchAndRespond(msg) {
   }
 
   // CAS D : ZÉRO résultat → did you mean + questions
-  if (allArr.length === 0 && verseHits.length === 0) {
+  if (allArrWithLiaisons.length === 0 && verseHits.length === 0) {
     const similar = findSimilarNames(msg);
     if (similar.length > 0) {
       sendLogToBackend({
