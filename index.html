@@ -191,12 +191,12 @@
   .summary-strong { color: var(--ink); font-weight: 500; }
 
   /* MASCOTTE */
-  .mascot-btn { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); right: 16px; width: 60px; height: 60px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-2); z-index: 30; display: grid; place-items: center; overflow: hidden; }
+  .mascot-btn { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); right: 16px; width: 56px; height: 56px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-2); z-index: 70; display: grid; place-items: center; overflow: hidden; transition: bottom .25s, right .25s, transform .15s; }
   .mascot-btn:active { transform: scale(.95); }
-  .mascot-bubble { position: fixed; bottom: calc(86px + env(safe-area-inset-bottom)); right: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow-2); z-index: 29; font-size: 13px; max-width: 220px; display: none; }
+  .mascot-bubble { position: fixed; bottom: calc(80px + env(safe-area-inset-bottom)); right: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow-2); z-index: 69; font-size: 13px; max-width: 220px; display: none; }
   .mascot-bubble.open { display: block; animation: pop .25s; }
   @keyframes pop { from { opacity: 0; transform: translateY(8px);} to {opacity: 1; transform: translateY(0);} }
-  .chat-panel { position: fixed; bottom: calc(86px + env(safe-area-inset-bottom)); right: 16px; width: min(360px, calc(100vw - 32px)); height: 60vh; max-height: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-l); box-shadow: var(--shadow-2); z-index: 31; display: none; flex-direction: column; overflow: hidden; }
+  .chat-panel { position: fixed; bottom: calc(80px + env(safe-area-inset-bottom)); right: 16px; width: min(360px, calc(100vw - 32px)); height: 65vh; max-height: 520px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-l); box-shadow: var(--shadow-2); z-index: 71; display: none; flex-direction: column; overflow: hidden; }
   .chat-panel.open { display: flex; }
   .chat-head { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .chat-head-av { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); overflow: hidden; display: grid; place-items: center; }
@@ -1083,6 +1083,21 @@
     letter-spacing: 0.2px;
     vertical-align: middle;
   }
+
+
+  /* Mascotte : décalée quand un sheet/page est ouvert pour ne pas chevaucher les boutons du bas */
+  body.sheet-open .mascot-btn,
+  body.page-open .mascot-btn {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    right: 12px;
+    width: 48px;
+    height: 48px;
+    opacity: 0.92;
+  }
+  body.sheet-open .mascot-bubble,
+  body.page-open .mascot-bubble {
+    display: none !important;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -1093,6 +1108,7 @@
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+<script src="./xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1416,7 +1432,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v59';
+const APP_VERSION = 'v61';
 
 /* === ITM APP === */
 (function(){
@@ -2170,16 +2186,21 @@ function openSheet(sheetId, overlayId){
   document.getElementById(overlayId).classList.add('open');
   document.getElementById(sheetId).classList.add('open');
   document.body.style.overflow = 'hidden';
+  document.body.classList.add('sheet-open');
 }
 function closeSheet(sheetId, overlayId){
   document.getElementById(overlayId).classList.remove('open');
   document.getElementById(sheetId).classList.remove('open');
   document.body.style.overflow = '';
+  // Retirer sheet-open uniquement si AUCUN autre sheet n'est ouvert
+  const anyOpen = document.querySelector('.sheet.open');
+  if (!anyOpen) document.body.classList.remove('sheet-open');
 }
 function closeAllSheets(){
   ['shProd','shZone','shNewZone','shConfirm'].forEach(id => document.getElementById(id).classList.remove('open'));
   ['ovProd','ovZone','ovNewZone','ovConfirm'].forEach(id => document.getElementById(id).classList.remove('open'));
   document.body.style.overflow = '';
+  document.body.classList.remove('sheet-open');
 }
 
 /* ---------- Header ---------- */
@@ -2428,7 +2449,7 @@ function renderInventaireCard(inv) {
   html += '    <span style="margin-left:8px;">' + cigBadge + '</span>';
   html += '  </div>';
   html += '  <div style="display:flex; gap:6px; flex-wrap:wrap;">';
-  html += '    <button type="button" class="inv-download-btn" data-id="' + escape(inv.id) + '" style="flex:1; min-width:160px; padding:8px 12px; background:var(--accent); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">📥 Télécharger CSV</button>';
+  html += '    <button type="button" class="inv-download-btn" data-id="' + escape(inv.id) + '" style="flex:1; min-width:160px; padding:8px 12px; background:var(--accent); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">📥 Télécharger Excel</button>';
   html += '    <button type="button" class="inv-delete-btn" data-id="' + escape(inv.id) + '" style="padding:8px 12px; background:transparent; color:var(--danger); border:1px solid var(--danger); border-radius:8px; font-size:12px; cursor:pointer;">Supprimer</button>';
   html += '  </div>';
   html += '</div>';
@@ -2451,47 +2472,21 @@ async function refreshInventaires() {
 
 // Télécharger le CSV depuis les données de l'inventaire backend
 function downloadInventoryCSV(inv) {
-  // Agréger par produit Yokitup (reprend la logique de exportAndMailInventory)
-  const agg = {};
-
-  function addToAgg(key, product, qty) {
-    if (!agg[key]) agg[key] = { product, total: 0 };
-    agg[key].total = Math.round((agg[key].total + qty) * 1000) / 1000;
-  }
-
-  (inv.lines || []).forEach(l => {
-    if (l.batchId) {
-      const count = l.batchCount || 0;
-      (l.batchCompo || []).forEach(c => {
-        const p = CATALOGUE[c.productId];
-        if (!p) return;
-        const totalQty = (c.qty || 0) * count;
-        let qty = totalQty;
-        if (p.e === 'litre' && (c.unit === 'cL' || c.unit === 'cl')) qty = totalQty / 100;
-        else if (p.e === 'litre' && (c.unit === 'ml' || c.unit === 'mL')) qty = totalQty / 1000;
-        addToAgg(p.y, p, qty);
-      });
-    } else {
-      const p = CATALOGUE[l.productId];
-      if (!p) return;
-      addToAgg(p.y, p, l.total);
-    }
-  });
-
-  let csv = 'product_name,quantity\n';
-  Object.values(agg).forEach(e => {
-    const name = e.product.y;
-    const needsQuotes = /[,"\n]/.test(name);
-    const safe = needsQuotes ? '"' + name.replace(/"/g, '""') + '"' : name;
-    csv += safe + ',' + (Math.round(e.total * 1000) / 1000) + '\n';
-  });
+  // Nom : downloadInventoryCSV conservé pour compat mais génère maintenant du xlsx Yokitup
+  const rows = aggregateInventoryLines(inv);
 
   const momentSlug = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
   const personneSlug = (inv.personne || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
   const etabSlug = (inv.etab || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-  const fname = etabSlug + '_' + (inv.date || '') + '_' + momentSlug + '_' + personneSlug + '.csv';
+  const fname = etabSlug + '_' + (inv.date || '') + '_' + momentSlug + '_' + personneSlug + '.xlsx';
 
-  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  let blob;
+  try {
+    blob = buildYokitupXlsx(rows);
+  } catch (e) {
+    toast('Erreur génération xlsx : ' + e.message);
+    return;
+  }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -3894,37 +3889,6 @@ function renderExport(){
       }
     });
   });
-}
-
-function exportCsv(){
-  const agg = {};
-  state.lines.forEach(l => {
-    const p = CATALOGUE[l.productId];
-    const key = p.y;
-    if (!agg[key]){ agg[key] = { product: p, total: 0 }; }
-    agg[key].total = round(agg[key].total + l.total, 3);
-  });
-
-  let csv = 'product_name,quantity\n';
-  Object.values(agg).forEach(e => {
-    const name = e.product.y;
-    const needsQuotes = /[,"\n]/.test(name);
-    const safe = needsQuotes ? '"' + name.replace(/"/g, '""') + '"' : name;
-    csv += safe + ',' + fmtQty(e.total) + '\n';
-  });
-
-  const fname = state.estab.replace(/\s+/g, '_') + '_' + (state.currentInventory ? state.currentInventory.date : new Date().toISOString().slice(0,10)) + '.csv';
-  const blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fname;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-  toast('CSV téléchargé');
 }
 
 function askResetSession(){
@@ -5769,6 +5733,63 @@ function confirmCancelInventory(){
   openSheet('shConfirm','ovConfirm');
 }
 
+
+// ============================================================
+// Générer un fichier Excel (.xlsx) au format Yokitup
+// Structure : 1 onglet "Sheet1", headers product_name | quantity
+// Accepte un tableau [{product_name, quantity}]
+// Retourne un Blob téléchargeable
+// ============================================================
+function buildYokitupXlsx(rows) {
+  if (typeof XLSX === 'undefined') {
+    throw new Error('SheetJS non chargé. Recharge l\'app.');
+  }
+  // Créer le worksheet à partir des données (avec header explicite)
+  const data = [['product_name', 'quantity']];
+  rows.forEach(r => {
+    data.push([r.product_name, r.quantity]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+  // Générer le binaire xlsx
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+// Agréger les lignes d'un inventaire en [{product_name, quantity}]
+// Gère les batchs en les expansant
+function aggregateInventoryLines(inv) {
+  const agg = {};
+  function addToAgg(key, product, qty) {
+    if (!agg[key]) agg[key] = { product, total: 0 };
+    agg[key].total = Math.round((agg[key].total + qty) * 1000) / 1000;
+  }
+  (inv.lines || []).forEach(l => {
+    if (l.batchId) {
+      const count = l.batchCount || 0;
+      (l.batchCompo || []).forEach(c => {
+        const p = CATALOGUE[c.productId];
+        if (!p) return;
+        const totalQty = (c.qty || 0) * count;
+        let qty = totalQty;
+        if (p.e === 'litre' && (c.unit === 'cL' || c.unit === 'cl')) qty = totalQty / 100;
+        else if (p.e === 'litre' && (c.unit === 'ml' || c.unit === 'mL')) qty = totalQty / 1000;
+        addToAgg(p.y, p, qty);
+      });
+    } else {
+      const p = CATALOGUE[l.productId];
+      if (!p) return;
+      addToAgg(p.y, p, l.total);
+    }
+  });
+  // Retourner sous forme de tableau
+  return Object.values(agg).map(e => ({
+    product_name: e.product.y,
+    quantity: e.total
+  }));
+}
+
 /* ---------- Export CSV + Mailto ---------- */
 async function exportAndMailInventory(inv) {
   // NOUVEAU (Volet 1) : Envoyer l'inventaire à Cloudflare EN PREMIER (silencieux)
@@ -5792,61 +5813,16 @@ async function exportAndMailInventory(inv) {
   if (sentToCloud) return;
 
 
-  // ==== 1. Construire le CSV ====
-  // Agréger par produit Yokitup. Les batchs sont expandés en leurs ingrédients.
-  const agg = {};
-
-  function addToAgg(productKey, product, qty) {
-    if (!agg[productKey]) agg[productKey] = { product: product, total: 0 };
-    agg[productKey].total = round(agg[productKey].total + qty, 3);
-  }
-
-  inv.lines.forEach(l => {
-    if (l.batchId) {
-      // Batch : expanser les ingrédients
-      const count = l.batchCount || 0;
-      (l.batchCompo || []).forEach(c => {
-        const p = CATALOGUE[c.productId];
-        if (!p) return;
-        const totalQty = (c.qty || 0) * count;
-        // Convertir en unité Yokitup :
-        // - si le produit est 'litre' : la qty batch est probablement en cL, Yokitup attend cL ou L selon p.u
-        // - si le produit est 'btl'/'unit' : qty en pc
-        // Simple : on somme la qty brute (on suppose que l'unité du batch est compatible avec celle du produit)
-        // Si produit litre + unité batch = cL → on divise par 100 pour obtenir des L
-        // Car l'export CSV utilise fmtQty(e.total) sans unité
-        // Et Yokitup veut : bouteilles → nb pièces, litre → cL ou L, à vérifier
-        // Pour sécuriser : on convertit en L si produit litre
-        let qty = totalQty;
-        if (p.e === 'litre' && (c.unit === 'cL' || c.unit === 'cl')) {
-          qty = totalQty / 100;  // cL → L
-        } else if (p.e === 'litre' && (c.unit === 'ml' || c.unit === 'mL')) {
-          qty = totalQty / 1000;
-        }
-        addToAgg(p.y, p, qty);
-      });
-    } else {
-      // Produit normal
-      const p = CATALOGUE[l.productId];
-      if (!p) return;
-      addToAgg(p.y, p, l.total);
-    }
-  });
-
-  let csv = 'product_name,quantity\n';
-  Object.values(agg).forEach(e => {
-    const name = e.product.y;
-    const needsQuotes = /[,"\n]/.test(name);
-    const safe = needsQuotes ? '"' + name.replace(/"/g, '""') + '"' : name;
-    csv += safe + ',' + fmtQty(e.total) + '\n';
-  });
+  // ==== 1. Construire le XLSX Yokitup ====
+  // Agrégation (gère batchs) via le helper
+  const rows = aggregateInventoryLines(inv);
 
   // ==== 2. Préparer les métadonnées du fichier ====
   const momentLblSlug = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
   const momentLblFr = inv.moment === 'apres' ? 'Après service' : 'Avant service';
   const personneSlug = (inv.personne || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
   const estabSlug = state.estab.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-  const fname = estabSlug + '_' + inv.date + '_' + momentLblSlug + '_' + personneSlug + '.csv';
+  const fname = estabSlug + '_' + inv.date + '_' + momentLblSlug + '_' + personneSlug + '.xlsx';
 
   const subject = 'Inventaire ' + state.estab + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr;
   const body = 'Inventaire terminé :\n'
@@ -5857,8 +5833,14 @@ async function exportAndMailInventory(inv) {
     + '- Nombre de produits : ' + inv.lines.length + '\n';
 
   // ==== 3. Partage natif avec pièce jointe (iOS 15+, Android récent) ====
-  const csvBlob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
-  const csvFile = new File([csvBlob], fname, { type: 'text/csv' });
+  let xlsxBlob;
+  try {
+    xlsxBlob = buildYokitupXlsx(rows);
+  } catch (e) {
+    toast('Erreur génération xlsx : ' + e.message);
+    return;
+  }
+  const csvFile = new File([xlsxBlob], fname, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
   // On ajoute l'adresse destinataire TOUT EN HAUT du message
   // (navigator.share ne permet pas de fixer un destinataire, l'utilisateur doit la taper/copier)
@@ -5882,8 +5864,8 @@ async function exportAndMailInventory(inv) {
     }
   }
 
-  // ==== 4. Fallback : télécharger CSV + ouvrir mailto ====
-  const url = URL.createObjectURL(csvBlob);
+  // ==== 4. Fallback : télécharger xlsx + ouvrir mailto ====
+  const url = URL.createObjectURL(xlsxBlob);
   const a = document.createElement('a');
   a.href = url;
   a.download = fname;
@@ -5893,7 +5875,7 @@ async function exportAndMailInventory(inv) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 
   const bodyMailto = body + '\n'
-    + 'Le fichier CSV (' + fname + ') a été téléchargé. '
+    + 'Le fichier Excel (' + fname + ') a été téléchargé. '
     + 'Il faut le joindre manuellement avant d\'envoyer.';
   const mailto = 'mailto:victor@indiegroup.fr'
     + '?subject=' + encodeURIComponent(subject)
@@ -6951,6 +6933,24 @@ function init(){
   const versionDiv = document.getElementById('appVersion');
   if (versionDiv) versionDiv.textContent = APP_VERSION;
 }
+
+
+
+// Toggle body.page-open dynamiquement quand une .estab-page est ouverte/fermée
+(function() {
+  if (!window.MutationObserver) return;
+  function updatePageOpenClass() {
+    const anyOpen = document.querySelector('.estab-page.open');
+    document.body.classList.toggle('page-open', !!anyOpen);
+  }
+  const observer = new MutationObserver(updatePageOpenClass);
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.estab-page').forEach(page => {
+      observer.observe(page, { attributes: true, attributeFilter: ['class'] });
+    });
+    updatePageOpenClass();
+  });
+})();
 
 document.addEventListener('DOMContentLoaded', init);
 })();
