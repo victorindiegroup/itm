@@ -1432,7 +1432,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v61';
+const APP_VERSION = 'v62';
 
 /* === ITM APP === */
 (function(){
@@ -1718,7 +1718,40 @@ function loadLiaisonsLocal() {
 }
 
 function saveLiaisonsLocal(list) {
+  // Tagger les liaisons modifiées avec un timestamp pour le merge intelligent
+  const now = new Date().toISOString();
+  const existing = (function() {
+    try { return JSON.parse(localStorage.getItem(LIAISONS_LS_KEY) || '[]'); } catch(e) { return []; }
+  })();
+  const existingMap = {};
+  existing.forEach(l => { if (l.id) existingMap[l.id] = l; });
+
+  // Pour chaque liaison : si elle n'existe pas ou si son contenu a changé → updatedAt = now
+  list.forEach(l => {
+    if (!l.updatedAt) l.updatedAt = l.createdAt || now;
+    const prev = existingMap[l.id];
+    if (!prev) {
+      l.updatedAt = now;  // nouvelle liaison
+    } else {
+      // Si le contenu a changé, mettre à jour le timestamp
+      const changed = prev.keyword !== l.keyword
+        || prev.productYokitup !== l.productYokitup
+        || JSON.stringify(prev.etabs || []) !== JSON.stringify(l.etabs || []);
+      if (changed) l.updatedAt = now;
+    }
+  });
+
   localStorage.setItem(LIAISONS_LS_KEY, JSON.stringify(list));
+
+  // Push vers Cloudflare en arrière-plan (admin uniquement, silencieux)
+  if (currentAuth && currentAuth.role === 'admin') {
+    const token = loadAdminToken();
+    if (token) {
+      pushLiaisonsToBackend(list, token)
+        .then(() => { console.log('Liaisons synchronisées avec Cloudflare'); })
+        .catch(err => { console.warn('Push liaisons échoué (retry au prochain save) :', err.message); });
+    }
+  }
 }
 
 // Charger les liaisons distantes depuis liaisons_manuelles.json
@@ -2630,11 +2663,15 @@ function renderDpLinkages(container) {
   let html = '';
   html += '<div class="batches-header">';
   html += '  <div class="batches-header-info">Vue d\'ensemble des associations mot-clé → produit (' + totalCount + ').</div>';
-  html += '  <button type="button" class="batches-add-btn" id="btnAddLiaisonDp" style="width:100%;">+ Créer une liaison</button>';
+  html += '  <div style="display:flex; gap:8px; margin-bottom:8px;">';
+  html += '    <button type="button" class="batches-add-btn" id="btnAddLiaisonDp" style="flex:1;">+ Créer une liaison</button>';
+  html += '    <button type="button" id="btnSyncLiaisons" style="flex:1; padding:12px 14px; background:var(--surface); color:var(--accent-dark); border:1px solid var(--accent); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">🔄 Sync Cloudflare</button>';
+  html += '  </div>';
+  html += '  <div id="liaisonsSyncStatus" style="font-size:11px; color:var(--ink-2); margin-top:4px;"></div>';
   html += '</div>';
 
   if (totalCount === 0) {
-    html += '<div class="prod-empty">Aucune liaison. Utilise l\'onglet Catalogue pour ajouter des mots-clés sur un produit, ou clique sur + ci-dessus pour créer manuellement.</div>';
+    html += '<div class="prod-empty">Aucune liaison. Utilise l\'onglet Catalogue pour ajouter des mots-clés sur un produit, ou clique sur + ci-dessus pour créer manuellement. <br><br>Si tu as déjà des liaisons sur un autre appareil, clique 🔄 Sync Cloudflare pour les récupérer.</div>';
   } else {
     html += '<div class="batches-list">';
     local.forEach(l => { html += renderLiaisonCard(l, true); });
@@ -2649,6 +2686,32 @@ function renderDpLinkages(container) {
 
   const addBtn = document.getElementById('btnAddLiaisonDp');
   if (addBtn) addBtn.addEventListener('click', () => openLiaisonEditor(null));
+
+  const syncBtn = document.getElementById('btnSyncLiaisons');
+  if (syncBtn) {
+    syncBtn.addEventListener('click', async () => {
+      const status = document.getElementById('liaisonsSyncStatus');
+      syncBtn.disabled = true;
+      const orig = syncBtn.textContent;
+      syncBtn.textContent = 'Sync...';
+      if (status) status.textContent = 'Synchronisation en cours…';
+      try {
+        const result = await syncLiaisonsWithCloudflare();
+        let msg = '✓ ' + result.total + ' liaison' + (result.total > 1 ? 's' : '') + ' synchronisée' + (result.total > 1 ? 's' : '');
+        if (result.fromRemote > 0) msg += ' · ' + result.fromRemote + ' récupérée' + (result.fromRemote > 1 ? 's' : '') + ' depuis le cloud';
+        if (result.localOnly > 0) msg += ' · ' + result.localOnly + ' envoyée' + (result.localOnly > 1 ? 's' : '') + ' vers le cloud';
+        if (status) status.textContent = msg;
+        toast('Sync terminée');
+        setTimeout(() => renderDpLinkages(container), 800);
+      } catch (err) {
+        if (status) status.textContent = '⚠ Erreur : ' + err.message;
+        toast('Erreur sync : ' + err.message);
+      } finally {
+        syncBtn.disabled = false;
+        syncBtn.textContent = orig;
+      }
+    });
+  }
 
   container.querySelectorAll('.liaison-card[data-id]').forEach(card => {
     card.addEventListener('click', () => openLiaisonEditor(card.dataset.id));
@@ -6492,6 +6555,68 @@ function deleteBatchLine() {
 }
 
 
+
+// ============================================================
+// VOLET 4 : Sync liaisons admin PC↔mobile via Cloudflare
+// Merge intelligent basé sur updatedAt
+// ============================================================
+
+// Merger deux listes de liaisons : pour chaque id unique, garde celle avec updatedAt le plus récent.
+// Les liaisons qui existent d'un seul côté sont gardées telles quelles.
+function mergeLiaisonsLists(local, remote) {
+  const byId = {};
+  // D'abord le remote
+  (remote || []).forEach(l => {
+    if (!l.id) return;
+    byId[l.id] = { ...l };
+  });
+  // Puis le local : écrase si plus récent
+  (local || []).forEach(l => {
+    if (!l.id) return;
+    const prev = byId[l.id];
+    if (!prev) {
+      byId[l.id] = { ...l };
+    } else {
+      const localTs = l.updatedAt || l.createdAt || '';
+      const remoteTs = prev.updatedAt || prev.createdAt || '';
+      // Local plus récent → écrase. Sinon on garde remote.
+      if (localTs > remoteTs) byId[l.id] = { ...l };
+    }
+  });
+  return Object.values(byId);
+}
+
+// Synchroniser les liaisons admin avec Cloudflare :
+// 1. Fetch remote
+// 2. Merge intelligent
+// 3. Save local + push résultat
+// Retourne { added, updated, fromRemote } pour affichage
+async function syncLiaisonsWithCloudflare() {
+  const token = loadAdminToken();
+  if (!token) throw new Error('Token admin requis');
+
+  const remote = await fetchLiaisonsFromBackend(token);  // null si rien, sinon array
+  const local = loadLiaisonsLocal();
+  const merged = mergeLiaisonsLists(local, remote || []);
+
+  // Comparer pour afficher le diff
+  const localIds = new Set(local.map(l => l.id));
+  const remoteIds = new Set((remote || []).map(l => l.id));
+  const fromRemote = merged.filter(l => !localIds.has(l.id)).length;
+  const localOnly = merged.filter(l => !remoteIds.has(l.id)).length;
+
+  // Sauver localement sans trigger le push auto (on push explicitement après)
+  localStorage.setItem(LIAISONS_LS_KEY, JSON.stringify(merged));
+  // Push le merge vers Cloudflare (pour que le remote reflète le merge)
+  await pushLiaisonsToBackend(merged, token);
+
+  return {
+    total: merged.length,
+    fromRemote,  // nouveau venant du cloud
+    localOnly,   // local pas encore sur le cloud avant ce sync
+  };
+}
+
 // ============================================================
 // ÉDITEUR DE LIAISON MANUELLE (admin)
 // ============================================================
@@ -6769,6 +6894,13 @@ function init(){
       state.currentInventory = null;
       saveState();
     }
+  }
+
+  // Admin : sync auto des liaisons avec Cloudflare au démarrage (silencieux)
+  if (currentAuth && currentAuth.role === 'admin' && loadAdminToken()) {
+    syncLiaisonsWithCloudflare()
+      .then(r => { console.log('Sync liaisons auto :', r); })
+      .catch(err => { console.warn('Sync liaisons auto échouée (normale si Worker pas encore déployé) :', err.message); });
   }
 
   renderHeader();
