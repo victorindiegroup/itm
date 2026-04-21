@@ -1144,6 +1144,7 @@
       <button class="tab" data-tab="batches">Batchs</button>
       <button class="tab admin-only" data-tab="alerts" style="display:none;">Alertes</button>
       <button class="tab admin-only" data-tab="dataproduct" style="display:none;">Data Product</button>
+      <button class="tab admin-only" data-tab="inventaires" style="display:none;">Inventaires</button>
   <button class="tab" data-tab="export">Saisies</button>
 </div>
 
@@ -1176,6 +1177,10 @@
 
   <div class="view" id="vDataproduct">
     <div id="dataProductView"></div>
+  </div>
+
+  <div class="view" id="vInventaires">
+    <div id="inventairesView"></div>
   </div>
 
   
@@ -1411,7 +1416,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v57';
+const APP_VERSION = 'v59';
 
 /* === ITM APP === */
 (function(){
@@ -1863,6 +1868,32 @@ async function sendEmailAlert(logId, adminToken) {
   return true;
 }
 
+
+// ============================================================
+// VOLET 1 : Inventaires clos → Cloudflare + mail cigarettes
+// ============================================================
+
+// L'étab actif a-t-il des produits de type cigarette à la carte ?
+function etabHasCigarettes(etab) {
+  const tag = ETAB_TO_TAG[etab];
+  if (!tag) return false;
+  return CATALOGUE.some(p => {
+    if (!(p.c || '').toUpperCase().includes('CIGARETTE')) return false;
+    return p.t && p.t.indexOf(tag) >= 0;
+  });
+}
+
+// L'inventaire contient-il au moins 1 produit de type cigarette ?
+function inventoryHasCigarettes(inv) {
+  if (!inv || !inv.lines) return false;
+  for (const l of inv.lines) {
+    if (!l.productId && l.productId !== 0) continue;
+    const p = CATALOGUE[l.productId];
+    if (p && (p.c || '').toUpperCase().includes('CIGARETTE')) return true;
+  }
+  return false;
+}
+
 // ============================================================
 // SYNC CLOUDFLARE : inventaires clos, batchs par étab, liaisons admin
 // ============================================================
@@ -1871,13 +1902,15 @@ async function sendEmailAlert(logId, adminToken) {
 
 // Envoyer un inventaire terminé vers Cloudflare (chef de bar)
 // Retourne { ok: true, id } ou throws
-async function sendInventoryToBackend(inventory, etab) {
+async function sendInventoryToBackend(inventory, etab, cigarettesCounted, etabHasCigarettes) {
   const response = await fetch(BACKEND_URL + '/inventory', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       etab: etab,
-      inventory: inventory
+      inventory: inventory,
+      cigarettesCounted: !!cigarettesCounted,
+      etabHasCigarettes: !!etabHasCigarettes
     }),
     signal: AbortSignal.timeout(30000)
   });
@@ -2183,6 +2216,7 @@ function switchTab(name){
   if (name === 'batches') renderBatches();
   if (name === 'alerts') renderAlerts();
   if (name === 'dataproduct') renderDataProduct();
+  if (name === 'inventaires') renderInventaires();
   if (name === 'demandes') renderDemandes();
   // scroll reset
   document.querySelector('main').scrollTop = 0;
@@ -2283,6 +2317,190 @@ function renderBatches() {
 // RENDU : vue Liaisons (admin uniquement)
 // ============================================================
 
+
+
+// ============================================================
+// RENDU : onglet Inventaires (admin) - Volet 1
+// Liste les inventaires clos envoyés par les chefs, permet de télécharger CSV
+// ============================================================
+let inventairesCache = [];
+let inventairesLoading = false;
+
+async function renderInventaires() {
+  const root = document.getElementById('inventairesView');
+  if (!root) return;
+
+  if (!currentAuth || currentAuth.role !== 'admin') {
+    root.innerHTML = '<div class="prod-empty">Accès réservé à l\'admin.</div>';
+    return;
+  }
+
+  const token = loadAdminToken();
+  if (!token) {
+    root.innerHTML = '<div class="prod-empty">Va d\'abord dans l\'onglet Alertes pour renseigner ton token admin.</div>';
+    return;
+  }
+
+  let html = '';
+  html += '<div class="batches-header">';
+  html += '  <div class="batches-header-info">Inventaires clôturés par les établissements. <b>' + inventairesCache.length + '</b> inventaire' + (inventairesCache.length > 1 ? 's' : '') + '.</div>';
+  html += '  <button type="button" id="refreshInventairesBtn" class="batches-add-btn" style="width:100%;">🔄 Rafraîchir</button>';
+  html += '</div>';
+
+  if (inventairesLoading) {
+    html += '<div class="prod-empty">Chargement…</div>';
+  } else if (inventairesCache.length === 0) {
+    html += '<div class="prod-empty">Aucun inventaire pour le moment.<br>Clique sur 🔄 Rafraîchir.</div>';
+  } else {
+    html += '<div style="padding: 0 16px 80px;">';
+    inventairesCache.forEach(inv => { html += renderInventaireCard(inv); });
+    html += '</div>';
+  }
+
+  root.innerHTML = html;
+
+  document.getElementById('refreshInventairesBtn').addEventListener('click', refreshInventaires);
+
+  root.querySelectorAll('.inv-download-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      btn.disabled = true;
+      const origText = btn.textContent;
+      btn.textContent = 'Chargement...';
+      try {
+        const full = await fetchInventoryById(id, loadAdminToken());
+        if (full) {
+          downloadInventoryCSV(full);
+          btn.textContent = '✓ Téléchargé';
+          setTimeout(() => { btn.textContent = origText; btn.disabled = false; }, 2000);
+        }
+      } catch (err) {
+        toast('Erreur : ' + err.message);
+        btn.textContent = origText;
+        btn.disabled = false;
+      }
+    });
+  });
+
+  root.querySelectorAll('.inv-delete-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (!confirm('Supprimer cet inventaire du serveur ?')) return;
+      try {
+        await deleteInventoryOnBackend(id, loadAdminToken());
+        inventairesCache = inventairesCache.filter(i => i.id !== id);
+        renderInventaires();
+        toast('Supprimé');
+      } catch (err) {
+        toast('Erreur : ' + err.message);
+      }
+    });
+  });
+}
+
+function renderInventaireCard(inv) {
+  const date = inv.receivedAt ? new Date(inv.receivedAt) : null;
+  const dateStr = date ? date.toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+  const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
+  const invDate = inv.date ? new Date(inv.date).toLocaleDateString('fr-FR') : '—';
+
+  let cigBadge;
+  if (inv.cigarettesCounted) {
+    cigBadge = '<span style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:6px; background:var(--accent-soft); color:var(--accent-dark);">✓ Cigarettes comptées</span>';
+  } else if (inv.etabHasCigarettes) {
+    cigBadge = '<span style="font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; background:#FEE4E4; color:var(--danger);">⚠️ Cigarettes MANQUANTES</span>';
+  } else {
+    cigBadge = '<span style="font-size:11px; color:var(--ink-2);">(pas de cigarettes)</span>';
+  }
+
+  let html = '<div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px;">';
+  html += '  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:8px;">';
+  html += '    <div>';
+  html += '      <div style="font-size:15px; font-weight:700;">' + escape(inv.etab) + '</div>';
+  html += '      <div style="font-size:12px; color:var(--ink-2); margin-top:2px;">' + escape(invDate) + ' · ' + escape(momentLbl) + ' · ' + escape(inv.personne || '—') + '</div>';
+  html += '    </div>';
+  html += '    <div style="text-align:right; font-size:10px; color:var(--ink-2);">Reçu ' + escape(dateStr) + '</div>';
+  html += '  </div>';
+  html += '  <div style="margin-bottom:10px;">';
+  html += '    <span style="font-size:12px; color:var(--ink-2);">' + (inv.nbLines || 0) + ' produit' + ((inv.nbLines || 0) > 1 ? 's' : '') + ' saisi' + ((inv.nbLines || 0) > 1 ? 's' : '') + '</span>';
+  html += '    <span style="margin-left:8px;">' + cigBadge + '</span>';
+  html += '  </div>';
+  html += '  <div style="display:flex; gap:6px; flex-wrap:wrap;">';
+  html += '    <button type="button" class="inv-download-btn" data-id="' + escape(inv.id) + '" style="flex:1; min-width:160px; padding:8px 12px; background:var(--accent); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">📥 Télécharger CSV</button>';
+  html += '    <button type="button" class="inv-delete-btn" data-id="' + escape(inv.id) + '" style="padding:8px 12px; background:transparent; color:var(--danger); border:1px solid var(--danger); border-radius:8px; font-size:12px; cursor:pointer;">Supprimer</button>';
+  html += '  </div>';
+  html += '</div>';
+  return html;
+}
+
+async function refreshInventaires() {
+  inventairesLoading = true;
+  renderInventaires();
+  try {
+    inventairesCache = await fetchInventoriesFromBackend(loadAdminToken());
+    toast(inventairesCache.length + ' inventaire' + (inventairesCache.length > 1 ? 's' : '') + ' chargé' + (inventairesCache.length > 1 ? 's' : ''));
+  } catch (err) {
+    toast('Erreur : ' + err.message);
+  } finally {
+    inventairesLoading = false;
+    renderInventaires();
+  }
+}
+
+// Télécharger le CSV depuis les données de l'inventaire backend
+function downloadInventoryCSV(inv) {
+  // Agréger par produit Yokitup (reprend la logique de exportAndMailInventory)
+  const agg = {};
+
+  function addToAgg(key, product, qty) {
+    if (!agg[key]) agg[key] = { product, total: 0 };
+    agg[key].total = Math.round((agg[key].total + qty) * 1000) / 1000;
+  }
+
+  (inv.lines || []).forEach(l => {
+    if (l.batchId) {
+      const count = l.batchCount || 0;
+      (l.batchCompo || []).forEach(c => {
+        const p = CATALOGUE[c.productId];
+        if (!p) return;
+        const totalQty = (c.qty || 0) * count;
+        let qty = totalQty;
+        if (p.e === 'litre' && (c.unit === 'cL' || c.unit === 'cl')) qty = totalQty / 100;
+        else if (p.e === 'litre' && (c.unit === 'ml' || c.unit === 'mL')) qty = totalQty / 1000;
+        addToAgg(p.y, p, qty);
+      });
+    } else {
+      const p = CATALOGUE[l.productId];
+      if (!p) return;
+      addToAgg(p.y, p, l.total);
+    }
+  });
+
+  let csv = 'product_name,quantity\n';
+  Object.values(agg).forEach(e => {
+    const name = e.product.y;
+    const needsQuotes = /[,"\n]/.test(name);
+    const safe = needsQuotes ? '"' + name.replace(/"/g, '""') + '"' : name;
+    csv += safe + ',' + (Math.round(e.total * 1000) / 1000) + '\n';
+  });
+
+  const momentSlug = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
+  const personneSlug = (inv.personne || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+  const etabSlug = (inv.etab || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+  const fname = etabSlug + '_' + (inv.date || '') + '_' + momentSlug + '_' + personneSlug + '.csv';
+
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fname;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 // ============================================================
 // RENDU : Onglet Data Product (admin)
@@ -5553,6 +5771,27 @@ function confirmCancelInventory(){
 
 /* ---------- Export CSV + Mailto ---------- */
 async function exportAndMailInventory(inv) {
+  // NOUVEAU (Volet 1) : Envoyer l'inventaire à Cloudflare EN PREMIER (silencieux)
+  // Si ça marche, le chef n'a plus besoin d'envoyer par mail
+  // Si ça échoue, on continue sur le workflow mail classique
+  let sentToCloud = false;
+  try {
+    const cigs = inventoryHasCigarettes(inv);
+    const hasCigs = etabHasCigarettes(state.estab);
+    await sendInventoryToBackend({
+      ...inv,
+      etab: state.estab
+    }, state.estab, cigs, hasCigs);
+    sentToCloud = true;
+    toast('Inventaire envoyé ✓');
+  } catch (e) {
+    console.warn('Envoi cloud échoué, fallback mail:', e.message);
+  }
+
+  // Si cloud OK, on s'arrête là. Sinon, on continue vers le partage classique.
+  if (sentToCloud) return;
+
+
   // ==== 1. Construire le CSV ====
   // Agréger par produit Yokitup. Les batchs sont expandés en leurs ingrédients.
   const agg = {};
@@ -6726,6 +6965,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<div id="appVersion" style="position:fixed; bottom:4px; left:6px; font-size:9px; color:#aaa; font-family:sans-serif; opacity:0.5; pointer-events:none; z-index:10; letter-spacing:0.5px;"></div>
+<div id="appVersion" style="position:fixed; bottom:6px; left:8px; font-size:11px; color:#888; font-family:sans-serif; opacity:0.8; pointer-events:none; z-index:10; letter-spacing:0.5px; font-weight:500;"></div>
 </body>
 </html>
