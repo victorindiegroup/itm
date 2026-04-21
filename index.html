@@ -1098,6 +1098,56 @@
   body.page-open .mascot-bubble {
     display: none !important;
   }
+
+  /* Carte pliable pour les touches caisse "non trouvées" (pour éviter la pollution du chat) */
+  .chat-missing-card {
+    margin: 8px 0;
+    background: var(--bg);
+    border: 1px dashed var(--border-strong);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .chat-missing-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chat-missing-toggle:active { background: rgba(0,0,0,0.04); }
+  .chat-missing-icon { font-size: 14px; opacity: 0.7; }
+  .chat-missing-txt {
+    flex: 1;
+    font-size: 12px;
+    color: var(--ink-2);
+    line-height: 1.35;
+  }
+  .chat-missing-txt b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .chat-missing-sub { font-size: 11px; }
+  .chat-missing-chevron {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink-2);
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .chat-missing-body {
+    padding: 4px 10px 10px;
+    border-top: 1px solid var(--border);
+  }
+  .chat-missing-body .chat-suggestion {
+    margin: 6px 0;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -1432,7 +1482,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v63';
+const APP_VERSION = 'v64';
 
 /* === ITM APP === */
 (function(){
@@ -5609,16 +5659,55 @@ function renderProductSuggestions(suggestions, opts) {
   const wrap = document.createElement('div');
   wrap.className = 'chat-suggestions';
 
+  // Helper : ajouter une carte pliable pour les "non trouvé" à la fin d'un container
+  // (appelé quand il y a au moins une vraie suggestion en amont dans le même bloc)
+  function appendCollapsibleMissing(targetWrap, missingItems) {
+    if (missingItems.length === 0) return;
+    const card = document.createElement('div');
+    card.className = 'chat-missing-card';
+    card.innerHTML =
+      '<div class="chat-missing-toggle">' +
+        '<span class="chat-missing-icon">🔍</span>' +
+        '<div class="chat-missing-txt">' +
+          '<b>' + missingItems.length + ' touche' + (missingItems.length > 1 ? 's' : '') + ' caisse trouvée' + (missingItems.length > 1 ? 's' : '') + '</b>' +
+          '<span class="chat-missing-sub"> · sans produit clair au catalogue</span>' +
+        '</div>' +
+        '<span class="chat-missing-chevron">+</span>' +
+      '</div>' +
+      '<div class="chat-missing-body" style="display:none;"></div>';
+    const toggle = card.querySelector('.chat-missing-toggle');
+    const body = card.querySelector('.chat-missing-body');
+    const chevron = card.querySelector('.chat-missing-chevron');
+    missingItems.forEach(s => body.appendChild(buildSuggestionButton(s)));
+    toggle.addEventListener('click', () => {
+      const isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      chevron.textContent = isOpen ? '+' : '−';
+      if (!isOpen) {
+        // Scroll pour que la carte dépliée soit visible
+        setTimeout(() => { root.scrollTop = root.scrollHeight; }, 50);
+      }
+    });
+    targetWrap.appendChild(card);
+  }
+
+  // Séparer les trouvés (inCatalogue !== false) des non trouvés
+  const isMissing = (s) => s.inCatalogue === false;
+
   // Si groupé par catégorie : regrouper les suggestions avant de rendre
   if (opts.groupedByCategory) {
+    // Séparer : suggestions qui vont dans des catégories vs les non trouvés (pas de categoryPath)
+    const found = suggestions.filter(s => !isMissing(s));
+    const missing = suggestions.filter(s => isMissing(s));
+
     const groups = new Map();
-    for (const s of suggestions) {
+    for (const s of found) {
       const cat = s.categoryPath ? parseCategoryPath(s.categoryPath) : { main: 'AUTRE' };
       const key = cat.main + (cat.sub ? ' - ' + cat.sub : '');
       if (!groups.has(key)) groups.set(key, { key, main: cat.main, sub: cat.sub, items: [] });
       groups.get(key).items.push(s);
     }
-    // Ordre des catégories (SOFT d'abord pour les cas type "mandarine")
+
     const sortOrder = { 'SOFT': 1, 'ALCOOL': 2, 'ALCOOL - VIN': 3, 'AUTRE': 99 };
     const sortedGroups = Array.from(groups.values()).sort((a, b) => {
       const ka = sortOrder[a.key] || (a.main === 'ALCOOL' ? 2.5 : 10);
@@ -5632,7 +5721,6 @@ function renderProductSuggestions(suggestions, opts) {
       header.style.cssText = 'font-size:11px; font-weight:700; color:var(--ink-2); text-transform:uppercase; letter-spacing:0.4px; padding: 10px 4px 4px;';
       header.textContent = categoryEmoji(g.main) + ' ' + g.key;
       wrap.appendChild(header);
-      // Trier : à la carte d'abord, hors carte ensuite
       const sortedItems = g.items.slice().sort((a, b) => {
         const aOff = a.inEtabCard === false ? 1 : 0;
         const bOff = b.inEtabCard === false ? 1 : 0;
@@ -5640,14 +5728,41 @@ function renderProductSuggestions(suggestions, opts) {
       });
       sortedItems.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
     });
+
+    // S'il y a des trouvés (found.length > 0) : replier les non trouvés
+    // Sinon : les afficher normalement (c'est tout ce qu'on a)
+    if (missing.length > 0) {
+      if (found.length > 0) {
+        appendCollapsibleMissing(wrap, missing);
+      } else {
+        // Pas de trouvés : afficher les non trouvés normalement
+        const header = document.createElement('div');
+        header.className = 'chat-suggestion-group-header';
+        header.style.cssText = 'font-size:11px; font-weight:700; color:var(--ink-2); text-transform:uppercase; letter-spacing:0.4px; padding: 10px 4px 4px;';
+        header.textContent = '📦 AUTRE';
+        wrap.appendChild(header);
+        missing.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
+      }
+    }
   } else {
-    // Trier : à la carte d'abord, hors carte ensuite
+    // Mode non groupé : trier, puis replier les non trouvés si présence de trouvés
     const sortedFlat = suggestions.slice().sort((a, b) => {
       const aOff = a.inEtabCard === false ? 1 : 0;
       const bOff = b.inEtabCard === false ? 1 : 0;
       return aOff - bOff;
     });
-    sortedFlat.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
+    const found = sortedFlat.filter(s => !isMissing(s));
+    const missing = sortedFlat.filter(s => isMissing(s));
+
+    found.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
+
+    if (missing.length > 0) {
+      if (found.length > 0) {
+        appendCollapsibleMissing(wrap, missing);
+      } else {
+        missing.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
+      }
+    }
   }
 
   root.appendChild(wrap);
