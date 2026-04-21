@@ -1123,7 +1123,6 @@
   <button class="tab active" data-tab="catalogue">Catalogue</button>
   <button class="tab" data-tab="session">Session <span class="badge" id="badgeSess">0</span></button>
       <button class="tab" data-tab="batches">Batchs</button>
-      <button class="tab admin-only" data-tab="liaisons" style="display:none;">Liaisons</button>
       <button class="tab admin-only" data-tab="alerts" style="display:none;">Alertes</button>
       <button class="tab admin-only" data-tab="dataproduct" style="display:none;">Data Product</button>
   <button class="tab" data-tab="export">Saisies</button>
@@ -1156,13 +1155,11 @@
     <div id="alertsView"></div>
   </div>
 
-  <div class="view" id="vDataProduct">
+  <div class="view" id="vDataproduct">
     <div id="dataProductView"></div>
   </div>
 
-  <div class="view" id="vLiaisons">
-    <div id="liaisonsView"></div>
-  </div>
+  
 
   <div class="view" id="vBatches">
     <div id="batchesView"></div>
@@ -1978,7 +1975,6 @@ function switchTab(name){
   if (name === 'export') renderExport();
   if (name === 'catalogue') renderCatalogue();
   if (name === 'batches') renderBatches();
-  if (name === 'liaisons') renderLiaisons();
   if (name === 'alerts') renderAlerts();
   if (name === 'dataproduct') renderDataProduct();
   if (name === 'demandes') renderDemandes();
@@ -2100,18 +2096,58 @@ function renderDataProduct() {
     return;
   }
 
+  // Si un produit est sélectionné → éditeur (mode catalogue, produit cliqué)
   if (dataProductSelected) {
     renderDataProductEditor(root);
     return;
   }
 
+  // Mode par défaut : 'catalog' | 'linkages' | 'export'
+  if (!window.dataProductMode) window.dataProductMode = 'catalog';
+
+  // Header avec onglets secondaires
+  let html = '';
+  html += '<div style="display:flex; gap:4px; padding: 12px 16px 8px; background:var(--bg); border-bottom: 1px solid var(--border); position:sticky; top:0; z-index:10; overflow-x:auto; white-space:nowrap;">';
+  const modes = [
+    { id: 'catalog',  label: 'Catalogue' },
+    { id: 'linkages', label: 'Liaisons' },
+    { id: 'export',   label: 'Export' }
+  ];
+  modes.forEach(m => {
+    const active = window.dataProductMode === m.id;
+    html += '<button type="button" class="dp-mode-btn" data-mode="' + m.id + '" style="padding:8px 14px; background:' + (active ? 'var(--accent)' : 'var(--surface)') + '; color:' + (active ? 'white' : 'var(--ink)') + '; border:1px solid ' + (active ? 'var(--accent)' : 'var(--border)') + '; border-radius:20px; font-size:13px; font-weight:' + (active ? '600' : '500') + '; cursor:pointer; flex-shrink:0;">' + escape(m.label) + '</button>';
+  });
+  html += '</div>';
+
+  html += '<div id="dpSubContent"></div>';
+
+  root.innerHTML = html;
+
+  root.querySelectorAll('.dp-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.dataProductMode = btn.dataset.mode;
+      renderDataProduct();
+    });
+  });
+
+  const sub = document.getElementById('dpSubContent');
+  if (window.dataProductMode === 'catalog') {
+    renderDpCatalog(sub);
+  } else if (window.dataProductMode === 'linkages') {
+    renderDpLinkages(sub);
+  } else if (window.dataProductMode === 'export') {
+    renderDpExport(sub);
+  }
+}
+
+// ---------- Sous-mode CATALOGUE ----------
+function renderDpCatalog(container) {
   let html = '';
   html += '<div class="batches-header">';
   html += '  <div class="batches-header-info">Clique sur un produit pour ajouter/retirer des <b>mots-clés</b> qui alimenteront la recherche du V.</div>';
   html += '  <input type="text" id="dataProductSearch" placeholder="Rechercher un produit..." value="' + escape(dataProductFilter) + '" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:14px; margin-bottom:8px;">';
   html += '</div>';
 
-  // Filtrer le catalogue
   const q = dataProductFilter.trim().toLowerCase();
   const filtered = q
     ? CATALOGUE.filter(p => p.y.toLowerCase().includes(q) || p.s.toLowerCase().includes(q))
@@ -2120,7 +2156,6 @@ function renderDataProduct() {
   html += '<div style="padding: 0 16px 80px;">';
   html += '  <div style="font-size:12px; color:var(--ink-2); margin-bottom:8px;">' + filtered.length + ' produit' + (filtered.length > 1 ? 's' : '') + '</div>';
 
-  // Liaisons existantes par produit (pour afficher les mots-clés actuels en aperçu)
   const liaisons = loadLiaisons();
   const kwByProduct = new Map();
   for (const l of liaisons) {
@@ -2128,7 +2163,6 @@ function renderDataProduct() {
     kwByProduct.get(l.productYokitup).push(l.keyword);
   }
 
-  // Limiter à 300 pour fluidité
   const items = filtered.slice(0, 300);
   items.forEach(p => {
     const existingKw = kwByProduct.get(p.y) || [];
@@ -2140,22 +2174,18 @@ function renderDataProduct() {
     html += '  <div style="font-size:11px; color:var(--ink-2);">' + escape(p.y) + '</div>';
     html += '</div>';
   });
-
   if (filtered.length > 300) {
     html += '<div style="font-size:12px; color:var(--ink-2); text-align:center; padding:12px;">' + (filtered.length - 300) + ' produits supplémentaires non affichés. Affine ta recherche.</div>';
   }
-
   html += '</div>';
 
-  root.innerHTML = html;
+  container.innerHTML = html;
 
-  // Events
   const searchInput = document.getElementById('dataProductSearch');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       dataProductFilter = e.target.value;
-      renderDataProduct();
-      // Refocus
+      renderDpCatalog(container);
       const newInput = document.getElementById('dataProductSearch');
       if (newInput) {
         newInput.focus();
@@ -2163,14 +2193,68 @@ function renderDataProduct() {
       }
     });
   }
-
-  root.querySelectorAll('.dp-item').forEach(item => {
+  container.querySelectorAll('.dp-item').forEach(item => {
     item.addEventListener('click', () => {
       const y = item.dataset.y;
       dataProductSelected = CATALOGUE.find(p => p.y === y);
       renderDataProduct();
     });
   });
+}
+
+// ---------- Sous-mode LIAISONS (toutes les liaisons existantes) ----------
+function renderDpLinkages(container) {
+  const local = loadLiaisonsLocal();
+  const remote = LIAISONS_REMOTE.filter(r => !local.some(l => l.id === r.id));
+  const totalCount = local.length + remote.length;
+
+  let html = '';
+  html += '<div class="batches-header">';
+  html += '  <div class="batches-header-info">Vue d\'ensemble des associations mot-clé → produit (' + totalCount + ').</div>';
+  html += '  <button type="button" class="batches-add-btn" id="btnAddLiaisonDp" style="width:100%;">+ Créer une liaison</button>';
+  html += '</div>';
+
+  if (totalCount === 0) {
+    html += '<div class="prod-empty">Aucune liaison. Utilise l\'onglet Catalogue pour ajouter des mots-clés sur un produit, ou clique sur + ci-dessus pour créer manuellement.</div>';
+  } else {
+    html += '<div class="batches-list">';
+    local.forEach(l => { html += renderLiaisonCard(l, true); });
+    if (remote.length > 0) {
+      html += '<div style="padding:12px 4px 4px; font-size:11px; color:var(--ink-2); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Depuis GitHub (' + remote.length + ')</div>';
+      remote.forEach(l => { html += renderLiaisonCard(l, false); });
+    }
+    html += '</div>';
+  }
+
+  container.innerHTML = html;
+
+  const addBtn = document.getElementById('btnAddLiaisonDp');
+  if (addBtn) addBtn.addEventListener('click', () => openLiaisonEditor(null));
+
+  container.querySelectorAll('.liaison-card[data-id]').forEach(card => {
+    card.addEventListener('click', () => openLiaisonEditor(card.dataset.id));
+  });
+}
+
+// ---------- Sous-mode EXPORT ----------
+function renderDpExport(container) {
+  const all = getAllLiaisons();
+  let html = '';
+  html += '<div style="padding: 20px 16px;">';
+  html += '<div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px;">';
+  html += '  <h3 style="margin:0 0 8px; font-size:16px;">Exporter les liaisons</h3>';
+  html += '  <p style="font-size:13px; color:var(--ink-2); margin:0 0 16px;">Génère un fichier <b>liaisons_manuelles.json</b> qui contient les <b>' + all.length + '</b> liaison' + (all.length > 1 ? 's' : '') + ' actuelle' + (all.length > 1 ? 's' : '') + '.</p>';
+  html += '  <ol style="font-size:12px; color:var(--ink-2); padding-left:20px; margin:0 0 16px;">';
+  html += '    <li>Clique <b>Télécharger le JSON</b> ci-dessous</li>';
+  html += '    <li>Upload ce fichier sur ton repo GitHub</li>';
+  html += '    <li>Les autres téléphones le chargeront au prochain refresh</li>';
+  html += '  </ol>';
+  html += '  <button type="button" id="btnExportLiaisonsDp" class="batches-add-btn" style="width:100%;">📥 Télécharger le JSON</button>';
+  html += '</div>';
+  html += '</div>';
+
+  container.innerHTML = html;
+  document.getElementById('btnExportLiaisonsDp').addEventListener('click', exportLiaisonsJson);
 }
 
 function renderDataProductEditor(root) {
@@ -2481,55 +2565,6 @@ function clearAllAlerts() {
   openSheet('shConfirm','ovConfirm');
 }
 
-function renderLiaisons() {
-  const root = document.getElementById('liaisonsView');
-  if (!root) return;
-
-  // Sécurité : seulement admin
-  if (!currentAuth || currentAuth.role !== 'admin') {
-    root.innerHTML = '<div class="prod-empty">Accès réservé à l\'admin.</div>';
-    return;
-  }
-
-  const local = loadLiaisonsLocal();
-  const remote = LIAISONS_REMOTE.filter(r => !local.some(l => l.id === r.id));
-
-  let html = '';
-  html += '<div class="batches-header">';
-  html += '  <div class="batches-header-info">Associations <b>marque/mot-clé → produit Yokitup</b> pour aider Le V.</div>';
-  html += '  <div style="display:flex; gap:8px; flex-wrap:wrap;">';
-  html += '    <button type="button" class="batches-add-btn" id="btnAddLiaison" style="flex:1; min-width:200px;">+ Créer une liaison</button>';
-  html += '    <button type="button" id="btnExportLiaisons" style="padding:12px 16px; background:var(--ink); color:white; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">📥 Exporter JSON</button>';
-  html += '  </div>';
-  html += '</div>';
-
-  const totalCount = local.length + remote.length;
-  if (totalCount === 0) {
-    html += '<div class="prod-empty">Aucune liaison pour le moment.<br>Crée la première pour aider Le V à retrouver les bouteilles qui n\'ont pas de touche caisse.</div>';
-  } else {
-    html += '<div class="batches-list">';
-    // D'abord les locales (modifiables)
-    local.forEach(l => {
-      html += renderLiaisonCard(l, true);
-    });
-    // Puis les distantes (lecture seule si pas modifiées localement)
-    if (remote.length > 0) {
-      html += '<div style="padding:12px 4px 4px; font-size:11px; color:var(--ink-2); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Depuis GitHub (' + remote.length + ')</div>';
-      remote.forEach(l => {
-        html += renderLiaisonCard(l, false);
-      });
-    }
-    html += '</div>';
-  }
-
-  root.innerHTML = html;
-
-  document.getElementById('btnAddLiaison').addEventListener('click', () => openLiaisonEditor(null));
-  document.getElementById('btnExportLiaisons').addEventListener('click', exportLiaisonsJson);
-  root.querySelectorAll('.batch-item[data-lid]').forEach(el => {
-    el.addEventListener('click', () => openLiaisonEditor(el.dataset.lid));
-  });
-}
 
 function renderLiaisonCard(l, editable) {
   const product = CATALOGUE.find(p => p.y === l.productYokitup);
@@ -3603,7 +3638,7 @@ function sendChat(){
     addChatMsg('assistant', reply.text);
     // Suggestions de produits (boutons)
     if (reply.suggestions && reply.suggestions.length) {
-      renderProductSuggestions(reply.suggestions);
+      renderProductSuggestions(reply.suggestions, { groupedByCategory: !!reply.groupedByCategory });
     }
     // Quick replies (boutons de désambiguïsation)
     if (reply.quickReplies && reply.quickReplies.length) {
@@ -4294,6 +4329,171 @@ function victorRespond(msg) {
 }
 
 // Recherche normale + gestion des cas 1-4
+
+// ============================================================
+// RECHERCHE CATALOGUE : trouve les produits dont le nom (y, s) OU la catégorie (c)
+// matche les mots de la query. Retourne triés par pertinence et groupés par catégorie.
+// ============================================================
+function searchCatalogByWords(words, currentEtab) {
+  if (!words || words.length === 0) return [];
+  const currentTag = ETAB_TO_TAG[currentEtab];
+  const results = [];
+
+  for (const p of CATALOGUE) {
+    const nameNorm = normalizePos(p.y + ' ' + (p.s || ''));
+    const catNorm = normalizePos(p.c || '');
+    let score = 0;
+    let matchInName = false;
+    let matchInCat = false;
+
+    for (const w of words) {
+      const inName = scoreMatch(w, nameNorm);
+      const inCat = scoreMatch(w, catNorm);
+      if (inName > 0) matchInName = true;
+      if (inCat > 0) matchInCat = true;
+      score += inName + (inCat * 0.5);  // nom compte plus que catégorie
+    }
+    if (score === 0) continue;
+
+    // Bonus si taggé pour l'étab courant
+    const isMine = currentTag && p.t && p.t.indexOf(currentTag) >= 0;
+    const effectiveScore = score + (isMine ? 50 : 0);
+
+    results.push({
+      product: p,
+      score: effectiveScore,
+      matchInName,
+      matchInCat,
+      fromCurrentEtab: isMine
+    });
+  }
+
+  results.sort((a, b) => b.score - a.score);
+  return results;
+}
+
+// Extrait la catégorie principale à partir du champ 'c' d'un produit
+// Ex: 'LIQUIDE - ALCOOL - VIN - ROUGE BORDEAUX' → { main: 'ALCOOL', sub: 'VIN', detail: 'ROUGE BORDEAUX' }
+function parseCategoryPath(c) {
+  if (!c) return { main: 'AUTRE', sub: '', detail: '' };
+  const parts = c.split(' - ').map(s => s.trim());
+  // parts[0] = LIQUIDE, parts[1] = main (ALCOOL / SOFT / CIGARETTE)
+  return {
+    main: parts[1] || 'AUTRE',
+    sub: parts[2] || '',
+    detail: parts[3] || '',
+    full: c
+  };
+}
+
+// Grouper les résultats catalogue par catégorie principale
+function groupCatalogResultsByCategory(results) {
+  const groups = new Map();
+  for (const r of results) {
+    const cat = parseCategoryPath(r.product.c);
+    const key = cat.main + (cat.sub ? ' - ' + cat.sub : '');
+    if (!groups.has(key)) {
+      groups.set(key, {
+        label: key,
+        main: cat.main,
+        sub: cat.sub,
+        items: []
+      });
+    }
+    groups.get(key).items.push(r);
+  }
+  return Array.from(groups.values());
+}
+
+// Emoji pour la catégorie principale
+function categoryEmoji(main) {
+  const map = {
+    'SOFT': '🥤',
+    'ALCOOL': '🍸',
+    'CIGARETTE': '🚬',
+    'AUTRE': '📦'
+  };
+  return map[main] || '📦';
+}
+
+
+// ============================================================
+// Construire la réponse unifiée : groupée par catégorie si plusieurs, 
+// ou liste simple si une seule catégorie
+// ============================================================
+function buildUnifiedResponse(msg, liaisonsHits, verseHits, topResults, currentEtab, mainCategories) {
+  // Convertir en suggestions
+  const suggestions = [];
+  const seenIds = new Set();
+
+  // Liaisons manuelles d'abord (si présentes, elles sont déjà gérées mais on les injecte aussi pour cohérence)
+  liaisonsHits.forEach(h => {
+    if (!seenIds.has(h.prod.id)) {
+      seenIds.add(h.prod.id);
+      suggestions.push({
+        productId: h.prod.id,
+        name: h.prod.s,
+        yokitup: h.prod.y,
+        categoryPath: h.prod.c || '',
+        pos_examples: [],
+        inCatalogue: true,
+        viaManualLiaison: true
+      });
+    }
+  });
+
+  // Ensuite les autres résultats
+  topResults.forEach(r => {
+    if (r.product) {
+      if (seenIds.has(r.product.id)) return;
+      seenIds.add(r.product.id);
+      suggestions.push({
+        productId: r.product.id,
+        name: r.product.s,
+        yokitup: r.product.y,
+        categoryPath: r.product.c || '',
+        pos_examples: r.pos_examples || [],
+        inCatalogue: true,
+        isVerseHit: r.isVerseHit,
+        fromCurrentEtab: r.fromCurrentEtab
+      });
+    } else if (r.productName) {
+      // POS non résolu au catalogue
+      const key = 'NOCAT_' + r.productName;
+      if (seenIds.has(key)) return;
+      seenIds.add(key);
+      suggestions.push({
+        productId: null,
+        name: r.productName,
+        yokitup: r.productName,
+        categoryPath: '',
+        pos_examples: r.pos_examples || [],
+        inCatalogue: false
+      });
+    }
+  });
+
+  // Construire le texte en fonction du nombre de catégories
+  let text;
+  const nCats = mainCategories.size;
+  const total = suggestions.length;
+
+  if (nCats >= 2) {
+    // Plusieurs catégories : grouper visuellement
+    text = "J'ai trouvé " + total + " produit" + (total > 1 ? 's' : '') + " dans plusieurs catégories :";
+  } else if (total === 1) {
+    text = "Voici ce que j'ai trouvé :";
+  } else {
+    text = "Voici " + total + " produits qui pourraient correspondre :";
+  }
+
+  return {
+    text,
+    suggestions,
+    groupedByCategory: nCats >= 2  // flag pour l'affichage
+  };
+}
+
 function searchAndRespond(msg) {
   const n = normalizePos(msg);
   const currentEtab = state.estab;
@@ -4372,40 +4572,111 @@ function searchAndRespond(msg) {
   }
   const sorted = Array.from(matches.values()).sort((a, b) => b.score - a.score);
 
-  // ========== DÉCISION : QUEL CAS ? ==========
+  // 4. Recherche DIRECTE DANS LE CATALOGUE (par nom y/s ET par catégorie c)
+  // Capture des produits qui ne sont pas dans les touches POS (ex: LIQUEUR MANDARINE)
+  const catalogResults = searchCatalogByWords(words, currentEtab);
 
-  // CAS VERSE + POS combiné : si VERSE hit, on propose à la fois VERSE et les top matches POS
-  // (ex: "coca" → Coca Cola Verse ET B. Coca Cola Verre Bouteille)
-  // Le chef choisit parmi les options.
-  if (verseHits.length > 0) {
-    // Prendre les meilleurs matches POS (jusqu'à 3) pour les joindre aux VERSE
-    const topPos = sorted.slice(0, 5);
-    return buildSuggestionsResponse(msg, liaisonsHits, verseHits, topPos, currentEtab);
+  // Fusionner : on considère catalogue + POS comme UNE source unifiée
+  // Les produits trouvés via POS sont enrichis avec leur catégorie c pour le regroupement
+  const allProducts = new Map();  // key = y du produit, value = { product, score, source, ... }
+
+  // a) Injecter les résultats catalogue direct
+  for (const r of catalogResults) {
+    allProducts.set(r.product.y, {
+      product: r.product,
+      score: r.score,
+      source: 'catalog',
+      fromCurrentEtab: r.fromCurrentEtab,
+      pos_examples: []
+    });
   }
 
-  // CAS A : liaisons manuelles → priorité absolue
+  // b) Enrichir avec les résultats POS (qui donnent des exemples de touches caisse)
+  for (const m of sorted) {
+    const prod = resolveToCatalog(m.product);
+    const key = prod ? prod.y : m.product;
+    const existing = allProducts.get(key);
+    if (existing) {
+      // Le produit est connu dans catalogue ET POS → fusionner
+      existing.score = Math.max(existing.score, m.score);
+      existing.pos_examples = m.pos_examples.slice(0, 3);
+      existing.source = 'both';
+      if (m.fromCurrentEtab) existing.fromCurrentEtab = true;
+    } else if (prod) {
+      // Produit trouvé en POS avec résolution catalogue
+      allProducts.set(prod.y, {
+        product: prod,
+        score: m.score,
+        source: 'pos',
+        fromCurrentEtab: m.fromCurrentEtab,
+        pos_examples: m.pos_examples.slice(0, 3)
+      });
+    } else {
+      // Produit POS non résolu au catalogue : on garde sous sa clé brute (gérée à l'affichage)
+      allProducts.set(m.product, {
+        product: null,
+        productName: m.product,
+        score: m.score,
+        source: 'pos-only',
+        fromCurrentEtab: m.fromCurrentEtab,
+        pos_examples: m.pos_examples.slice(0, 3)
+      });
+    }
+  }
+
+  // c) Ajouter les VERSE hits (priorité forte)
+  for (const v of verseHits) {
+    if (v.productRef) {
+      const key = v.productRef.y;
+      const existing = allProducts.get(key);
+      if (existing) {
+        existing.score = Math.max(existing.score, 200);  // boost VERSE
+        existing.isVerseHit = true;
+      } else {
+        allProducts.set(key, {
+          product: v.productRef,
+          score: 200,
+          source: 'verse',
+          fromCurrentEtab: true,
+          pos_examples: [],
+          isVerseHit: true
+        });
+      }
+    }
+  }
+
+  // Trier tout par score décroissant
+  const allArr = Array.from(allProducts.values()).sort((a, b) => b.score - a.score);
+
+  // ========== DÉCISION : QUEL CAS ? ==========
+
+  // CAS A : liaisons manuelles → priorité absolue (reste prioritaire sur tout)
   if (liaisonsHits.length > 0) {
     return buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentEtab);
   }
 
-  // CAS B : résultats précis (1-5 matches sérieux)
-  const goodMatches = sorted.filter(m => m.score >= 8);
-  if (goodMatches.length >= 1 && goodMatches.length <= 5) {
-    return buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentEtab);
-  }
+  // CAS FUSION : si on a des résultats (au moins 1), regrouper par catégorie principale
+  // et présenter tous les groupes pertinents
+  if (allArr.length > 0) {
+    // Filtrer les résultats faibles pour éviter les faux positifs (Cocalières pour "coca")
+    // Si il existe un résultat fort, on ne garde que les résultats >= 30% du top score
+    const topScore = allArr[0] ? allArr[0].score : 0;
+    const threshold = topScore >= 30 ? Math.max(topScore * 0.3, 5) : 5;
+    const topResults = allArr.filter(r => r.score >= threshold).slice(0, 15);
 
-  // CAS C : BEAUCOUP de résultats → proposer de préciser par catégorie
-  if (sorted.length >= 6) {
-    sendLogToBackend({
-      query: msg,
-      type: 'low_confidence',
-      details: { num_results: sorted.length, reason: 'too_many_matches' }
-    });
-    return buildDisambiguationByCategory(msg, sorted);
+    if (topResults.length === 0) {
+      // Scores trop faibles : tomber dans did-you-mean
+    } else {
+      // Si plusieurs catégories principales différentes → on regroupe pour choix
+      const mainCategories = new Set(topResults.map(r => r.product ? parseCategoryPath(r.product.c).main : 'POS'));
+
+      // Construire la réponse enrichie
+      return buildUnifiedResponse(msg, liaisonsHits, verseHits, topResults, currentEtab, mainCategories);
+    }
   }
 
   // CAS D : ZÉRO résultat → did you mean + questions
-  if (sorted.length === 0 && verseHits.length === 0) {
+  if (allArr.length === 0 && verseHits.length === 0) {
     const similar = findSimilarNames(msg);
     if (similar.length > 0) {
       sendLogToBackend({
@@ -4728,57 +4999,88 @@ function finishBlindQuestions(ctx) {
 
 
 
-function renderProductSuggestions(suggestions) {
+function renderProductSuggestions(suggestions, opts) {
+  opts = opts || {};
   const root = document.getElementById('chatMsgs');
   const wrap = document.createElement('div');
   wrap.className = 'chat-suggestions';
 
-  suggestions.forEach(s => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'chat-suggestion' + (s.inCatalogue === false ? ' chat-suggestion-missing' : '');
-    
-    // Récupérer le produit complet pour avoir la pill
-    let pillHtml = '';
-    if (s.productId !== null && s.productId !== undefined) {
-      const prod = CATALOGUE[s.productId];
-      if (prod && prod.p) {
-        const pillCls = 'pill-' + (prod.p === '½' ? 'DEMI' : prod.p);
-        pillHtml = '<span class="chat-suggestion-pill ' + pillCls + '">' + escape(prod.p) + '</span> ';
-      }
+  // Si groupé par catégorie : regrouper les suggestions avant de rendre
+  if (opts.groupedByCategory) {
+    const groups = new Map();
+    for (const s of suggestions) {
+      const cat = s.categoryPath ? parseCategoryPath(s.categoryPath) : { main: 'AUTRE' };
+      const key = cat.main + (cat.sub ? ' - ' + cat.sub : '');
+      if (!groups.has(key)) groups.set(key, { key, main: cat.main, sub: cat.sub, items: [] });
+      groups.get(key).items.push(s);
     }
-    
-    let innerHtml = pillHtml + '<b>' + escape(s.name) + '</b>';
-    if (s.inCatalogue === false) {
-      innerHtml += ' <span class="chat-suggestion-badge">non trouvé</span>';
-    }
-    if (s.fromOtherEtab) {
-      innerHtml += ' <span class="chat-suggestion-badge-other">chez ' + escape(s.fromOtherEtab) + '</span>';
-    }
-    if (s.viaManualLiaison) {
-      innerHtml += ' <span class="chat-suggestion-badge-manual">lié manuellement</span>';
-    }
-    if (s.viaCocktail) {
-      innerHtml += ' <span class="chat-suggestion-badge-cocktail">🍹 via ' + escape(s.viaCocktail) + '</span>';
-    }
-    if (s.pos_examples && s.pos_examples.length) {
-      innerHtml += '<br><span class="chat-suggestion-sub">Caisse : ' + escape(s.pos_examples.slice(0, 2).join(' · ')) + '</span>';
-    }
-    btn.innerHTML = innerHtml;
-    
-    if (s.productId !== null && s.productId !== undefined) {
-      btn.addEventListener('click', () => {
-        closeChat();
-        openProductSheet(s.productId);
-      });
-    } else {
-      btn.style.cursor = 'default';
-      btn.disabled = true;
-    }
-    wrap.appendChild(btn);
-  });
+    // Ordre des catégories (SOFT d'abord pour les cas type "mandarine")
+    const sortOrder = { 'SOFT': 1, 'ALCOOL': 2, 'ALCOOL - VIN': 3, 'AUTRE': 99 };
+    const sortedGroups = Array.from(groups.values()).sort((a, b) => {
+      const ka = sortOrder[a.key] || (a.main === 'ALCOOL' ? 2.5 : 10);
+      const kb = sortOrder[b.key] || (b.main === 'ALCOOL' ? 2.5 : 10);
+      return ka - kb;
+    });
+
+    sortedGroups.forEach(g => {
+      const header = document.createElement('div');
+      header.className = 'chat-suggestion-group-header';
+      header.style.cssText = 'font-size:11px; font-weight:700; color:var(--ink-2); text-transform:uppercase; letter-spacing:0.4px; padding: 10px 4px 4px;';
+      header.textContent = categoryEmoji(g.main) + ' ' + g.key;
+      wrap.appendChild(header);
+      g.items.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
+    });
+  } else {
+    suggestions.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
+  }
+
   root.appendChild(wrap);
   root.scrollTop = root.scrollHeight;
+}
+
+// Construire un bouton pour une suggestion
+function buildSuggestionButton(s) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'chat-suggestion' + (s.inCatalogue === false ? ' chat-suggestion-missing' : '');
+
+  let pillHtml = '';
+  if (s.productId !== null && s.productId !== undefined) {
+    const prod = CATALOGUE[s.productId];
+    if (prod && prod.p) {
+      const pillCls = 'pill-' + (prod.p === '½' ? 'DEMI' : prod.p);
+      pillHtml = '<span class="chat-suggestion-pill ' + pillCls + '">' + escape(prod.p) + '</span> ';
+    }
+  }
+
+  let innerHtml = pillHtml + '<b>' + escape(s.name) + '</b>';
+  if (s.inCatalogue === false) {
+    innerHtml += ' <span class="chat-suggestion-badge">non trouvé</span>';
+  }
+  if (s.fromOtherEtab) {
+    innerHtml += ' <span class="chat-suggestion-badge-other">chez ' + escape(s.fromOtherEtab) + '</span>';
+  }
+  if (s.viaManualLiaison) {
+    innerHtml += ' <span class="chat-suggestion-badge-manual">lié manuellement</span>';
+  }
+  if (s.viaCocktail) {
+    innerHtml += ' <span class="chat-suggestion-badge-cocktail">🍹 via ' + escape(s.viaCocktail) + '</span>';
+  }
+  if (s.pos_examples && s.pos_examples.length) {
+    innerHtml += '<br><span class="chat-suggestion-sub">Caisse : ' + escape(s.pos_examples.slice(0, 2).join(' · ')) + '</span>';
+  }
+  btn.innerHTML = innerHtml;
+
+  if (s.productId !== null && s.productId !== undefined) {
+    btn.addEventListener('click', () => {
+      closeChat();
+      openProductSheet(s.productId);
+    });
+  } else {
+    btn.style.cursor = 'default';
+    btn.disabled = true;
+  }
+  return btn;
 }
 
 // Affiche des boutons cliquables dans le chat (désambiguïsation)
@@ -4801,7 +5103,7 @@ function renderQuickReplies(replies) {
         const reply = victorRespond(r);
         addChatMsg('assistant', reply.text);
         if (reply.suggestions && reply.suggestions.length) {
-          renderProductSuggestions(reply.suggestions);
+          renderProductSuggestions(reply.suggestions, { groupedByCategory: !!reply.groupedByCategory });
         }
         if (reply.quickReplies && reply.quickReplies.length) {
           renderQuickReplies(reply.quickReplies);
@@ -5940,7 +6242,10 @@ function saveLiaisonEditor() {
     markRequestResolved(currentLiaison.fromRequestId);
   }
   closeLiaisonEditor();
-  renderLiaisons();
+  // Rafraîchir la vue Data Product si on y est
+  if (document.getElementById('vDataproduct') && document.getElementById('vDataproduct').classList.contains('active')) {
+    renderDataProduct();
+  }
   toast('Liaison enregistrée');
 }
 
@@ -5950,7 +6255,9 @@ function deleteLiaisonEditor() {
     const list = loadLiaisonsLocal().filter(l => l.id !== currentLiaison.id);
     saveLiaisonsLocal(list);
     closeLiaisonEditor();
-    renderLiaisons();
+    if (document.getElementById('vDataproduct') && document.getElementById('vDataproduct').classList.contains('active')) {
+      renderDataProduct();
+    }
     toast('Liaison supprimée');
   };
   document.getElementById('confirmTitle').textContent = 'Supprimer cette liaison ?';
