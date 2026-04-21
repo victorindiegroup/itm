@@ -1064,6 +1064,25 @@
     letter-spacing: 0.2px;
     vertical-align: middle;
   }
+
+  .chat-suggestion-offcard {
+    opacity: 0.55;
+  }
+  .chat-suggestion-offcard b {
+    color: var(--ink-2);
+  }
+  .chat-suggestion-badge-offcard {
+    display: inline-block;
+    background: #EEE9DF;
+    color: #8A7E66;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 8px;
+    margin-left: 4px;
+    letter-spacing: 0.2px;
+    vertical-align: middle;
+  }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -1392,6 +1411,8 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
+const APP_VERSION = 'v57';
+
 /* === ITM APP === */
 (function(){
 'use strict';
@@ -4632,6 +4653,9 @@ function buildUnifiedResponse(msg, liaisonsHits, verseHits, topResults, currentE
     if (r.product) {
       if (seenIds.has(r.product.id)) return;
       seenIds.add(r.product.id);
+      // Déterminer si le produit est à la carte de l'étab courant
+      const currentTag = ETAB_TO_TAG[currentEtab];
+      const inEtabCard = currentTag ? (r.product.t && r.product.t.indexOf(currentTag) >= 0) : true;
       suggestions.push({
         productId: r.product.id,
         name: r.product.s,
@@ -4641,7 +4665,9 @@ function buildUnifiedResponse(msg, liaisonsHits, verseHits, topResults, currentE
         inCatalogue: true,
         isVerseHit: r.isVerseHit,
         viaManualLiaison: r.viaManualLiaison,
-        fromCurrentEtab: r.fromCurrentEtab
+        fromCurrentEtab: r.fromCurrentEtab,
+        inEtabCard: inEtabCard,
+        etabTags: r.product.t || []
       });
     } else if (r.productName) {
       // POS non résolu au catalogue
@@ -4841,12 +4867,12 @@ function searchAndRespond(msg) {
       const key = h.prod.y;
       const existing = allProducts.get(key);
       if (existing) {
-        existing.score = Math.max(existing.score, 500);  // boost liaison manuelle
+        existing.score = Math.max(existing.score, 100);  // boost liaison manuelle (modéré)
         existing.viaManualLiaison = true;
       } else {
         allProducts.set(key, {
           product: h.prod,
-          score: 500,
+          score: 100,
           source: 'liaison',
           fromCurrentEtab: true,
           pos_examples: [],
@@ -4865,9 +4891,11 @@ function searchAndRespond(msg) {
   if (allArrWithLiaisons.length > 0) {
     // Filtrer les résultats faibles pour éviter les faux positifs (Cocalières pour "coca")
     // Si il existe un résultat fort, on ne garde que les résultats >= 30% du top score
-    // MAIS : on garde toujours les liaisons manuelles (viaManualLiaison) quel que soit le score relatif
-    const topScore = allArrWithLiaisons[0] ? allArrWithLiaisons[0].score : 0;
+    // Calculer le threshold sur les résultats NON-liaison (sinon le boost écrase tout le reste)
+    const nonLiaisonResults = allArrWithLiaisons.filter(r => !r.viaManualLiaison);
+    const topScore = nonLiaisonResults[0] ? nonLiaisonResults[0].score : 0;
     const threshold = topScore >= 30 ? Math.max(topScore * 0.3, 5) : 5;
+    // Garder : liaisons manuelles (toujours) + résultats au-dessus du threshold
     const topResults = allArrWithLiaisons.filter(r => r.viaManualLiaison || r.score >= threshold).slice(0, 15);
 
     if (topResults.length === 0) {
@@ -5234,10 +5262,22 @@ function renderProductSuggestions(suggestions, opts) {
       header.style.cssText = 'font-size:11px; font-weight:700; color:var(--ink-2); text-transform:uppercase; letter-spacing:0.4px; padding: 10px 4px 4px;';
       header.textContent = categoryEmoji(g.main) + ' ' + g.key;
       wrap.appendChild(header);
-      g.items.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
+      // Trier : à la carte d'abord, hors carte ensuite
+      const sortedItems = g.items.slice().sort((a, b) => {
+        const aOff = a.inEtabCard === false ? 1 : 0;
+        const bOff = b.inEtabCard === false ? 1 : 0;
+        return aOff - bOff;
+      });
+      sortedItems.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
     });
   } else {
-    suggestions.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
+    // Trier : à la carte d'abord, hors carte ensuite
+    const sortedFlat = suggestions.slice().sort((a, b) => {
+      const aOff = a.inEtabCard === false ? 1 : 0;
+      const bOff = b.inEtabCard === false ? 1 : 0;
+      return aOff - bOff;
+    });
+    sortedFlat.forEach(s => wrap.appendChild(buildSuggestionButton(s)));
   }
 
   root.appendChild(wrap);
@@ -5248,7 +5288,10 @@ function renderProductSuggestions(suggestions, opts) {
 function buildSuggestionButton(s) {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'chat-suggestion' + (s.inCatalogue === false ? ' chat-suggestion-missing' : '');
+  let cls = 'chat-suggestion';
+  if (s.inCatalogue === false) cls += ' chat-suggestion-missing';
+  else if (s.inEtabCard === false) cls += ' chat-suggestion-offcard';
+  btn.className = cls;
 
   let pillHtml = '';
   if (s.productId !== null && s.productId !== undefined) {
@@ -5271,6 +5314,15 @@ function buildSuggestionButton(s) {
   }
   if (s.viaCocktail) {
     innerHtml += ' <span class="chat-suggestion-badge-cocktail">🍹 via ' + escape(s.viaCocktail) + '</span>';
+  }
+  if (s.inEtabCard === false && s.etabTags && s.etabTags.length > 0) {
+    // Trouver les noms d'étabs à partir des tags
+    const etabNames = s.etabTags.map(tag => {
+      const name = Object.keys(ETAB_TO_TAG).find(n => ETAB_TO_TAG[n] === tag);
+      return name || tag;
+    }).slice(0, 2).join(', ');
+    const suffix = s.etabTags.length > 2 ? '…' : '';
+    innerHtml += ' <span class="chat-suggestion-badge-offcard">hors carte · ' + escape(etabNames + suffix) + '</span>';
   }
   if (s.pos_examples && s.pos_examples.length) {
     innerHtml += '<br><span class="chat-suggestion-sub">Caisse : ' + escape(s.pos_examples.slice(0, 2).join(' · ')) + '</span>';
@@ -6655,6 +6707,10 @@ function init(){
   document.getElementById('chatInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') sendChat();
   });
+
+  // Afficher la version en bas à gauche
+  const versionDiv = document.getElementById('appVersion');
+  if (versionDiv) versionDiv.textContent = APP_VERSION;
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -6669,5 +6725,7 @@ if ('serviceWorker' in navigator) {
       .catch((err) => console.warn('SW registration failed:', err));
   });
 }
-</script></body>
+</script>
+<div id="appVersion" style="position:fixed; bottom:4px; left:6px; font-size:9px; color:#aaa; font-family:sans-serif; opacity:0.5; pointer-events:none; z-index:10; letter-spacing:0.5px;"></div>
+</body>
 </html>
