@@ -1432,7 +1432,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v62';
+const APP_VERSION = 'v63';
 
 /* === ITM APP === */
 (function(){
@@ -1754,15 +1754,30 @@ function saveLiaisonsLocal(list) {
   }
 }
 
-// Charger les liaisons distantes depuis liaisons_manuelles.json
-function loadLiaisonsRemote() {
-  fetch('./liaisons_manuelles.json', { cache: 'no-cache' })
-    .then(r => r.ok ? r.json() : [])
-    .then(data => {
-      LIAISONS_REMOTE = Array.isArray(data) ? data : [];
-      console.log('Liaisons distantes chargées : ' + LIAISONS_REMOTE.length);
-    })
-    .catch(() => { LIAISONS_REMOTE = []; });
+// Charger les liaisons distantes :
+// 1. D'abord essayer Cloudflare (liaisons publiées par l'admin)
+// 2. Fallback : liaisons_manuelles.json sur GitHub (au cas où Cloudflare down)
+async function loadLiaisonsRemote() {
+  // Tentative Cloudflare d'abord
+  try {
+    const published = await fetchPublishedLiaisons();
+    if (published !== null && Array.isArray(published)) {
+      LIAISONS_REMOTE = published;
+      console.log('Liaisons distantes chargées depuis Cloudflare : ' + LIAISONS_REMOTE.length);
+      return;
+    }
+  } catch (e) { /* fallback GitHub */ }
+
+  // Fallback GitHub
+  try {
+    const r = await fetch('./liaisons_manuelles.json', { cache: 'no-cache' });
+    const data = r.ok ? await r.json() : [];
+    LIAISONS_REMOTE = Array.isArray(data) ? data : [];
+    console.log('Liaisons distantes chargées depuis GitHub (fallback) : ' + LIAISONS_REMOTE.length);
+  } catch (e) {
+    LIAISONS_REMOTE = [];
+    console.warn('Liaisons distantes : aucune source disponible');
+  }
 }
 
 // Toutes les liaisons actives (locales + distantes), dédoublonnées par id
@@ -2128,6 +2143,61 @@ async function fetchLiaisonsFromBackend(adminToken) {
   const data = await response.json();
   return data.liaisons || [];
 }
+
+// ============================================================
+// Publication des liaisons admin → chefs (via Cloudflare)
+// ============================================================
+
+// Publier les liaisons actuelles vers l'endpoint public lu par les chefs
+async function publishLiaisonsToChefs(liaisons, adminToken) {
+  const response = await fetch(BACKEND_URL + '/liaisons/publish', {
+    method: 'POST',
+    headers: {
+      'X-Admin-Token': adminToken,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ liaisons }),
+    signal: AbortSignal.timeout(10000)
+  });
+  if (response.status === 401) throw new Error('Token admin invalide');
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  const data = await response.json();
+  return data.count || 0;
+}
+
+// Récupérer la date de dernière publication (pour affichage admin)
+async function fetchLiaisonsPublishedInfo() {
+  try {
+    const response = await fetch(BACKEND_URL + '/liaisons/published', {
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return {
+      count: (data.liaisons || []).length,
+      updatedAt: data.updatedAt
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+// Fetch les liaisons publiées (version chef, pas de token)
+// Retourne [] si échec (fallback GitHub pris en charge par loadLiaisonsRemote)
+async function fetchPublishedLiaisons() {
+  try {
+    const response = await fetch(BACKEND_URL + '/liaisons/published', {
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.liaisons || [];
+  } catch (e) {
+    return null;
+  }
+}
+
+
 
 
 
@@ -2667,7 +2737,9 @@ function renderDpLinkages(container) {
   html += '    <button type="button" class="batches-add-btn" id="btnAddLiaisonDp" style="flex:1;">+ Créer une liaison</button>';
   html += '    <button type="button" id="btnSyncLiaisons" style="flex:1; padding:12px 14px; background:var(--surface); color:var(--accent-dark); border:1px solid var(--accent); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">🔄 Sync Cloudflare</button>';
   html += '  </div>';
+  html += '  <button type="button" id="btnPublishLiaisons" style="width:100%; padding:12px 14px; background:#1D9E75; color:white; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; margin-bottom:6px;">📤 Publier vers les chefs</button>';
   html += '  <div id="liaisonsSyncStatus" style="font-size:11px; color:var(--ink-2); margin-top:4px;"></div>';
+  html += '  <div id="liaisonsPublishedInfo" style="font-size:11px; color:var(--ink-2); margin-top:2px;"></div>';
   html += '</div>';
 
   if (totalCount === 0) {
@@ -2676,7 +2748,7 @@ function renderDpLinkages(container) {
     html += '<div class="batches-list">';
     local.forEach(l => { html += renderLiaisonCard(l, true); });
     if (remote.length > 0) {
-      html += '<div style="padding:12px 4px 4px; font-size:11px; color:var(--ink-2); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Depuis GitHub (' + remote.length + ')</div>';
+      html += '<div style="padding:12px 4px 4px; font-size:11px; color:var(--ink-2); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Publiées (visibles par les chefs) (' + remote.length + ')</div>';
       remote.forEach(l => { html += renderLiaisonCard(l, false); });
     }
     html += '</div>';
@@ -2712,6 +2784,59 @@ function renderDpLinkages(container) {
       }
     });
   }
+
+  const publishBtn = document.getElementById('btnPublishLiaisons');
+  if (publishBtn) {
+    publishBtn.addEventListener('click', async () => {
+      const token = loadAdminToken();
+      if (!token) { toast('Token admin requis'); return; }
+      const local = loadLiaisonsLocal();
+      if (local.length === 0) {
+        toast('Aucune liaison à publier');
+        return;
+      }
+      confirmCb = async () => {
+        publishBtn.disabled = true;
+        const orig = publishBtn.textContent;
+        publishBtn.textContent = 'Publication...';
+        try {
+          const count = await publishLiaisonsToChefs(local, token);
+          toast('✓ ' + count + ' liaisons publiées. Les chefs les verront au prochain refresh.');
+          renderDpLinkages(container);
+        } catch (err) {
+          toast('Erreur : ' + err.message);
+        } finally {
+          publishBtn.disabled = false;
+          publishBtn.textContent = orig;
+        }
+      };
+      document.getElementById('confirmTitle').textContent = 'Publier vers les chefs ?';
+      document.getElementById('confirmMsg').textContent = local.length + ' liaison' + (local.length > 1 ? 's seront envoyées' : ' sera envoyée') + ' à tous les établissements. Ils y auront accès au prochain refresh de leur app.';
+      openSheet('shConfirm','ovConfirm');
+    });
+  }
+
+  // Afficher l'info de dernière publication en arrière-plan
+  fetchLiaisonsPublishedInfo().then(info => {
+    const el = document.getElementById('liaisonsPublishedInfo');
+    if (!el || !info) return;
+    if (!info.updatedAt) {
+      el.textContent = 'Jamais publié.';
+      el.style.color = 'var(--danger)';
+      return;
+    }
+    const date = new Date(info.updatedAt);
+    const now = Date.now();
+    const diffMs = now - date.getTime();
+    const diffH = Math.floor(diffMs / 3600000);
+    const diffD = Math.floor(diffH / 24);
+    let rel;
+    if (diffH < 1) rel = 'il y a moins d\'une heure';
+    else if (diffH < 24) rel = 'il y a ' + diffH + 'h';
+    else if (diffD < 7) rel = 'il y a ' + diffD + ' jour' + (diffD > 1 ? 's' : '');
+    else rel = 'le ' + date.toLocaleDateString('fr-FR');
+    el.textContent = 'Dernière publication : ' + rel + ' · ' + info.count + ' liaison' + (info.count > 1 ? 's visibles' : ' visible') + ' par les chefs.';
+  });
 
   container.querySelectorAll('.liaison-card[data-id]').forEach(card => {
     card.addEventListener('click', () => openLiaisonEditor(card.dataset.id));
@@ -6885,6 +7010,8 @@ function updateAdminUIVisibility() {
 function init(){
   // Charger les données POS pour l'établissement actif
   loadPosData();
+  // Charger les liaisons distantes (Cloudflare d'abord, GitHub fallback)
+  loadLiaisonsRemote();
 
   // Si utilisateur connecté et pas admin, forcer son établissement
   if (currentAuth && currentAuth.role === 'user' && currentAuth.etab) {
