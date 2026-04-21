@@ -1,0 +1,932 @@
+POS Product Type,POS Product ID,POS Product Name,POS Product Status,POS Product Group ID,POS Product Group Name,Product ID,Product Name,Product Status,Action Type
+generic,V. DON JULIO 1942,V. DON JULIO 1942,enabled,,,014f9588-4368-48f3-bf68-f0641d637a0b,V. DON JULIO 1942,enabled,increase
+generic,B. PEYRASSOL MEDITERRANEE BLC,B. PEYRASSOL MEDITERRANEE BLC,enabled,,,46c27eaa-31a0-4033-9b43-eabe2d502680,"B._ IGP Méditérranée_ ""Méditérranée"", Peyrassol_BLC_75CL",enabled,increase
+generic,BTL LAURENT PERRIER,BTL LAURENT PERRIER,disabled,,,,,,none
+generic,V. HENNESSY XO,V. HENNESSY XO,enabled,,,a209778b-4ea1-43e4-827d-2debdce29ac7,V. HENNESSY X.O,enabled,increase
+generic,V. LIQUEUR ABSINTHE A JOE,BAS ARMAGNAC LABALLE,disabled,,,e0cac64c-e4b7-4fbb-b5ec-108988ff56c0,V. ABSINTHE À JOE,enabled,increase
+generic,V. JUS PAMPLEMOUSSE FRAIS,V. JUS PAMPLEMOUSSE FRAIS,enabled,,,,,,none
+generic,V. RHONE ESTEZARGUES RGE,V. RHONE ESTEZARGUES RGE,enabled,,,59962ded-1c4d-4a4a-8faa-9d8bf5d31a39,V. CUVEE DES GALETS ESTEZARGUES,enabled,increase
+generic,B. ST EMILION FORTS DE BEL AIR RGE,B. ST EMILION FORTS DE BEL AIR RGE,enabled,,,8b58fcfe-1395-45f1-8dec-a0647bd2bba5,"B._ Montagne St Emilion _ Les Forts de Bel Air ""CASHER""_RGE_75CL",enabled,increase
+generic,ANANAS,ANANAS,enabled,,,,,,none
+generic,B. DOM. CAMPAUX OSE BLC,B. LYS DES SABLES FONDUGUES BLC,disabled,,,05c18b64-fae1-4887-99b6-9395c8531d62,"B._Provence_""Cuvée Osé Blanc"", Domaine des Campaux_BLC_75CL",enabled,increase
+generic,B. ORANGINA 33CL,B. ORANGINA 33CL,enabled,,,bc5d72d8-4f2c-48df-b7d1-63350269aa3d,B. ORANGINA VP 25CL,enabled,increase
+generic,B. CHABLIS 1ER CRU MONT DE MILIEU BLC,B. CHABLIS 1ER CRU FOURNEAUX BLC,enabled,,,88e1dcab-a78f-41f4-aaf6-53bc67a6444a,"B._ Chablis 1er Cru_ ""Fourneaux"", Domaine Gautheron_BLC_75CL",enabled,increase
+generic,B. DON JULIO 1942,B. DON JULIO 1942,enabled,,,4639253b-3962-43ea-86de-6b4bc9e381a5,B. DON JULIO 1942 70CL,enabled,increase
+generic,B. CH. MARTIN GRAVES,B. CH. LA BRANDE CASTILLON RGE,disabled,,,e77ddad2-bf9c-4cd2-aba1-d891d8631c0c,B. BORDEAUX GRAVES CHATEAU MARTIN RGE 75CL,enabled,increase
+generic,LONDON MULE TANQUERAY,LONDON MULE TANQUERAY,enabled,,,a8f0eb30-75e1-48d7-94cc-819a5a7f4a68,LONDON MULE,enabled,increase
+generic,V. TANQUERAY TEN,V. TANQUERAY TEN,enabled,,,8b48560f-2b31-4a37-864f-010b79335c0d,V. TANQUERAY TEN,enabled,increase
+generic,TARTE CITRON,TARTE CITRON,enabled,,,,,,none
+generic,S.KETEL ONE,S. BELVEDERE DIRTY BREW,enabled,,,b4f502d3-4bed-422a-b0f5-9487e949e506,S. VODKA VERSE 3CL,enabled,increase
+generic,CITRON,CITRON,enabled,,,,,,none
+generic,FINGER CHOCOLAT,KNAFEH DOREE,enabled,,,,,,none
+generic,CAPPUCCINO,CAPPUCCINO,enabled,,,01b46a0b-8186-44b0-b108-890f6b0cbca2,CAFE DOUBLE INDIE MALONGO,enabled,increase
+generic,PLAYAMIGOS,KORALLION,enabled,,,dc936e13-97f2-467f-a8fa-7da2bb9d075a,PLAYAMIGOS DON JULIO BLC,enabled,increase
+generic,TRANSAT,TRANSAT,enabled,,,,,,none
+generic,B. DOM. DES MARTINELLES ST JOSEPH RGE,B. DOM. DES MARTINELLES ST JOSEPH RGE,disabled,,,29624961-82ad-47be-b390-f495f9420b61,B._ Saint-Joseph_ Domaine des Martinelles_RGE_75CL,enabled,increase
+generic,B. ROUILLERE GRDE RESERVE BLC,B. ROUILLERE GRDE RESERVE BLC,disabled,,,9fae2ec8-8541-49a3-8854-1d0908882118,"B._Côtes-De-Provence_""Grande Reserve"", Domaine La Rouillère_BLC_75CL",enabled,increase
+generic,B. IGP CUCUGNAN VIEILLES VIGNES BLC,B. IGP CUCUGNAN VIEILLES VIGNES BLC,enabled,,,f4bce759-7009-4139-9032-e4e2b96b2ef7,"B._IGP Pays de Cucugnan_""Roussanne Vieilles Vignes"", Peter Sichel_BLC_75CL",enabled,increase
+generic,HOUMOUS,HOUMOUS,enabled,,,,,,none
+generic,V. CHIVAS XII,V. CHIVAS XII,enabled,,,e683eb6f-4296-4666-aeef-669ac46d8221,V. CHIVAS 12ANS,enabled,increase
+generic,B. ROCK ANGEL RSE,B. ROCK ANGEL RSE,disabled,,,,,,none
+generic,S. ZACAPA 23,S. ZACAPA 23,enabled,,,eaa14bb3-de7f-475e-91d8-8796ff49d25e,S. ZACAPA 23 3CL,enabled,increase
+generic,B. POMMERY BRUT ROYAL,B. POMMERY BRUT ROYAL,enabled,,,99a5c07e-7375-401d-b27d-5364494e0f6a,"B._ Pommery_ ""Brut Royal""_CASHER_75CL",enabled,increase
+generic,SIROP. FRAISE,SIROP. FRAISE,enabled,,,65588f43-3335-4010-ab6e-89292c1e1bb9,SIROP. FRAISE,enabled,increase
+generic,SIROP. ORGEAT,SIROP. ORGEAT,enabled,,,b2cd4645-43b8-4111-b029-8451f6b608ba,SIROP. ORGEAT,enabled,increase
+generic,ACC BTL. LIMONADE,ACC BTL. LIMONADE,enabled,,,e8f4698c-3465-49dc-a05d-d4c0b389e76c,ACC BTL. LIMONADE,enabled,increase
+generic,V. BELVEDERE FESTIF,V. BELVEDERE FESTIF,enabled,,,75226a68-6f1e-44f4-9da5-403ede6fc422,V. VODKA VERSE,enabled,increase
+generic,B. DOM. DE MARIE RGE,B. MELI MELLOW FONDUGUES RGE,disabled,,,13c89a82-30d2-482e-a772-05bef04ad033,"B._ Luberon_  ""Rouge Marie"", Domaine De Marie, Famille Sibuet_RGE_75CL",enabled,increase
+generic,S. HAVANA 7 ANS,S. HAVANA 7 ANS,disabled,,,,,,none
+generic,B. ZACAPA 23,B. ZACAPA 23,enabled,,,19aabb81-bbad-466c-b621-b41b63b84358,B. ZACAPA 23 70CL,enabled,increase
+generic,V. AVION REPOSADO,V. AVION REPOSADO,enabled,,,bb7a7ffa-94eb-42eb-9ee7-9ddcac94e23c,V. AVION REPOSADO,enabled,increase
+generic,B. CHAS. MONT. HOUILLERES LEFLAIVE BLC,B. CHAS. MONT. HOUILLERES LEFLAIVE BLC,disabled,,,283134b8-61b0-4c34-bf37-f64acd7ca8a1,"B. BOURGOGNE CHASSAGNE MONTRACHET ""Houilleres"" DOM. O.LEFLAIVE BLC 75CL",enabled,increase
+generic,CHANDON GARDEN SPRITZ,CHANDON GARDEN SPRITZ,enabled,,,4681a18e-de36-4145-a721-b6d5ad7bc659,CHANDON GARDEN SPRITZ,enabled,increase
+generic,B. CH. MINUTY PRESTIGE RSE,B. CH. MINUTY PRESTIGE RSE,disabled,,,fda2d01f-cc1f-4656-b7b5-49d66f490522,"B. PROVENCE MINUTY ""PRESTIGE"" RSE 75CL",enabled,increase
+generic,M. CH MONTAUD CASHER,M. CH MONTAUD CASHER,enabled,,,52a12fe9-0c4f-4801-a028-5e2f7c35cbba,M. PROVENCE CHATEAU MONTAUD RSE 150CL,enabled,increase
+generic,V. PASTIS 12-12,V. PASTIS 12-12,enabled,,,0132d5fa-123b-44e2-9099-3f837043c284,V. PASTIS 12 12,enabled,increase
+generic,B.ROSE UZUME,B.ROSE UZUME,enabled,,,f2fb8c38-280b-4c0f-b457-17de5c95c98a,B. UZUME MURI PIC 75CL,enabled,increase
+generic,ROSSINI,ROSSINI,enabled,,,4cb419b0-a527-4377-90da-0046373587d5,ROSSINI,enabled,increase
+generic,B. SAINT VERAN ROCHE MER BLC,B. SAINT VERAN ROCHE MER BLC,disabled,,,f1e261f6-7735-4c59-aa87-fb0e005ea5be,"B._ Saint-Véran_ ""Roche Mer"", Gilles Morat_BLC_75CL",enabled,increase
+generic,B. BEAUNE 1ER CHAMPS PIMONT J.PRIEUR BLC,M. BEAUNE LULUNE GENOT BOULANGER BLC,disabled,,,f62c3099-d2c2-409e-ad97-182b9e99e22e,"M. BEAUNE ""En Lulune"" GENOT-BOULANGER BLC 150CL",enabled,increase
+generic,INDIE,INDIE,enabled,,,d461be37-10ad-458f-acc2-ed100d446844,INDIE TANQUERAY TEN,enabled,increase
+generic,V. SANCERRE BLC,V. SANCERRE BLC,enabled,,,52d4fee3-bba9-4212-950b-2d3babe60858,V. SANCERRE PRIEUR,enabled,increase
+generic,B. MALARD BRUT,B. MALARD BRUT,enabled,,,ef6285ec-4536-44c2-96be-34b2be29f416,B._Champagne_ Malard Brut_75CL,enabled,increase
+generic,MOJITO FESTIF,MOJITO FESTIF,enabled,,,f5fa4334-6f06-4c71-b6d3-ffe0cef661cb,MOJITO,enabled,increase
+generic,JUG THE GLACE,JUG THE GLACE,enabled,,,,,,none
+generic,PAIN HALLAH,MUHAMMARA,enabled,,,,,,none
+generic,CARAFE SIROP,CARAFE SIROP,disabled,,,,,,none
+generic,SPRITE FESTIVE,SPRITE FESTIVE,enabled,,,0d3e9c2c-fdbd-44c0-8b11-2689b0847f21,B. SPRITE VC 25CL,enabled,increase
+generic,B. DOM. ROUILLERE RSE,B. DOM. ROUILLERE RSE,disabled,,,,,,none
+generic,B. GIVRY 1ER CRU CELLIER AUX MOINES RGE,B. GIVRY 1ER CRU CELLIER AUX MOINES RGE,disabled,,,68e96cfb-f87e-4921-aa69-4cbca7a0f8e9,"B. BOURGOGNE GIVRY 1ER CRU ""Clos du Cellier aux Moines"" DOM. THENARD RGE 75CL",enabled,increase
+generic,SIROP. GRENADINE,SIROP. GRENADINE,enabled,,,e0100769-a8dd-4d75-8096-87cff3228929,SIROP. GRENADINE,enabled,increase
+generic,DIVER SOFT,DIVER SOFT,enabled,,,,,,none
+generic,V.KETEL ONE,V. BELVEDERE DIRTY BREW,enabled,,,f2947580-6da7-43b7-94ed-a24ed13807eb,V. KETEL ONE,enabled,increase
+generic,MANGO MARTINI DOUDOU,MANGO MARTINI DOUDOU,enabled,,,099973e2-3f1c-44ee-896a-876dbc8b109d,MANGO MARTINI DOUDOU,enabled,increase
+generic,SUGG POISSON,SUG. HOMARD,enabled,,,,,,none
+generic,B. PINOT NOIR CROIX SAINT JACQUES RGE,B. PINOT NOIR CROIX COTEAUX MARGOTS RGE,disabled,,,e5c61ab5-bc14-4361-9f3d-7fbe0265b774,B. BOURGOGNE PINOT NOIR DOM. CROIX SAINT JACQUES RGE 75CL,enabled,increase
+generic,OLD FASHIONNED EMINENTE 7 ANS,OLD FASHIONNED EMINENTE 7 ANS,enabled,,,c47fb17a-a3a1-4911-8dbf-7f3399f865f9,OLD FASHIONNED RHUM 7 ANS,enabled,increase
+generic,S. DON JULIO 1942,S. DON JULIO 1942,enabled,,,84089c99-1171-444f-924c-cce4c3c358ec,S. DON JULIO 1942 3CL,enabled,increase
+generic,PORNSTAR MARTINI,PORNSTAR MARTINI,enabled,,,886701cb-9827-4a86-8547-62ce40091e9a,PORNSTAR MARTINI,enabled,increase
+generic,KIR CASSIS,KIR CASSIS,enabled,,,7b086348-769a-45af-85f0-74009fb22deb,CASSIS,enabled,increase
+generic,SUPP FETA,SUPP FETA,enabled,,,,,,none
+generic,B. CLOS BONETTE VIELLES VIGNES RGE,B. CLOS BONETTE VIELLES VIGNES RGE,disabled,,,,,,none
+generic,SUPP 1/2 AVOCAT,SUPP 1/2 AVOCAT,enabled,,,,,,none
+generic,B. DOM. COTEAUX LANGUEDOC AUREL BLC,B. DOM. COTEAUX LANGUEDOC AUREL BLC,disabled,,,,,,none
+generic,V. HENNESSY VSOP,V. HENNESSY VSOP,disabled,,,7567418c-88ae-4352-baba-88066cb57d96,V. HENNESSY VSOP,enabled,increase
+generic,SIROP. CITRON,SIROP. CITRON,enabled,,,e19c8ff7-b1eb-47be-a286-6b527fc01a48,SIROP. CITRON,enabled,increase
+generic,JUS DE BAGARRE,JUS DE BAGARRE,enabled,,,e5b9ab8e-9e8a-4527-bf63-dc096c2d7610,JUS DE BAGARRE,enabled,increase
+generic,JUG THE FROID,JUG THE GLACE,disabled,,,,,,none
+generic,V.ROSE PETILLANT CARPE DIEM,V.ROSE PETILLANT CARPE DIEM,enabled,,,dc134474-fa3a-4b25-b7cb-4ce968a24806,V.ROSE PETILLANT CARPE DIEM,enabled,increase
+generic,BED,BED,enabled,,,,,,none
+generic,M. BEAUJOLAIS LAPIERRE RGE,M. BEAUJOLAIS LAPIERRE RGE,enabled,,,70bc4d14-a5b0-4276-a1bc-21c69995a0a7,"M._Beaujolais_""Le Beaujolais"", Domaine Marcel Lapierre_RGE_150CL",enabled,increase
+generic,LATTE,LATTE,enabled,,,d2b7cbfe-961b-4321-8d3d-6ccb1415ad0f,CAFE INDIE MALONGO,enabled,increase
+generic,SMALL LOUNGE,SMALL LOUNGE,enabled,,,,,,none
+generic,M. BEAUNE LULUNE GENOT BOULANGER BLC,M. BEAUNE LULUNE GENOT BOULANGER BLC,disabled,,,f62c3099-d2c2-409e-ad97-182b9e99e22e,"M. BEAUNE ""En Lulune"" GENOT-BOULANGER BLC 150CL",enabled,increase
+generic,DOUBLE EXPRESSO,DOUBLE EXPRESSO,enabled,,,01b46a0b-8186-44b0-b108-890f6b0cbca2,CAFE DOUBLE INDIE MALONGO,enabled,increase
+generic,HALLOUMI,HALLOUMI,disabled,,,,,,none
+generic,B. CHABLIS 1ER CRU LE GRAND SECRET BLC,B. CHABLIS 1ER CRU LE GRAND SECRET BLC,enabled,,,469ef10c-fe25-48df-9c09-97e4571d40e4,"B._ Chablis 1er Cru_ « Le Grand Secret », Domaine Beauregard_BLC_75CL",enabled,increase
+generic,NEGRONI VODKA,NEGRONI VODKA,enabled,,,314ff2f6-15fa-4cd0-9487-e77d0db6a0a5,NEGRONI VODKA,enabled,increase
+generic,MARGARITA DON JULIO BLC,MARGARITA DON JULIO BLC,enabled,,,38017862-ea2c-4841-a29e-50063c45dee1,MARGARITA DON JULIO BLC,enabled,increase
+generic,BLOODY MARY TEQUILA,BLOODY MARY TEQUILA,enabled,,,7c43283d-6feb-4de9-8c97-d345da546b22,BLOODY MARY TEQUILA JUS DE FRUIT BTL 20CL,enabled,increase
+generic,REDBULL FESTIVE,REDBULL FESTIVE,enabled,,,409b5cac-d375-49f0-aa36-105c05ef545a,B. RED BULL,enabled,increase
+generic,BRAMBLE GIN,BRAMBLE GIN,enabled,,,b90f17a8-07e8-4692-a896-d19cde9b40bb,BRAMBLE GIN,enabled,increase
+generic,ACC. RED BULL,ACC. RED BULL,enabled,,,b07db99c-698b-48fd-a4f9-9f1e468ea37f,SUP. RED BULL,enabled,increase
+generic,V. WHISTLEPIG,V. WHISTLEPIG,enabled,,,ee6e8363-59ad-4167-b7ff-7819d7320711,V. WHISTLEPIG,enabled,increase
+generic,B. MEURSAULT V.VIGNES BLC,B. MEURSAULT V.VIGNES BLC,disabled,,,,,,none
+generic,V. CHAMPAGNE FESTIF,V. CHAMPAGNE FESTIF,enabled,,,7aa2bda4-e278-4762-9ef0-6b8a380dff93,V. MALARD BRUT,enabled,increase
+generic,B. CROZES HERMITAGE SYRAHNE ST JEMMS RGE,B. CROZES HERMITAGE SYRAHNE ST JEMMS RGE,enabled,,,bd58e3fc-6e56-4978-9610-833c5fe2f790,"B. CROZES HERMITAGE ""Fleur de Syrahne"" MICHELAS ST JEMMS RGE 75CL",enabled,increase
+generic,B. SAUMUR VARENNES MESTRE OURS BLEU RGE,B. SAUMUR VARENNES MESTRE OURS BLEU RGE,enabled,,,311ab94c-7376-49cc-9aa4-a0e281356f39,"B._ Saumur_ ""Les Varennes de Mestré"", Domaine de l'Ours Bleu_RGE_75CL",enabled,increase
+generic,LOUP 1 PERSONNE,BAR ENTIER,enabled,,,,,,none
+generic,V. SIROP A LEAU,V. SIROP A LEAU,enabled,,,,,,none
+generic,FETA AOP,FETA AOP,disabled,,,,,,none
+generic,B. IGP COL DE SEGAS RGE,B. IGP COL DE SEGAS RGE,enabled,,,0b98c03c-d1d6-4941-aa07-29fe42772057,"B._ IGP Côtes Catalanes_ ""Col de Segas"", Domaine de Majas_RGE_75CL",enabled,increase
+generic,PINTE MONACO,PINTE MONACO,disabled,,,2e5a0191-a4ec-4b8b-8593-3900f6bd5cdd,PINTE MONACO,enabled,increase
+generic,Langouste royale,Langouste royale,enabled,,,,,,none
+generic,ACC. FEVER TREE GINGER BEER,ACC. FEVER TREE GINGER BEER,disabled,,,85c4b7af-9d07-4e3c-a630-9b544e484325,ACC. FEVER TREE GINGER BEER,enabled,increase
+generic,SUG. WAGYU INDIVIDUEL,SUG. WAGYU INDIVIDUEL,enabled,,,,,,none
+generic,V. EMINENTE 7ANS,V. EMINENTE 7 ANS,disabled,,,af6106c8-8606-4435-b69c-e3723dbe5471,V. EMINENTE 7ANS,enabled,increase
+generic,S. ADICCION ANEJO,S. ADICCION ANEJO,enabled,,,a335c9e1-b58d-4127-8291-052a93aca9f1,S. ADICCION ANEJO 3CL,enabled,increase
+generic,MOJITO,MOJITO,enabled,,,f5fa4334-6f06-4c71-b6d3-ffe0cef661cb,MOJITO,enabled,increase
+generic,PURA VIDA RHUM,PURA VIDA RHUM,disabled,,,,,,none
+generic,BB. ADICCION ANEJO,BB. ADICCION ANEJO,disabled,,,,,,none
+generic,P. MINUTY PRESTIGE RSE,P. MINUTY PRESTIGE RSE,disabled,,,0e8c4cab-fdae-4777-82e5-060fbe570876,V. MINUTY PRESTIGE ROSE,enabled,increase
+generic,EXPRESSO SERRE,EXPRESSO SERRE,enabled,,,d2b7cbfe-961b-4321-8d3d-6ccb1415ad0f,CAFE INDIE MALONGO,enabled,increase
+generic,INDIE ALTOS REP,INDIE ALTOS REP,enabled,,,940bfbd8-449f-426d-9623-2af696828459,INDIE ALTOS REPOSADO,enabled,increase
+generic,LUQUEUR AGRUMES PEGASUS,LIQUEUR CITRON & MIEL DIST. ST VERAN,enabled,,,1c655519-3814-46b2-8f07-d60a474b6f49,V. LIQUEUR ROYALE NECTAR D AGRUME PEGASUS,enabled,increase
+generic,DOUBLE DECA,DOUBLE DECA,enabled,,,dae03318-72d3-4faa-999b-c5196d9dae52,DK DOUBLE INDIEGROUP,enabled,increase
+generic,1/2 SMALL LOUNGE,1/2 SMALL LOUNGE,enabled,,,,,,none
+generic,PATE TOMATE ENF,PATE TOMATE ENF,enabled,,,,,,none
+generic,MOSCOW MULE,MOSCOW MULE,enabled,,,9353e864-7827-4b84-9e04-1071822e4f74,MOSCOW MULE,enabled,increase
+generic,V. LIQUEUR MENTHE METTE,LIMONCE,disabled,,,9238e27e-535e-4d8d-b821-d2c43e98281f,V. LIQUEUR MENTHE METTE,enabled,increase
+generic,KEFTEDES,BAVETTE BOEUF,enabled,,,,,,none
+generic,FENTIMANS TONIC FESTIVE,FENTIMANS TONIC FESTIVE,enabled,,,06c34727-da71-4f03-9441-d5a14c04bc7e,B. TONIC WATER VP 20cl,enabled,increase
+generic,EXPRESSO MARTINI TEQUILA,EXPRESSO MARTINI TEQUILA,enabled,,,8e977135-56d4-4693-87c2-7185655aab14,EXPRESSO MARTINI TEQUILA,enabled,increase
+generic,V. ROSE MARRES FESTIF,V. ROSE MARRES FESTIF,enabled,,,5e6748ac-aff5-47ab-ac87-de88298444bc,V. MARRES ROSE,enabled,increase
+generic,CARPANO BIANCO,CARPANO BIANCO,enabled,,,10dcccdc-f0f6-48dd-abd3-b4782208ca40,V. MARTINI BLANC,enabled,increase
+generic,S. COINTREAU,S. COINTREAU,enabled,,,6efcfa0e-8d20-4fce-9981-e307096024ed,S. COINTREAU 3CL,enabled,increase
+generic,CAIPIRINHA,CAIPIRINHA,enabled,,,fc48b757-a7ee-4393-aa2f-1533151c85e4,CAIPIRINHA,enabled,increase
+generic,OLD FASHIONNED EMINENTE,OLD FASHIONNED EMINENTE,disabled,,,,,,none
+generic,BAS ARMAGNAC LABALLE,BAS ARMAGNAC LABALLE,enabled,,,c1df0f16-03b6-4b6e-a5d8-13306e0e17dc,V. BAS ARMAGNAC LABALLE,enabled,increase
+generic,ACC BTL. COCA ZERO,ACC BTL. COCA ZERO,enabled,,,56c70509-379f-4d20-b8c9-b2ec64bed23e,SUP. COCA,enabled,increase
+generic,PAVLOVA,FONDANT CHOCOLAT,enabled,,,,,,none
+generic,TEQUILA SOUR,TEQUILA SOUR,enabled,,,3aa1b0a9-f708-42fd-81de-40d8667cc21e,TEQUILA SOUR,enabled,increase
+generic,SAUVAGEONNE VODKA,N°4 VODKA,enabled,,,681044ae-18e6-4523-90c4-81acc47d1c31,LA SAUVAGEONNE VODKA,enabled,increase
+generic,V. MARTINI ROUGE,V. MARTINI ROUGE,enabled,,,ae25288d-dd04-4905-af11-2d1b820884b5,V. MARTINI ROUGE,enabled,increase
+generic,V. LIMONCELLO CELINI,V. LIMONCELLO CELINI,disabled,,,aebc6942-3ea1-4f38-b8c1-1fd8fb5bb0ec,V. LIMONCELLO,enabled,increase
+generic,B. VIN FRANCE ENJOUEE OGEREAU BLC,B. VIN FRANCE ENJOUEE OGEREAU BLC,disabled,,,4358d553-16e1-41ac-bae0-8338acf6170b,"B. VDF LOIRE ""L'Enjouée"" DOMAINE OGEREAU BLC 75CL",enabled,increase
+generic,CALISTA,CALISTA,enabled,,,ec3519cc-e002-4d6f-8439-3df09d21cae9,CALISTA,enabled,increase
+generic,AVEC RHUM EMINENTE 3 ANS,AVEC RHUM EMINENTE 3 ANS,enabled,,,53d439e6-6bf2-4e3a-b7d2-4392be72e777,V. HAVANA 3ANS,enabled,increase
+generic,MILLE FEUILLE CROUSTILLANT,MILLE FEUILLE CROUSTILLANT,enabled,,,,,,none
+generic,V.CASTILLON CHATEAU LA BRANDE,V.CASTILLON CHATEAU LA BRANDE,disabled,,,9b70a57e-130d-484e-8bec-58e543707c7f,V. CASTILLON CHATEAU LA BRANDE,enabled,increase
+generic,B. DOM. CAMPAUX CUVEE LES CANISSONS RSE,B. DOM. CAMPAUX CUVEE LES CANISSONS RSE,enabled,,,9810bf27-452f-4351-aec2-5a7c65784483,"B._Côtes-de-Provence_""Cuvée les Cannissons"", Domaine des Campaux_RSE_75CL",enabled,increase
+generic,CHICH TAOUK DE POULET,CHICH TAOUK DE POULET,disabled,,,,,,none
+generic,B. CH MONTAUD CASHER,B. CH MONTAUD CASHER,enabled,,,cab558c8-336c-4c90-9f50-b754c4e65c8e,B. PROVENCE CHATEAU MONTAUD CASHER RSE 75CL,enabled,increase
+generic,V. DOM. FRISSON BLC,V. DOM. FRISSON BLC,disabled,,,,,,none
+generic,B. WHISPERING ANGEL CASHER,B. WHISPERING ANGEL CASHER,disabled,,,3150a68a-19ce-4d89-aba1-17950a99da9d,"B._Côtes De Provence_""Whispering Angel"", Château d'Esclans_RSE_75CL",enabled,increase
+generic,S. VODKA FESTIF,S. VODKA FESTIF,enabled,,,b4f502d3-4bed-422a-b0f5-9487e949e506,S. VODKA VERSE 3CL,enabled,increase
+generic,B. PASTIS 12-12,B. PASTIS 12-12,enabled,,,eec4c92c-2842-4158-bda2-6c520e1f0529,B. PASTIS 70CL,enabled,increase
+generic,EXPRESSO MARTINI DON JULIO 1942,EXPRESSO MARTINI DON JULIO 1942,enabled,,,195f2261-2c02-4f01-83a3-73eeec9094a6,EXPRESSO MARTINI DON JULIO 42,enabled,increase
+generic,B. FONDUGUES LYS DES SABLES BLC,B. PEYRASSOL MEDITERRANEE BLC,disabled,,,46c27eaa-31a0-4033-9b43-eabe2d502680,"B._ IGP Méditérranée_ ""Méditérranée"", Peyrassol_BLC_75CL",enabled,increase
+generic,B. COINTREAU,B. COINTREAU,disabled,,,,,,none
+generic,SUPP LABNEH,SUPP LABNEH,enabled,,,,,,none
+generic,P. PROSECCO,V. PROSECCO,disabled,,,f052722b-5126-44ce-b506-fd1ea0a0d7c8,V. PROSECCO,enabled,increase
+generic,V. JW BLACK,V. JW BLACK,enabled,,,b0cfea41-d6d6-4fed-b806-6951c8127345,V. JW BLACK,enabled,increase
+generic,V. JUS CITRON VERT FRAIS,V. JUS CITRON VERT FRAIS,enabled,,,,,,none
+generic,ACC. ORANGE,ACC. ORANGE,enabled,,,7f03ec1a-143b-4dd5-a7d9-d2e4570b75f0,SUP. ORANGE,enabled,increase
+generic,B. DOM. GUYONS VENT DU NORD SAUMUR BLC,B. VOUVRAY EMPREINTE ROBERT BLC,disabled,,,b44bcf65-741b-4e8d-bf20-c9ab81b7638e,"B._Saumur_ ""Vent du Nord"", Domaine des Guyons_BLC_75CL",enabled,increase
+generic,SUP PARMESAN,SUPP. PARMESAN,disabled,,,,,,none
+generic,B. VIOGNIER CH.ST MAUR BLC,B. VIOGNIER CH.ST MAUR BLC,disabled,,,924a05e2-aac2-4925-b86d-cf46ba5fe85e,B. PROVENCE IGP MEDITERRANEE CHATEAU SAINT-MAUR BLC 75CL,enabled,increase
+generic,B. IGP PEYRASSOL RSE FESTIF,B. IGP PEYRASSOL RSE FESTIF,enabled,,,c84b6835-3a20-4c6c-a6e4-fe6028809157,"B._ IGP Méditérranée_ ""Méditérranée"", Peyrassol_RSE_75CL",enabled,increase
+generic,THE EARL GREY,THE EARL GREY,enabled,,,7e8cb6d3-78f5-4e59-acf1-8610ff85ad8a,THE,enabled,increase
+generic,MAI TAI,MAI TAI,enabled,,,2dc2e914-da35-4dc7-acc9-60b15d69ef3d,MAI TAI,enabled,increase
+generic,B. ST JULIEN LAGRANGE RGE,B. ST JULIEN LAGRANGE RGE,disabled,,,7b81e2df-966b-42a0-b59d-146b85f15bdf,"B. BORDEAUX SAINT JULIEN ""Les Fiefs de Lagrange"" CHATEAU LAGRANGE RGE 75CL",enabled,increase
+generic,PALOMA,PALOMA,enabled,,,043a6c21-d182-4a7e-9fc5-8af38f54eaef,PALOMA ALTOS,enabled,increase
+generic,SUPP. GRENADINE,SUPP. GRENADINE,enabled,,,e0100769-a8dd-4d75-8096-87cff3228929,SIROP. GRENADINE,enabled,increase
+generic,S. ALTOS REPOSADO,S. CODIGO REPOSADO,enabled,,,8dffaa75-6885-408d-a4ac-0e1068416ef1,S. ALTOS REPOSADO 3CL,enabled,increase
+generic,V. VODKA GET,V. VODKA GET,enabled,,,c3a75a4e-ea02-46d9-967d-19ea20a07a74,V. VODKA GET,enabled,increase
+generic,ACC BTL. POMME,ACC BTL. POMME,enabled,,,1341987e-9017-4593-b332-6ad8177e001b,ACC BTL. POMME,enabled,increase
+generic,B. MAÏONNETTE INSTANT BLC,B. MAÏONNETTE INSTANT BLC,disabled,,,aa628f89-efb8-4cb7-b218-3f8c760e46c9,"B._ Cotes de Provence_ ""Instant Blanc"", Domaine la Maïonnette_BLC_75CL",enabled,increase
+generic,B. VENTOUX CH BACCHUS BLC,B.VENTOUX CH BACCHUS BLC,enabled,,,f075a541-6e16-4188-b49a-507b1a2c27ab,"B._Ventoux_""Château de Bacchus"", Claret Tournier_BLC_75CL",enabled,increase
+generic,B. ST EMILION GRD CRU CLASSE ANGELUS RGE,B. ST EMILION GRD CRU CLASSE ANGELUS RGE,disabled,,,7293f423-a201-4a77-a678-d7cdad37ea9e,B._Saint-Emilion Grand Cru_Château Angelus_RGE_75CL,enabled,increase
+generic,APEROL FESTIF,APEROL FESTIF,enabled,,,50596d57-20df-4cd0-8665-8c9f145372fc,APEROL SPRITZ,enabled,increase
+generic,PLAYAMIGOS VODKA,KORALLION VODKA,enabled,,,62edf277-0d89-44d9-a8f3-aa302a63d096,PLAYAMIGOS VODKA,enabled,increase
+generic,B. SCHWEPPES GINGER ALE 20CL,B. SCHWEPPES GINGER ALE 20CL,enabled,,,a71d480f-b1ec-452f-93f0-4db5ecb8521b,B. GINGER BEER VP 20CL,enabled,increase
+generic,VIRGIN PLAYAMIGOS,VIRGIN PLAYAMIGOS,enabled,,,7793ea01-e037-4f72-ae87-db422630420d,VIRGIN PLAYAMIGOS,enabled,increase
+generic,EXPRESSO ALLONGE,EXPRESSO ALLONGE,enabled,,,d2b7cbfe-961b-4321-8d3d-6ccb1415ad0f,CAFE INDIE MALONGO,enabled,increase
+generic,B. CHINON CUISINE DE MA M. GROSBOIS RGE,B. SAUMUR VARENNES MESTRE OURS BLEU RGE,disabled,,,a3ea622a-302c-485a-8ead-02d1fa4e5058,"B._ Chinon_ ""Cuisine de ma Mère"", Domaine Grosbois_RGE_75CL",enabled,increase
+generic,ACC BTL. RED BULL,ACC BTL. RED BULL,enabled,,,fde4d509-2871-4165-8524-dce196b1c095,PACK RED BULL X5,enabled,increase
+generic,PURA VIDA KTEL ONE,PURA VIDA KTEL ONE,disabled,,,,,,none
+generic,HOUSE LEMONADE,HOUSE LEMONADE,enabled,,,a5a1669b-1734-43a5-9ed2-4d1f0f164a6a,HOUSE LEMONADE,enabled,increase
+generic,B. EMINENTE 3 ANS,B. EMINENTE 3 ANS,enabled,,,b9c300b5-af55-4413-87de-b5c76ea4fc36,B. RHUM 3ANS VERSE 70CL,enabled,increase
+generic,SUPP. MIEL,SUPP. MIEL,enabled,,,,,,none
+generic,SAUVAGEONNE,N°4,enabled,,,23d4fb37-b4e5-4d8a-9e99-169c766b809d,LA SAUVAGEONNE RHUM 7,enabled,increase
+generic,MARTINI DIRTY GIN,MARTINI DIRTY GIN,enabled,,,db1e0427-1663-437b-ba48-86a2ca591bb2,MARTINI DRY GIN VERSE,enabled,increase
+generic,SEMOULE,ASPERGES,enabled,,,,,,none
+generic,CARPACCIO BOEUF,CARPACCIO BOEUF,disabled,,,,,,none
+generic,V. CASAMIGOS REPOSADO,V. CASAMIGOS REPOSADO,disabled,,,,,,none
+generic,MOJITO ROYAL,MOJITO ROYAL,enabled,,,a2f51e98-9a3a-42bc-99b4-fd664d20cf76,MOJITO ROYAL,enabled,increase
+generic,B.ZACAPA,B.ZACAPA,disabled,,,ab6ca186-1d27-4e0b-9ccc-773220017ddd,ZACAPA 23 ANS RHUM 40°,enabled,increase
+generic,COCA FESTIVE,COCA FESTIVE,enabled,,,13634ef9-71de-42ba-a494-7d50b8014896,B. COCA COLA VERRE BOUTEILLE,enabled,increase
+generic,B. RULLY DOM. P&M JACQUESON BLC,B. RULLY DOM. P&M JACQUESON BLC,enabled,,,8379eae6-ff8c-4435-a010-b218769797ad,B._ Rully_ Domaine P&M Jacqueson_BLC_75CL,enabled,increase
+generic,PINACOLADA,PINACOLADA,enabled,,,ea5321d8-41d7-4df0-bb19-51dc713b16cc,PINA COLADA,enabled,increase
+generic,MI CUIT THON,MI CUIT THON,enabled,,,,,,none
+generic,ASSIETTE PASTEQUE,ASSIETTE PASTEQUE,disabled,,,,,,none
+generic,B.LAURENT PERRIER CASHER,B.LAURENT PERRIER CASHER,disabled,,,1cacf091-8b00-423b-85af-229d4a0a8e40,"B. CASHER CHAMPAGNE LAURENT PERRIER BRUT ""La Cuvée"" 75CL CASHER",enabled,increase
+generic,S. ADICCION REPOSADO,S. ADICCION REPOSADO,enabled,,,b540c3fc-e5d4-4132-a04a-3d80d4e3c043,S. ADICCION REPOSADO 3CL,enabled,increase
+generic,B. SAVIGNY LES BEAUNES DOM. DUBOIS RGE,B. POMMARD DUBREIL FONTAINE RGE,disabled,,,9dc2d7fb-7233-4b75-a560-7180308d0469,B. BOURGOGNE SAVIGNY-LÈS-BEAUNES DOM. DUBOIS & FILS RGE 75CL,enabled,increase
+generic,B. ADICCION REPOSADO,B. ADICCION REPOSADO,enabled,,,bbc5a83b-b01f-480c-b453-bc94cde869d6,B. ADICCION REPOSADO 70CL,enabled,increase
+generic,SALADE HALLOUMI,SALADE HALLOUMI,disabled,,,,,,none
+generic,V. MARRES PRESTIGE BLC,V. MARRES PRESTIGE BLC,disabled,,,,,,none
+generic,V. ZACAPA 23,V. ZACAPA 23,enabled,,,d2a806ab-e497-49cc-b46f-fcf498521e17,V. ZACAPA 23ANS,enabled,increase
+generic,V. LILLET BLANC,V. LILLET BLANC,enabled,,,4af8c907-86c3-4ab1-9a1c-dc9a23db9444,V. LILLET BLANC,enabled,increase
+generic,B. RUINART BLC DE BLCS,B. RUINART BLC DE BLCS,enabled,,,374b48ee-ede0-400d-8462-781dff40736e,"B._ Ruinart, ""Blanc de Blancs""_75CL",enabled,increase
+generic,V. FRAISE PASTEQUE FRAISE,V. FRAISE PASTEQUE FRAISE,enabled,,,,,,none
+generic,MATCHA LATTE,MATCHA LATTE,enabled,,,,,,none
+generic,GIN FIZZ,GIN FIZZ,enabled,,,53c5e3ea-4fc5-4531-b08e-b57ab31c881c,GIN FIZZ,enabled,increase
+generic,NEGRONI GIN,NEGRONI GIN,enabled,,,5b11d50b-e206-4780-964e-c649d086361f,DIRTY NEGRONI TANQUERAY TEN,enabled,increase
+generic,ACC. TONIC,ACC. TONIC,enabled,,,c484a254-cb55-4bb5-bd4f-cbd603aa1869,ACC. TONIC,enabled,increase
+generic,P. CH. MARRES PRESTIGE BLC,P. CH. MARRES PRESTIGE BLC,disabled,,,,,,none
+generic,B. RUMOR RSE,B. RUMOR RSE,disabled,,,7e9714ca-1123-4440-b0c8-aa962edced9a,B._Côtes de Provence_Domaine Rumor_75CL,enabled,increase
+generic,M. SANCERRE CHAVIGNOL DELAPORTE BLC,M. SANCERRE CHAVIGNOL DELAPORTE BLC,disabled,,,5e99d344-7de5-4b53-8163-65a5af5e15b5,"M._Sancerre_""Chavignol"", Domaine Delaporte_BLC_150CL",enabled,increase
+generic,S. CLASE AZUL,S. CLASE AZUL,disabled,,,,,,none
+generic,RIZ,RIZ,enabled,,,,,,none
+generic,M. VEUVE CLICQUOT BRUT,M. VEUVE CLICQUOT BRUT,enabled,,,d0d4d075-e75d-4a8d-93d2-93bd9341a336,"M._ Veuve Clicquot ""Brut""_150CL",enabled,increase
+generic,ACC. LIMONADE,ACC. LIMONADE,enabled,,,f2e71349-b39a-48f2-8537-e88dfc5fb6f0,SUP. LIMONADE,enabled,increase
+generic,B. CHEVAL DES ANDES ARGENTINE RGE,B. CHEVAL DES ANDES ARGENTINE RGE,disabled,,,,,,none
+generic,ACC BTL. FENTIMANS GINGER BEER,ACC BTL. FENTIMANS GINGER BEER,enabled,,,27810768-9d46-4747-a0fe-1f05b3940be8,PACK GINGER BEER  X4,enabled,increase
+generic,B. CH. MARGAUX PAVILLON RGE,B. CH. MARGAUX PAVILLON RGE,disabled,,,25050086-85c6-4a77-b044-7d07b71e58b6,"B._Margaux_""Pavillon Rouge"", Château Margaux_RGE_75CL",enabled,increase
+generic,V. B DE BACCHUS RSE,V. B DE BACCHUS RSE,enabled,,,bddc9509-a171-4a31-80bd-6e8926dcf99c,V. B DE BACCHUS RSE,enabled,increase
+generic,SUPP. CITRON,SUPP. CITRON,enabled,,,e19c8ff7-b1eb-47be-a286-6b527fc01a48,SIROP. CITRON,enabled,increase
+generic,MENU BAGGAMON 100€,MENU BAGGAMON 100€,enabled,,,,,,none
+generic,V. EMINENTE 3 ANS,V. EMINENTE 3 ANS,enabled,,,9ee25877-4a51-4117-8c3e-6a893f0df8ee,V. EMINENTE 3ANS,enabled,increase
+generic,B. CH. DE PEZ RGE,B. ST ESTEPHE MONTROSE RGE,disabled,,,c985c1a0-795d-4c67-a0ea-8939a77425ad,B. BORDEAUX SAINT-ESTEPHE CHATEAU DE PEZ RGE 75CL,enabled,increase
+generic,SALADE DE VENTRECHE,SALADE DE VENTRECHE,enabled,,,,,,none
+generic,S. LIQUEUR METTE MENTHE,S. LIQUEUR METTE MENTHE,enabled,,,ef7af822-0dec-4eed-b855-a64548efa16c,S. LIQUEUR METTE MENTHE 3CL,enabled,increase
+generic,B. GAUBY COTES CATALANES V. VIGNES RGE,B. GAUBY COTES CATALANES V. VIGNES RGE,disabled,,,,,,none
+generic,HOT DOG,HOT DOG,enabled,,,,,,none
+generic,LOUP GRILLEE MENU,LOUP GRILLEE MENU,enabled,,,,,,none
+generic,ACC BTL. ORANGE,ACC BTL. ORANGE,enabled,,,39d7bfb8-8e0d-46ef-a79c-fd932d8c0f8c,ACC BTL. ORANGE,enabled,increase
+generic,B. CONNETABLE CH. TALBOT,B. MARGAUX PLANTES DUFORT VIVIENS RGE,disabled,,,e329628a-d909-4d53-875a-2541b490ef8d,"B. BORDEAUX SAINT-JULIEN ""Connetable de Talbot"" CHATEAU TALBOT RGE 75CL",enabled,increase
+generic,B. CORNAS JABOULET RGE,B. CORNAS JABOULET RGE,disabled,,,863dcd1c-a514-4a08-9f9e-8389d3ad493d,"B. RHONE ""Cornas"" DOM. JABOULET RGE 75CL",enabled,increase
+generic,SIROP. MENTHE,SIROP. MENTHE,enabled,,,e5146373-2408-41cb-bb00-23ca5043b5d9,SIROP. MENTHE,enabled,increase
+generic,V. HENNESSY VS,V. HENNESSY VSOP,enabled,,,659bfb7a-7d86-4af7-8593-da2603d48180,V. HENNESSY VS,enabled,increase
+generic,ACE FRAIS,ACE FRAIS,disabled,,,,,,none
+generic,V. SANGRIA PETILLANTE,V. SANGRIA PETILLANTE,enabled,,,8a58a403-0592-48e5-8761-e3f0533c9917,V. SANGRIA PETILLANTE OR,enabled,increase
+generic,1/2 COCO,1/2 COCO,enabled,,,,,,none
+generic,ACC. COCA,ACC. COCA,enabled,,,56c70509-379f-4d20-b8c9-b2ec64bed23e,SUP. COCA,enabled,increase
+generic,B. NUITS ST GEORGES CH. PREMEAUX RGE,B. NUITS ST GEORGES CAMUZET RGE,disabled,,,2330a46d-433a-447b-8be1-3a572dea1794,B._ Nuits-Saint-Georges_ Château de Prémeaux_RGE_75CL,enabled,increase
+generic,B. BANDOL DOM. DE TERREBRUNE  RGE,B. NUIT INTENSE RINAUDO  RGE,disabled,,,7a26b0f5-9bed-438c-9e8e-b841df630433,"B._Bandol_""Terrebrune"", Domaine de Terrebrune_RGE_75CL",enabled,increase
+generic,B. CH ST MARGUERITE FANTASTIQUE BLC,B. RINAUDO COEUR BLANC BLC,disabled,,,5854d6cc-e8f0-4d85-a7c1-b773de44a743,"B._Côtes de Provence_""Fantastique"", Château Sainte Marguerite_BLC_75CL",enabled,increase
+generic,S. SEX ON THE BEACH,S. SEX ON THE BEACH,enabled,,,1d849e84-87e6-487c-b140-cdae6c4a700c,SEX ON THE BEACH,enabled,increase
+generic,S. EXPRESSO MARTINI,S. EXPRESSO MARTINI,enabled,,,0f9be33a-16f6-47a5-9ee4-36aa46ab02db,S. EXPRESSO MARTINI 3CL,enabled,increase
+generic,V. KETEL ONE,V. KETEL ONE,disabled,,,,,,none
+generic,TENTACULE DE POULE,TENTACULE DE POULPE,disabled,,,,,,none
+generic,B. CH. MINUTY ROSE ET OR,B. CH. MINUTY ROSE ET OR,enabled,,,8fbd66bc-b8f3-42d5-921e-d1ff66e06bc4,"B._ Cotes de Provence_""Rose & Or"", Château Minuty_RSE_75CL",enabled,increase
+generic,PINTE PANACHE,PINTE PANACHE,enabled,,,dbe03cd5-babb-4b33-8ddc-4ff34e155d0e,PINTE PANACHE,enabled,increase
+generic,B. MINUTY PRESTIGE RS,B. MINUTY PRESTIGE RS,enabled,,,fda2d01f-cc1f-4656-b7b5-49d66f490522,"B. PROVENCE MINUTY ""PRESTIGE"" RSE 75CL",enabled,increase
+generic,RISONI,RISONI,enabled,,,,,,none
+generic,B. DOM. CROIX MARGOT MENETOU SALON BLC,B. DOM. CROIX MARGOT MENETOU SALON BLC,enabled,,,e2a4f7fe-1914-4ad6-8b22-cb59b4630958,B. LOIRE MENETOU-SALON DOM. DE LA CROIX MARGOT BLC 75CL,enabled,increase
+generic,PATES TOMATE LANGOUSTE,PATES TOMATE LANGOUSTE,disabled,,,,,,none
+generic,B. GAGNARD CHASSAGNE MONTRACHET RGE,B. GAGNARD CHASSAGNE MONTRACHET RGE,disabled,,,,,,none
+generic,B. VENEZIE PINOT GRIGIO ITALIE BLC,B. VENEZIE PINOT GRIGIO ITALIE BLC,disabled,,,,,,none
+generic,V.SEVENTY ONE,V.SEVENTY ONE,enabled,,,d7c74c61-c49e-4383-b61c-5468e583bd81,V. SEVENTY ONE,enabled,increase
+generic,B. HAVANA 7 ANS,B. HAVANA 7 ANS,disabled,,,,,,none
+generic,B. JACK DANIELS,B. JACK DANIELS,disabled,,,,,,none
+generic,B. CUV. DES GALETS VIGN. ESTEZARGUES RGE,B. CUV. DES GALETS VIGN. ESTEZARGUES RGE,enabled,,,59750a9d-002e-41e2-b55c-a0c7efec0b86,"B._ Côtes Du Rhone_ ""Cuvée des Galets"", Les Vignerons d'Estézargues_RGE_75CL",enabled,increase
+generic,B. SANCERRE DOM. PRIEUR & FILS BLC,B. SANCERRE DOM. PRIEUR & FILS BLC,enabled,,,2b983adb-02fb-44dc-82e5-9d6d86ee0841,B._ Sancerre_Domaine Pierre Prieur et Fils_BLC_75CL,enabled,increase
+generic,B. MONKEY 47,B. SEVENTY ONE,disabled,,,859c29e7-6737-48f0-9bee-344a7081bda5,GIN MONKEY 47 OF 47°,enabled,increase
+generic,B. SEVENTY ONE,B. SEVENTY ONE,enabled,,,5fdb4bf9-3e80-4d8c-aefd-57034d181b16,B. 71 SEVENTY ONE GIN 70CL,enabled,increase
+generic,AVEC VODKA BELVE,AVEC VODKA BELVE,enabled,,,75226a68-6f1e-44f4-9da5-403ede6fc422,V. VODKA VERSE,enabled,increase
+generic,S. LIQUEUR METTE POIRE,S. LIQUEUR METTE POIRE,disabled,,,,,,none
+generic,V. IGP MED. RSE PEYRASSOL,V. IGP MED. RSE PEYRASSOL,enabled,,,b0bb8ee2-aa7c-492f-9034-4c4be74ef815,V. IGP PEYRASSOL RSE,enabled,increase
+generic,B. DOM. JEANNE RSE,B. DOM. JEANNE RSE,enabled,,,a5d1ef9d-32ea-432b-b50d-cde629398f36,B._ Cotes de Provence_ Domaine de Jeanne_RSE_75CL,enabled,increase
+generic,SALADE DE CREVETTE AVOCAT,SALADE DE CREVETTE,enabled,,,,,,none
+generic,B. AMOUR PLAGE RAMATUELLE ROSE,B. AMOUR PLAGE RAMATUELLE ROSE,disabled,,,31ae882a-1fec-4370-9670-c1e2be9d4d68,"B. PROVENCE ""L'Amour à la Plage"" VIGNOBLE DE RAMATUELLE RSE 75CL",enabled,increase
+generic,B. VOLCAN BLANCO,B. CASAMIGOS REPOSADO,enabled,,,0228a3b6-23e8-4fe2-af0e-5c0bb4a74eb1,B. VOLCAN BLANCO 70CL,enabled,increase
+generic,LONDON MULE SEVENTY ONE,LONDON MULE SEVENTY ONE,enabled,,,cbb964e3-b9fb-4613-97c9-d58267a2b1f9,LONDON MULE MONKEY 47,enabled,increase
+generic,S. BELVEDERE,S. BELVEDERE,enabled,,,b4f502d3-4bed-422a-b0f5-9487e949e506,S. VODKA VERSE 3CL,enabled,increase
+generic,BAVETTE WAGYU,BAVETTE WAGYU,enabled,,,,,,none
+generic,FALAFELS,FALAFELS,enabled,,,,,,none
+generic,AMARETTO SOUR,AMARETTO SOUR,enabled,,,e437c86a-0018-4b73-9038-2dea3d6acdd2,AMARETTO SOUR,enabled,increase
+generic,V. ADICCION REPOSADO,V. ADICCION REPOSADO,enabled,,,9dd833ae-0945-4463-ac50-5615443c052b,V. ADICCION REPOSADO,enabled,increase
+generic,MARTINI DRY VODKA,MARTINI DRY VODKA,enabled,,,1cd2a26b-caa7-4aee-b51d-fe956f31857c,DRY MARTINI VODKA VERSE,enabled,increase
+generic,PATE TOMATE ADULTE,PATE TOMATE ADULTE,disabled,,,,,,none
+generic,B. CHAS. MONT. LES CHENEVOTTES GENOT BLC,B. CHAS. MONT. LES CHENEVOTTES GENOT BLC,disabled,,,7b20f4cd-0114-48a2-8188-5c88cfe49f73,"B. BOURGOGNE CHASSAGNE MONTRACHET ""Houillières"" DOM. OLIVIER LEFLAIVE BLC 75CL",disabled,increase
+generic,B. CLASE AZUL REPOSADO,B. CLASE AZUL REPOSADO,disabled,,,,,,none
+generic,PUFF RIPPLE,PUFF RIPPLE,enabled,,,,,,none
+generic,YAOURT GRECQUE,GLACE YAOURT GREC,enabled,,,,,,none
+generic,THE MENTHE,THE MENTHE,enabled,,,7e8cb6d3-78f5-4e59-acf1-8610ff85ad8a,THE,enabled,increase
+generic,RED ICED TEA,LYLA DETOX,disabled,,,,,,none
+generic,AGNEAU CONFIT,GIGOT AGNEAU CONFIT,disabled,,,,,,none
+generic,V. THE FROID,V. THE GLACE,disabled,,,,,,none
+generic,FRESH GREEN,FRESH GREEN,enabled,,,,,,none
+generic,PASTRAMI,PASTRAMI,disabled,,,,,,none
+generic,S. CODIGO BLANC,S. CODIGO BLANC,enabled,,,d8de7608-06db-497c-9291-ab319ba34021,S. CODIGO BLANCO 3CL,enabled,increase
+generic,BAILEYS,BAILEYS,enabled,,,99b925b3-8eba-4a4f-85d7-f322e44cb63d,V. BAILEYS,enabled,increase
+generic,SUPP. PINSA,SUPP. PINSA,enabled,,,,,,none
+generic,SUP FRUITS,SUP FRUITS,enabled,,,,,,
+generic,GLACE 3 BOULES,GLACE 3 BOULES,enabled,,,,,,none
+generic,B. PERRIER 33CL,B. BADOIT ROUGE 33CL,enabled,,,7bd34663-f631-4078-8410-db7e7e3b2eda,B. BADOIT ROUGE VP 33CL,enabled,increase
+generic,M. RUINART BLC DE BLCS,M. RUINART BLC DE BLCS,enabled,,,3b9b3937-f01f-4608-aa65-49d96459b9ea,"M._ Ruinart, ""Blanc de Blancs""_150CL",enabled,increase
+generic,B. CODIGO BLANCO,B. CODIGO BLANCO,enabled,,,d5fe83e0-fc8a-49f1-a264-4a2fc984554d,B. CODIGO BLANCO 70CL,enabled,increase
+generic,LINGUINE GAMBAS,LINGUINE POUTARGUE,enabled,,,,,,none
+generic,CHEESECAKE,CHEESECAKE,enabled,,,,,,none
+generic,B. DON JULIO REPOSADO,B. DON JULIO REPOSADO,enabled,,,dd68bcd1-f2d8-4bc3-bb75-e268d76b992a,B. DON JULIO REPOSADO 70CL,enabled,increase
+generic,B. CHABLIS 1er CRU CASHER,B. CHABLIS 1er CRU CASHER,disabled,,,,,,
+generic,VIRGIN BLOODY MARY,VIRGIN BLOODY MARY,enabled,,,d933fa35-d3c0-4868-b0ff-66872816d7ec,VIRGIN BLOODY MARY,enabled,increase
+generic,CARPANO BOTTANIC BITTER,CARPANO BOTTANIC BITTER,enabled,,,db2bda7f-e882-421a-a59e-96add7cb18fb,V. CAMPARI,enabled,increase
+generic,B. PAUILLAC DE LATOUR RGE,B. PAUILLAC DE LATOUR RGE,enabled,,,b6922631-a031-4ce0-a8fd-5cf3dcb6fada,"B._Pauillac_""Pauillac de Latour"", Château Latour_RGE_75CL",enabled,increase
+generic,B. FEVER TREE TONIC 20CL,B. FENTIMANS TONIC 20CL,disabled,,,06c34727-da71-4f03-9441-d5a14c04bc7e,B. TONIC WATER VP 20cl,enabled,increase
+generic,BLOODY MARY,BLOODY MARY,enabled,,,f852001b-95d1-4869-ae64-2f12d73ede0f,BLOODY MARY,enabled,increase
+generic,DEMI PANACHE,DEMI PANACHE,enabled,,,b40ec920-86c3-49fe-8015-ce8251762732,DEMI PANACHE,enabled,increase
+generic,V. VOLCAN BLANCO,V. CASAMIGOS REPOSADO,enabled,,,5e7c9de9-ede1-4293-a561-d6da20772cc7,V. VOLCAN BLANCO,enabled,increase
+generic,ACC BTL. EAU PETILLANTE,ACC BTL. EAU PETILLANTE,enabled,,,dce6ce96-c84e-4ee6-82f6-995d9fd4a911,EAU GAZEUZE PET,enabled,increase
+generic,EXPRESSO MARTINI,EXPRESSO MARTINI,enabled,,,ab1affce-f83b-4758-8f88-5dacbf7e3fa7,EXPRESSO MARTINI,enabled,increase
+generic,B. CH. LEOVILLE POYFERRE SAINT JULIEN RG,B. CH. LEOVILLE POYFERRE SAINT JULIEN RG,disabled,,,,,,none
+generic,MATELAS DEBUT DE SAISON,MATELAS DEBUT DE SAISON,enabled,,,,,,none
+generic,B. NOAM,B. NOAM,enabled,,,8113bba8-bcfc-4291-a65b-c44147ce071c,B. NOAM 34CL VC,enabled,increase
+generic,J. CH. MINUTY PRESTIGE RSE,J. CH. MINUTY PRESTIGE RSE,disabled,,,ab086b2a-c0fb-4c21-99df-e5c4535d74d4,"J._ Côtes-de-Provence_ ""Prestige"", Château Minuty_RSE_300CL",enabled,increase
+generic,FETA DIAKOUMIS GRILLE,FETA DIAKOUMIS GRILLE,enabled,,,,,,none
+generic,DECA CREME,DECA CREME,enabled,,,072e1a16-3991-45e8-adba-345d427a7bc8,DECA DOSETTES,enabled,increase
+generic,VODKA SOUR,VODKA SOUR,enabled,,,e67cf376-8958-4cb1-8a75-3fad38792a3a,VODKA SOUR,enabled,increase
+generic,GIGOT AGNEAU CONFIT,GIGOT AGNEAU CONFIT,enabled,,,,,,none
+generic,KALI,YUKA,enabled,,,20dc308f-632e-4362-9504-5b4fe48a97d1,KALI,enabled,increase
+generic,DOUBLE SERVIETTE,DOUBLE SERVIETTE,enabled,,,,,,none
+generic,EXPRESSO MARTINI FESTIF,EXPRESSO MARTINI FESTIF,enabled,,,ab1affce-f83b-4758-8f88-5dacbf7e3fa7,EXPRESSO MARTINI,enabled,increase
+generic,PATE LANGOUSTE,PATE LANGOUSTE,disabled,,,,,,none
+generic,TOUTOU BAR,TOUTOU BAR,enabled,,,,,,none
+generic,B. ESPRIT DE PAVIE ST EMILION RGE,B. PESSAC LEOGNAN PAUL RGE,disabled,,,dae98415-2f5d-463e-97d6-a68dc355899c,"B. BORDEAUX SAINT-EMILION ""Esprit de Pavie"" RGE 75CL",enabled,increase
+generic,LONG ISLAND,LONG ISLAND,enabled,,,f7fe2516-3f75-42a6-8a02-6fac0f0382fd,LONG ISLAND,enabled,increase
+generic,LIQUEUR ABRICOT JMR,LIQUEUR ABRICOT JMR,enabled,,,97372655-6db7-468d-8525-2ca0d1e8ddf4,V. LIQUEUR ABRICOT JEAN MARC ROULOT,enabled,increase
+generic,B. CLAZE AZUL REPOSADO,B. CLAZE AZUL REPOSADO,enabled,,,33f25970-028d-4319-905e-0b6800fc5ce6,B. CLASE AZUL REPOSADO 70CL,enabled,increase
+generic,MILLE FEUILLE,MILLE FEUILLE,enabled,,,,,,none
+generic,B. RED BULL,B. RED BULL,enabled,,,409b5cac-d375-49f0-aa36-105c05ef545a,B. RED BULL,enabled,increase
+generic,B. MEZCAL DEL MAGUEY VIDA,B. MEZCAL DEL MAGUEY VIDA,enabled,,,c97366a0-af0f-4e7e-83bc-da899d9f5adf,B. MEZCAL DEL MAGUEY VIDA 42° 70CL,enabled,increase
+generic,NOISETTE,NOISETTE,enabled,,,d2b7cbfe-961b-4321-8d3d-6ccb1415ad0f,CAFE INDIE MALONGO,enabled,increase
+generic,B. DOM. CHATENOY MENETOU SALON BLC,B. DOM. CHATENOY MENETOU SALON BLC,disabled,,,,,,none
+generic,PASTIS 12 12 SOUR,PASTIS 12 12 SOUR,enabled,,,70eff09a-9c01-4a26-8ac1-3ed73b323d5f,PASTIS 12-12 SOUR,enabled,increase
+generic,B. PAUILLAC PONTET CANET RGE,B. PAUILLAC PONTET CANET RGE,disabled,,,771061b4-78ff-45c4-9e4f-82b740583f50,B._Pauillac_Château Pontet Canet_RGE_75CL,enabled,increase
+generic,B. CH. MARRES PRESTIGE RGE,B. CH. MARRES PRESTIGE RGE,disabled,,,db45f0f9-28c0-4436-ae1d-ec51b58f3c39,"B. PROVENCE CHATEAU DES MARRES ""Prestige"" RGE 75CL",enabled,increase
+generic,V. BELVEDERE,V. BELVEDERE,enabled,,,75226a68-6f1e-44f4-9da5-403ede6fc422,V. VODKA VERSE,enabled,increase
+generic,ACC. FEVER TREE TONIC,ACC. FEVER TREE TONIC,disabled,,,8ec06f6e-1eb7-4359-acb5-e1e103b30bec,ACC. FEVER TREE TONIC,enabled,increase
+generic,M. SANCERRE DOM. PRIEUR & FILS BLC,M. SANCERRE DOM. PRIEUR & FILS BLC,enabled,,,5ed60e97-55a8-4d00-9106-ba6e419b8cd9,M._ Sancerre_Domaine Pierre Prieur et Fils_BLC_150CL,enabled,increase
+generic,NO SHOW PLAGE,NO SHOW PLAGE,enabled,,,,,,none
+generic,SKINNY BITCH,SKINNY BITCH,enabled,,,796efc5a-3ce5-418b-9d47-a0a43e252886,SKINNY BITCH,enabled,increase
+generic,POMME DE TERRE,POMME DE TERRE,enabled,,,,,,none
+generic,V. ADICCION ANEJO,V. ADICCION ANEJO,enabled,,,d8d0fe85-0ea9-4158-a9bc-47af4943e69b,V. ADICCION ANEJO,enabled,increase
+generic,J. MINUTY PRESTIGE RS,J. MINUTY PRESTIGE RS,enabled,,,ab086b2a-c0fb-4c21-99df-e5c4535d74d4,"J._ Côtes-de-Provence_ ""Prestige"", Château Minuty_RSE_300CL",enabled,increase
+generic,APEROL SPRITZ,APEROL SPRITZ,enabled,,,50596d57-20df-4cd0-8665-8c9f145372fc,APEROL SPRITZ,enabled,increase
+generic,B. CLOS CAPELUNE ST MAUR CRU CLASSE BLC,B. CLOS CAPELUNE ST MAUR CRU CLASSE BLC,enabled,,,dcc7dfd5-17a1-4e3c-91f0-1eac290e8276,"B._ Cotes de Provence_ ""Clos de Capelune"", Château Saint-Maur Cru Classé_BLC_75CL",enabled,increase
+generic,B. GET 27,B. GET 27,enabled,,,65285c02-c502-4eca-9f14-94ac81af22da,B. GET 27 100CL,enabled,increase
+generic,SUPP. NOIX DE PECAN,SUPP. NOIX DE PECAN,enabled,,,,,,
+generic,B. CHAMBOLLE MUSIGNY VIEILLES VIGNES RGE,B. CHAMBOLLE MUSIGNY VIEILLES VIGNES RGE,disabled,,,a828d95b-ad89-43a7-81f1-7cad47ff0e7a,"B._Chambolle-Musigny_""Vieilles Vignes"", Roche de Bellene_RGE_75CL",enabled,increase
+generic,PAMPLEMOUSSE,PAMPLEMOUSSE,enabled,,,,,,none
+generic,MANGUE,MANGUE,enabled,,,,,,none
+generic,BED DEMI JOURNEE,BED DEMI JOURNEE,enabled,,,,,,none
+generic,ACC BTL. SCHWEPPES TONIC,ACC BTL. SCHWEPPES TONIC,enabled,,,bab7a490-6503-4ebe-93b6-8e777f9468f7,ACC BTL. SCHWEPPES TONIC,enabled,increase
+generic,AVEC MEZCAL D.M,AVEC MEZCAL D.M,enabled,,,9d95feef-f001-4213-aa1e-555f430c7cd2,V. MEZCAL DEL MAGUEY VIDA,enabled,increase
+generic,JACK SOUR,JACK SOUR,disabled,,,,,,none
+generic,B. DOM. ANJOU BLC,B. DOM. ANJOU BLC,disabled,,,,,,none
+generic,M. CH. MINUTY PRESTIGE RSE,M. CH. MINUTY PRESTIGE RSE,disabled,,,e548302f-2151-4962-95da-c97bd81c3dc3,"M._ Côtes-de-Provence_ ""Prestige"", Château Minuty_RSE_150CL",enabled,increase
+generic,THE VERT,THE VERT,enabled,,,7e8cb6d3-78f5-4e59-acf1-8610ff85ad8a,THE,enabled,increase
+generic,PABLO MEZCAL,PABLO MEZCAL,enabled,,,2deecfd5-88ba-4372-8178-1510521a85ef,PABLO MEZCAL,enabled,increase
+generic,CAIPIRINHA FRUIT,CAIPIRINHA FRUIT,enabled,,,2b360eaf-700a-44fe-a8f4-8696ca0b51f1,CAIPIRINHA FRUIT,enabled,increase
+generic,TEABISCUS,TEABISCUS,enabled,,,,,,none
+generic,PAGO JUS TOMATE,PAGO JUS TOMATE,enabled,,,100fd8aa-197a-41d3-860f-17d618f5cc50,B. JUS DE FRUIT 20CL,enabled,increase
+generic,SUP. SIROP,SUP. SIROP,enabled,,,,,,none
+generic,GLACE 1 BOULE ENFANT,GLACE 1 BOULE ENFANT,enabled,,,,,,none
+generic,B. GIVRY 1ER CRU CLOS ST PIERRE RGE,B. GIVRY 1ER CRU CLOS ST PIERRE RGE,disabled,,,,,,none
+generic,B. SAUMUR CHAMPIGNY LES CLOSIERS RGE,B. SAUMUR CHAMPIGNY ROCHES NEUVES RGE,disabled,,,83e442c4-557e-461b-89a5-ff7a6906715c,"B._Saumur-Champigny_""Les Closiers"", Domaine des Closiers_RGE_75CL",enabled,increase
+generic,M. GIVRY 1ER CRU CLOS ST PIERRE THENARD,M. GIVRY 1ER CRU CLOS ST PIERRE THENARD,disabled,,,341e3f0a-994a-4e62-963b-931a0b84d704,"M. BOURGOGNE GIVRY 1ER CRU ""Clos du Cellier aux Moines"" DOM. THENARD BLC 150CL",enabled,increase
+generic,S. EMINENTE 3 ANS,S. EMINENTE 3 ANS,enabled,,,374c4eac-9341-408e-b7da-25b0179be60a,S. EMINENTE 3 ANS 3CL,enabled,increase
+generic,B. SPRITE 33CL,B. SPRITE 33CL,enabled,,,0d3e9c2c-fdbd-44c0-8b11-2689b0847f21,B. SPRITE VC 25CL,enabled,increase
+generic,ACC. FENTIMANS TONIC,ACC. FENTIMANS TONIC,enabled,,,8ec06f6e-1eb7-4359-acb5-e1e103b30bec,ACC. FEVER TREE TONIC,enabled,increase
+generic,COTE DE BOEUF X3,COTE DE BOEUF X3,enabled,,,,,,none
+generic,V. GRAPPA POLI,LIQUEUR VERVEINE VERTE MJ,disabled,,,c66d2a42-abc3-4fd4-a39f-2f6afab952c1,V. GRAPPA POLI,enabled,increase
+generic,M. MINUTY PRESTIGE RS,M. MINUTY PRESTIGE RS,enabled,,,e548302f-2151-4962-95da-c97bd81c3dc3,"M._ Côtes-de-Provence_ ""Prestige"", Château Minuty_RSE_150CL",enabled,increase
+generic,PATE A LA TOMATE,PATE A LA TOMATE,enabled,,,,,,none
+generic,COTE DE BOEUF BLACK ANGUS,COTE DE BOEUF BLACK ANGUS,disabled,,,,,,none
+generic,B.THE BLC NEPAL JASBIRE,B.THE BLC NEPAL JASBIRE,enabled,,,08a19557-9115-468b-8683-f74bdb79d61a,"B._Thé_""Jasbire"", Grands Jardins_75CL",enabled,increase
+generic,SUPP. PARMESAN,SUPP. PARMESAN,enabled,,,,,,none
+generic,KIWI JAUNE,KIWI JAUNE,enabled,,,,,,none
+generic,BACKGAMMON,BACKGAMMON,enabled,,,,,,none
+generic,ACC BTL. CRANBERRY,ACC BTL. CRANBERRY,enabled,,,053859fe-cde6-4462-88cb-fb164053e3f9,JUS DE FRUIT VERSE,enabled,increase
+generic,V. KALUHA,V. KALUHA,disabled,,,,,,none
+generic,M. DOM. GAUTHERON CHABLIS BLC,M. DOM. GAUTHERON CHABLIS BLC,enabled,,,656dfb68-60e5-4297-9d88-c7ac46282a1a,M._ Chablis_ Domaine Gautheron_BLC_150CL,enabled,increase
+generic,COTE DE BOEUF,COTE DE BOEUF,enabled,,,,,,none
+generic,V.CH DES MARRES ROSE,V.CH DES MARRES ROSE,disabled,,,5e6748ac-aff5-47ab-ac87-de88298444bc,V. MARRES ROSE,enabled,increase
+generic,M. CHABLIS GAUTHERON,M. CHABLIS GAUTHERON,enabled,,,656dfb68-60e5-4297-9d88-c7ac46282a1a,M._ Chablis_ Domaine Gautheron_BLC_150CL,enabled,increase
+generic,Big sceau de glacons,Big sceau de glacons,enabled,,,,,,none
+generic,JUG SANGRIA ROUGE,JUG SANGRIA ROUGE,enabled,,,7f7caafa-7157-47d7-9fb3-442d06e7817b,JUG SANGRIA ROUGE,enabled,increase
+generic,B. TERRAZAS CHARDONNAY ARGENTINE BLC,B. TERRAZAS CHARDONNAY ARGENTINE BLC,disabled,,,,,,none
+generic,P.CH DES MARRES ROSE,P.CH DES MARRES ROSE,enabled,,,5e6748ac-aff5-47ab-ac87-de88298444bc,V. MARRES ROSE,enabled,increase
+generic,B. PINK GRAPEFRUIT,B. PINK GRAPEFRUIT,disabled,,,,,,none
+generic,CARPACCIO GAMBERO,CARPACCIO GAMBERO,enabled,,,,,,none
+generic,VESPER,VESPER,enabled,,,e2d3dd1e-7832-491a-baa3-5f8740590cb3,VESPER,enabled,increase
+generic,B. CH. PONTET CANET RGE,B. ST EMILION GRD CRU CLASSE ANGELUS RGE,disabled,,,,,,none
+generic,V. CITRONNADE,V. CITRONNADE,enabled,,,,,,none
+generic,RIZ DIR,RIZ DIR,enabled,,,,,,none
+generic,S. MEZCAL DEL MAGUEY VIDA,S. MEZCAL DEL MAGUEY VIDA,enabled,,,ece58862-32e2-47ae-836d-efe965e9c13e,S. MEZCAL DEL MAGUEY VIDA 3CL,enabled,increase
+generic,SUPP KEFTA,SUPP KEFTA,enabled,,,,,,none
+generic,TARTARE DAURADE,SALADE DE POULPE,enabled,,,,,,none
+generic,B. GEVREY CHAMBERTIN DOM. ROSSIGNOL RGE,B. GEVREY CHAMBERTIN DOM. ROSSIGNOL RGE,enabled,,,b6591ed6-d272-4c37-ac5e-c697e2a4041a,"B. BOURGOGNE GEVREY-CHAMBERTIN ""Vieilles Vignes"" DOM. ROSSIGNOL-TRAPET RGE 75CL",enabled,increase
+generic,S. KETEL ONE,S. KETEL ONE,disabled,,,,,,none
+generic,SIDE CAR,SIDE CAR,enabled,,,3a62f4b0-f64e-4362-b245-4305e76d7425,SIDE CAR,enabled,increase
+generic,B. CH. LA BRANDE CASTILLON RGE,B. CH. LA BRANDE CASTILLON RGE,disabled,,,e9b64cde-6ff6-48f3-880e-8bc6ecc5e55c,B. BORDEAUX CASTILLON CHATEAU LA BRANDE RGE 75CL,enabled,increase
+generic,UBE FRAPPÉ,UBE FRAPPÉ,enabled,,,,,,none
+generic,B. SANCERRE MT DAMNE PIERRE&FILS BLC,B. SANCERRE CHAVIGNOL DELAPORTE BLC,disabled,,,2e5d9cad-af7e-40c5-b7b0-fe1757611922,"B._Sancerre_""Les Monts Damnés"", Domaine Pierre Prieur & Fils_BLC_75CL",enabled,increase
+generic,ASSORTIMENT MEZZE,ASSORTIMENT MEZZE,enabled,,,,,,none
+generic,SCHNITZEL DE POULET,SCHNITZEL DE POULET,enabled,,,,,,none
+generic,ASSIETTE FRUIT FRAIS,ASSIETTE FRUIT FRAIS,disabled,,,,,,none
+generic,B. 0% HEINEKEN,B. 0% HEINEKEN,enabled,,,fa1d0fa4-a5e3-4c80-b38f-4e17561bb088,B. BIERE SANS ALCOOL 0° 33CL,enabled,increase
+generic,S. EMINENTE,S. EMINENTE,disabled,,,,,,none
+generic,B. DOM PERIGNON BRUT,B. DOM PERIGNON BRUT,enabled,,,e6ea14a8-ca2f-4c7a-9fee-13a787279ebc,"B._ Dom Perignon, ""Brut""_75CL",enabled,increase
+generic,PAGO JUS FRAISE,PAGO JUS FRAISE,enabled,,,100fd8aa-197a-41d3-860f-17d618f5cc50,B. JUS DE FRUIT 20CL,enabled,increase
+generic,B. CH. NEUF DU PAPE LES SINARDS RGE,B. CH. NEUF DU PAPE LES SINARDS RGE,enabled,,,188fd572-1ca9-480c-bd87-94952619cfe2,"B. CHATEAUNEUF-DU-PAPE ""Les Sinards"" FAMILLE PERRIN RGE 75CL",enabled,increase
+generic,AVEC TEQUILA BLANCO DON JULIO,AVEC TEQUILA BLANCO DON JULIO,enabled,,,8caf6947-fec8-4900-ab04-51b234b8b7d8,V. DON JULIO BLANCO,enabled,increase
+generic,B. CHASSAGNE MONTRACHET BLC,B. CHASSAGNE MONTRACHET BLC,enabled,,,7687d492-9984-4fd8-8bf2-c105e77af8b6,B._ Chassagne-Montrachet_ Domaine Fontaine-Gagnard_BLC_75CL,enabled,increase
+generic,V. JUS ORANGE FRAIS,V. JUS ORANGE FRAIS,enabled,,,,,,none
+generic,V. CH BACCHUS BLC,V. CH BACCHUS BLC,disabled,,,443196a0-1289-4a45-a641-b53b21eea1db,V. CHA. BACCHUS BLC,enabled,increase
+generic,M. CH.PEYRASSOL ROSE,M. CH.PEYRASSOL ROSE,disabled,,,02f65032-6f68-4424-aa42-834c5d72c8fc,M. PROVENCE CHATEAU PEYRASSOL RSE 150CL,enabled,increase
+generic,V. MINUTY PRESTIGE RSE,V. MINUTY PRESTIGE RSE,disabled,,,0e8c4cab-fdae-4777-82e5-060fbe570876,V. MINUTY PRESTIGE ROSE,enabled,increase
+generic,DEMI HEINEKEN FESTIVE,DEMI HEINEKEN FESTIVE,enabled,,,f6fee045-3f9d-484f-9f08-a1027cfc3ab0,DEMI HEINEKEN,enabled,increase
+generic,JUG SANGRIA PETILLANTE,JUG SANGRIA PETILLANTE,enabled,,,eed6cbaa-9786-4789-bb93-e39be16001f0,JUG SANGRIA PETILLANTE,enabled,increase
+generic,B. INSTANT BLANC MAIONNETTE,B. INSTANT BLANC MAIONNETTE,enabled,,,aa628f89-efb8-4cb7-b218-3f8c760e46c9,"B._ Cotes de Provence_ ""Instant Blanc"", Domaine la Maïonnette_BLC_75CL",enabled,increase
+generic,B. ALTOS REPOSADO,B. ALTOS REPOSADO,disabled,,,74aa8578-a008-4e2f-bda2-be4f3befafb1,OLMECA ALTOS REPOSADO 38°,enabled,increase
+generic,TI PUNCH,TI PUNCH,enabled,,,f30df654-a335-43a1-b9a6-b91ee94b3b57,TI PUNCH EMINENTE 3,enabled,increase
+generic,MARTINI DRY BELVEDERE,MARTINI DRY BELVEDERE,disabled,,,,,,none
+generic,SUGG. GATEAU FRAISE,SUGG. GATEAU FRAISE,enabled,,,,,,none
+generic,B. DOM. JB. PULIGNY MONTRACHET BLC,B. DOM. JB. PULIGNY MONTRACHET BLC,disabled,,,,,,none
+generic,B. INSTANT ROUGE MAIONNETTE,B. INSTANT ROUGE MAIONNETTE,enabled,,,d85b6818-e961-400c-bce0-63c9d451ac27,"B._ Cotes de Provence_ ""Instant Rouge"", Domaine la Maïonnette_RGE_75CL",enabled,increase
+generic,CHOU FLEUR FRIT,CHOU FLEUR FRIT,enabled,,,,,,none
+generic,V. EMINENTE FESTIF,V. EMINENTE FESTIF,enabled,,,9ee25877-4a51-4117-8c3e-6a893f0df8ee,V. EMINENTE 3ANS,enabled,increase
+generic,LIQUEUR ELIXIR AGRUME EAU D'OR PEGASUS,LIQUEUR ELIXIR AGRUME EAU D'OR PEGASUS,enabled,,,5f4ed4e0-6816-40cd-8440-9192928b30f5,V. EAU D'OR ELIXIR D AGRUME PEGASUS,enabled,increase
+generic,B. MELI MELLOW FONDUGUES RGE,B. MELI MELLOW FONDUGUES RGE,disabled,,,2b25443f-a1c9-45e7-a110-70f7c30289a7,"B. PROVENCE ""MELI MELOW"" DOM. FONDUGUES PRADUGUES RGE 75CL",enabled,increase
+generic,LATTE MACHIATO,LATTE MACHIATO,enabled,,,d2b7cbfe-961b-4321-8d3d-6ccb1415ad0f,CAFE INDIE MALONGO,enabled,increase
+generic,CAIPIROSKA,CAIPIROSKA,enabled,,,27e6d596-d6b6-4db1-b921-16bcaed95a47,CAIPIROSKA,enabled,increase
+generic,PASTEQUE,PASTEQUE,enabled,,,,,,none
+generic,V. EMINENTE 7 ANS,V. EMINENTE 7 ANS,enabled,,,af6106c8-8606-4435-b69c-e3723dbe5471,V. EMINENTE 7ANS,enabled,increase
+generic,B. ST ROMAIN LES CINQ CLIMATS ALAIN GRAS,B. ST ROMAIN LES CINQ CLIMATS ALAIN GRAS,disabled,,,ebd0de8d-6137-4ef8-becf-db1cee3624d1,"B._ Saint-Romain_ ""Les 5 Climats"", Domaine Alain Gras_BLC_75CL",enabled,increase
+generic,AMERICANO,AMERICANO,enabled,,,0baa2430-5243-47ae-8267-cf97aaca282c,AMERICANO,enabled,increase
+generic,B. DOM. CHAMBEYRON VIEILLES VIGNES RGE,B. DOM. CHAMBEYRON VIEILLES VIGNES RGE,disabled,,,,,,none
+generic,S. MADELEINE,S. MADELEINE,enabled,,,9a865c46-269e-42d2-8a61-b35513fe7cbc,S. MADELEINE 3CL,enabled,increase
+generic,AC BTL. FEVER TREE GINGER BEER,ACC BTL. FEVER TREE GINGER BEER,disabled,,,92eb7cef-eb42-45f1-ad9a-ff984910a03b,PACK FEVER TREE GINGER X2,enabled,increase
+generic,B. BONNAUD PALETTE RGE,B. BONNAUD PALETTE RGE,disabled,,,,,,none
+generic,KIR,KIR,enabled,,,bf61ac75-a71e-480f-8af7-a6d5582548a6,KIR,enabled,increase
+generic,JUS DE POMME,JUS DE POMME,enabled,,,a957dd15-0380-467a-af6a-5ab0580d9b9f,JUS DE POMME VERSE,enabled,increase
+generic,AVEC MEZCAL,AVEC MEZCAL,disabled,,,,,,
+generic,B. SANCERRE CHAVIGNOL DELAPORTE BLC,B. SANCERRE CHAVIGNOL DELAPORTE BLC,disabled,,,22d4675e-29f9-400c-b0cb-4e87238ab878,"B._Sancerre_""Chavignol"", Domaine Delaporte_BLC_75CL",enabled,increase
+generic,CAIPIROSKA FRUIT,CAIPIROSKA FRUIT,enabled,,,3681ecba-9ecd-42fe-a1f9-221b6eea0223,CAIPIROSKA FRUIT ORMEAU,enabled,increase
+generic,MOJITO HAVANA 7,MOJITO HAVANA 7,disabled,,,,,,none
+generic,FRITES DIR,FRITES DIR,enabled,,,,,,none
+generic,1/2 BIG LOUNGE,1/2 BIG LOUNGE,enabled,,,,,,none
+generic,SALADE,SUPP SALADE,enabled,,,,,,none
+generic,OLD FASHIONNED,OLD FASHIONNED,enabled,,,36ab8007-c58d-4b95-838a-ce078eef4f92,OLD FASHIONNED BULLEIT,enabled,increase
+generic,POULET MARINE,POULET ENTIER,enabled,,,,,,none
+generic,V.POMME VERSE,V.POMME VERSE,enabled,,,a957dd15-0380-467a-af6a-5ab0580d9b9f,JUS DE POMME VERSE,enabled,increase
+generic,B. PINOT NOIR CROIX COTEAUX MARGOTS RGE,B. PINOT NOIR CROIX COTEAUX MARGOTS RGE,enabled,,,b83f20df-8f69-4980-b8d2-60fdd908cef3,B._ Bourgogne _ Domaine Coteaux des Margots_RGE_75CL,enabled,increase
+generic,B. AVION REPOSADO,B. AVION REPOSADO,enabled,,,bd94fd24-7853-4c2f-a5dc-9281046511af,B. ALTOS REPOSADO 70CL,enabled,increase
+generic,ACC BTL. ANANAS,ACC BTL. ANANAS,enabled,,,bcc01676-7f56-4276-b7d1-2624ab43cd76,ACC BTL. ANANAS,enabled,increase
+generic,S. MADELEINE OFFERT,S. MADELEINE OFFERT,enabled,,,9a865c46-269e-42d2-8a61-b35513fe7cbc,S. MADELEINE 3CL,enabled,increase
+generic,SUPP RIKAKAT,SUPP RIKAKAT,enabled,,,,,,none
+generic,S. ORGASME,S. ORGASME,enabled,,,1ee0373c-9a7c-423f-895b-55de61cd2765,S. ORGASME 3CL,enabled,increase
+generic,B. COCA COLA ZERO 33CL,B. COCA COLA ZERO 33CL,enabled,,,13634ef9-71de-42ba-a494-7d50b8014896,B. COCA COLA VERRE BOUTEILLE,enabled,increase
+generic,B. IGP ALPILLES ROUCAS HAUVETTE RGE,B. IGP ALPILLES ROUCAS HAUVETTE RGE,disabled,,,42c70b3a-29ea-4037-8dd3-ea37def9b674,"B._IGP Alpilles_""Roucas"", Domaine Hauvette_RGE_75CL",enabled,increase
+generic,B. SANCERRE MT DAMNE PIERRE&FILS  BLC,M. SANCERRE CHAVIGNOL DELAPORTE BLC,disabled,,,5e99d344-7de5-4b53-8163-65a5af5e15b5,"M._Sancerre_""Chavignol"", Domaine Delaporte_BLC_150CL",enabled,increase
+generic,V. PROSECCO,V. PROSECCO,enabled,,,f052722b-5126-44ce-b506-fd1ea0a0d7c8,V. PROSECCO,enabled,increase
+generic,SAUVAGEONNE ALTOS REP,N°4 DON JULIO REP,enabled,,,4ab8c6ec-b59d-4145-b0dd-173b2f4d4238,LA SAUVAGEONNE ALTOS REPOSADO,enabled,increase
+generic,YAOURT GREC A LA POUTARGUE,CARPACCIO DAURADE SUGG.,enabled,,,,,,none
+generic,B. CH. RASQUE CLOS MADAME BLC,B. CH. RASQUE CLOS MADAME BLC,disabled,,,,,,none
+generic,FRAPPUCCINO,FRAPPUCCINO,enabled,,,d2b7cbfe-961b-4321-8d3d-6ccb1415ad0f,CAFE INDIE MALONGO,enabled,increase
+generic,IRISH COFFEE,IRISH COFFEE,enabled,,,ccffee29-38cc-4893-bdae-f696100b5c40,V. JB,enabled,increase
+generic,P. DOM. FRISSON BLC,P. DOM. FRISSON BLC,disabled,,,,,,none
+generic,ITCH,CRUDO DE THON,enabled,,,,,,none
+generic,SEX ON THE BEACH,SEX ON THE BEACH,enabled,,,1d849e84-87e6-487c-b140-cdae6c4a700c,SEX ON THE BEACH,enabled,increase
+generic,ACC BTL. FEVER TREE TONIC,ACC BTL. FEVER TREE TONIC,disabled,,,a2a615e2-cebd-4d42-9622-a4f0ccf761f0,PACK TONIC*5,enabled,increase
+generic,CHOUX FLEUR ROTI,OSPRIADA SALATA,enabled,,,,,,none
+generic,COCA CANETTE,COCA CANETTE,enabled,,,040c4381-e541-4bbf-90b5-6fc3e752cbef,CANETTE COCA COLA 33CL,enabled,increase
+generic,ITALICUS SPRITZ,ITALICUS SPRITZ,enabled,,,a0ed4aee-ada0-4182-a396-847a618c3f84,ITALICUS SPRITZ,enabled,increase
+generic,DIVERS PRESTATION,DIVERS PRESTATION,enabled,,,,,,none
+generic,S. EMINENTE 7 ANS,S. EMINENTE 7 ANS,enabled,,,f2f35a32-7bd7-451f-a223-261a12cad2fc,S. EMINENTE 7 ANS 3CL,enabled,increase
+generic,CALAMARS FRITS,CALAMARS FRITS,enabled,,,,,,none
+generic,STEAK FRITE ENF,Blanc de poulet enfant,enabled,,,,,,none
+generic,B. CASAMIGOS REPOSADO,B. CASAMIGOS REPOSADO,disabled,,,,,,none
+generic,B. CH. BACCHUS BLC,B. CH.PAMPELONNE BLC,disabled,,,f075a541-6e16-4188-b49a-507b1a2c27ab,"B._Ventoux_""Château de Bacchus"", Claret Tournier_BLC_75CL",enabled,increase
+generic,PURA VIDA GIN,PURA VIDA GIN,disabled,,,,,,none
+generic,B. IGP CUCUGNAN MONTHANA SICHEL RGE,B. IGP CUCUGNAN MONTHANA SICHEL RGE,disabled,,,861bfc69-f604-4e41-b173-5d28fddfacb9,"B._IGP Pays de Cucugnan_""Monthana"", Peter Sichel_RGE_75CL",enabled,increase
+generic,ASSIETTE DE FRUIT MENU,ASSIETTE DE FRUIT MENU,enabled,,,,,,none
+generic,B. MACON VILLAGES COTEAUX DE MARGOT BLC,B. MACON VILLAGES COTEAUX DE MARGOT BLC,enabled,,,18d5f2ba-1e74-402a-b806-177231f2c814,B._ Macon Villages_ Domaine Coteaux de Margots_BLC_75CL,enabled,increase
+generic,SUPP. FETA,SUPP. FETA,enabled,,,,,,none
+generic,EXPRESSO,EXPRESSO,enabled,,,d2b7cbfe-961b-4321-8d3d-6ccb1415ad0f,CAFE INDIE MALONGO,enabled,increase
+generic,NOAM FESTIVE,NOAM FESTIVE,enabled,,,8113bba8-bcfc-4291-a65b-c44147ce071c,B. NOAM 34CL VC,enabled,increase
+generic,NEGRONI MEZCAL,NEGRONI MEZCAL,enabled,,,ceda976a-f8cf-4f4e-aebd-897c0c6ad00a,NEGRONI MEZCAL,enabled,increase
+generic,GRAPPA NONINO MOSCATO,GRAPPA NONINO MOSCATO,enabled,,,9ae9a3aa-ab3d-470e-8840-c59b8810d852,V. GRAPPA NONINO MOSCATO,enabled,increase
+generic,SPRAY CREME SOLAIRE,SPRAY CREME SOLAIRE,enabled,,,,,,none
+generic,DECA NOISETTE,DECA NOISETTE,enabled,,,072e1a16-3991-45e8-adba-345d427a7bc8,DECA DOSETTES,enabled,increase
+generic,B. HAVANA 3 ANS,B. HAVANA 3 ANS,disabled,,,,,,none
+generic,B. DOM. LA MAIONETTE BLC,B. DOM. LA MAIONETTE BLC,disabled,,,,,,none
+generic,B. IGP MED. CH. REVELETTE BLC,B. IGP MED. CH. REVELETTE BLC,enabled,,,8c7e75ea-7e8b-4c04-8e6f-0c9ea687efba,"B._ IGP Méditerranée_ ""Le Grand Blanc"", Château Revelette_BLC_75CL",enabled,increase
+generic,B. CLOS VOUGEOT GRD CRU PRIEUR RGE,B. CLOS VOUGEOT GRD CRU PRIEUR RGE,disabled,,,3cba49dd-4fd6-4bcd-a043-5a9dccd4a74e,B._ Clos De Vougeot Grand Cru_ Domaine Jacques Prieur_RGE_75CL,enabled,increase
+generic,V. HONEST,V. HONEST,enabled,,,,,,
+generic,ACC. COCA ZERO,ACC. COCA ZERO,enabled,,,d226e2fc-cf2d-480a-9db5-1d07481f3106,SUP. COCA ZERO,enabled,increase
+generic,V. AVION 44,V. AVION 44,disabled,,,,,,none
+generic,B. CH. BACCHUS CHAPELLE RGE,B. CH. BACCHUS CHAPELLE RGE,disabled,,,,,,none
+generic,VOSS PLATE,VOSS PLATE,enabled,,,ce3e66ae-0c3d-420d-8a42-78fc19ce537f,B. VOSS PLATE VP 80CL,enabled,increase
+generic,INDIEN,INDIEN,enabled,,,4dc67db7-cff6-40ff-9553-4c6c3423ef70,INDIEN,enabled,increase
+generic,B. POUILLY FUME BARRE A MINE BLC,B. VIN FRANCE ENJOUEE OGEREAU BLC,disabled,,,,,,none
+generic,V. CLASE AZUL REPOSADO,V. CLASE AZUL REPOSADO,disabled,,,,,,none
+generic,HUGO SPRITZ,HUGO SPRITZ,enabled,,,91b95200-67fc-4ae1-b9f3-a7c6552508c1,HUGO SPRITZ,enabled,increase
+generic,SAN PELLEGRINO TAKE AWAY,SAN PELLEGRINO TAKE AWAY,enabled,,,dce6ce96-c84e-4ee6-82f6-995d9fd4a911,EAU GAZEUZE PET,enabled,increase
+generic,P. TROPEZIENNE,P. TROPEZIENNE,enabled,,,8e485537-2460-4aa7-8b4a-dca7a7c2e605,P. TROPEZIENNE,enabled,increase
+generic,B. DOM. GAUTHERON CHABLIS BLC,B. DOM. GAUTHERON CHABLIS BLC,disabled,,,81f23aa2-0275-4440-a6cb-6744e17beaf6,B._ Chablis_Domaine Gautheron_BLC_75CL,enabled,increase
+generic,SUPP. FRAISE,SUPP. FRAISE,enabled,,,65588f43-3335-4010-ab6e-89292c1e1bb9,SIROP. FRAISE,enabled,increase
+generic,B. TANQUERAY,B. TANQUERAY,enabled,,,9d4a3150-6580-4aed-9a0a-ade26b1c55e1,B. GIN VERSE 70CL,enabled,increase
+generic,B. MARGAUX PLANTES DUFORT VIVIENS RGE,B. MARGAUX PLANTES DUFORT VIVIENS RGE,disabled,,,35dcb660-67a8-4ef2-8035-8abcfc9e8414,B._ Margaux_ Château Durfort-Viviens_RGE_75CL,enabled,increase
+generic,B. CLAS AZUL REPOSADO,B. CLAS AZUL REPOSADO,enabled,,,33f25970-028d-4319-905e-0b6800fc5ce6,B. CLASE AZUL REPOSADO 70CL,enabled,increase
+generic,V.HAVANA 7 ANS,V.HAVANA 7 ANS,enabled,,,7c63d0be-9a79-43ea-ad5b-5376d1c8d04b,V. HAVANA 7ANS,enabled,increase
+generic,B. POMMARD DUBREIL FONTAINE RGE,B. POMMARD DUBREIL FONTAINE RGE,enabled,,,02f8caa4-9d10-49b7-8188-db9679a5e139,B. BOURGOGNE POMMARD DOMAINE DUBREUIL FONTAINE RGE 75CL,enabled,increase
+generic,J. CH. MINUTY ROSE ET OR,J. CH. MINUTY ROSE ET OR,enabled,,,6d09be72-4959-4812-8092-63b65ee4bd3f,"J._ Cotes de Provence_ ""Rose et Or"", Château Minuty_RSE_300CL",enabled,increase
+generic,MEZCAL MULE,MEZCAL MULE,enabled,,,1d57cba3-7d50-448b-bd69-9a9e1444d565,MEZCAL MULE,enabled,increase
+generic,S. CHARTREUSE JAUNE,S. CHARTREUSE JAUNE,enabled,,,af0ec3e9-d55a-477f-a5e4-0c9d0550cc3c,S. CHARTREUSE JAUNE 3CL,enabled,increase
+generic,V. MAURESQUE,V. MAURESQUE,disabled,,,,,,none
+generic,V. MEZCAL DEL MAGUEY VIDA,V. MEZCAL DEL MAGUEY VIDA,enabled,,,9d95feef-f001-4213-aa1e-555f430c7cd2,V. MEZCAL DEL MAGUEY VIDA,enabled,increase
+generic,WHISKY SOUR,WHISKY SOUR,enabled,,,940628bb-5557-4339-b95c-4b1563d0de97,WHISKY SOUR,enabled,increase
+generic,V. LUBERON RGE MARIE,V.CH BACCHUS RGE,disabled,,,4e129ff4-479a-4c28-ae40-fcf5d7d4a041,V. LUBERON DOM. MARIE RGE,enabled,increase
+generic,V. TANQUERAY FESTIF,V. TANQUERAY FESTIF,enabled,,,d5ad3135-84df-4e3a-a3d3-b8e97f2fe9da,V. GIN VERSE,enabled,increase
+generic,B. CODIGO REPOSADO,B. CODIGO REPOSADO,enabled,,,3c4f2ee4-2a85-46cb-83b1-218e71ce569f,B. CODIGO REPOSADO 40° 70CL,enabled,increase
+generic,B. MARGAUX CANTENAC BROWN,B. MARGAUX CANTENAC BROWN,disabled,,,35dbe935-05be-48c7-9c9f-d1ceb0e2bc17,B. BORDEAUX MARGAUX CHAT. CANTENAC RGE 75CL,enabled,increase
+generic,B. CH. POUJEAUX MOULIS EN MEDOC RGE,B. CH. POUJEAUX MOULIS EN MEDOC RGE,disabled,,,,,,none
+generic,AVEC GIN TANQUERAY,AVEC GIN TANQUERAY,enabled,,,d5ad3135-84df-4e3a-a3d3-b8e97f2fe9da,V. GIN VERSE,enabled,increase
+generic,SIROCO,MAKARIOS,enabled,,,3220a71a-cf7b-40b6-8cd9-cebdec844bcd,SIROCCO,enabled,increase
+generic,B. DOM. SAUMUR CLOS ROMANS BLC,B. DOM. SAUMUR CLOS ROMANS BLC,disabled,,,,,,none
+generic,B. CH. MARRES PRESTIGE RSE,B. CH. MARRES PRESTIGE RSE,disabled,,,7771505f-caee-44d0-a669-8c56d400e9ed,"B._ Côtes-de-Provence_ ""Prestige"", Château des Marres_RSE_75CL",enabled,increase
+generic,MARTINI BLANC TONIC,MARTINI BLANC TONIC,disabled,,,,,,none
+generic,S. GET 31,S. GET 31,enabled,,,17d8115b-1289-4c45-9326-ed578b7c705d,S. GET 31 3CL,enabled,increase
+generic,SUG. TENTACULE DE POULPE,SUG. TENTACULE DE POULPE,enabled,,,,,,none
+generic,LONDON MULE,LONDON MULE SEVENTY ONE,disabled,,,a8f0eb30-75e1-48d7-94cc-819a5a7f4a68,LONDON MULE,enabled,increase
+generic,BIG LOUNGE,BIG LOUNGE,enabled,,,,,,none
+generic,DIVER DESSERT,DIVER DESSERT,enabled,,,,,,none
+generic,P. MAIONNETTE BLC,P. MAIONNETTE BLC,enabled,,,563213e1-c798-4050-95e5-c3e3d6512cf1,P. MAIONETTE BLC,enabled,increase
+generic,TIAN DE LEGUMES,SUPP BROCCOLINI,enabled,,,,,,none
+generic,MIMOSA,MIMOSA,enabled,,,9a4d3272-922b-47bc-b54c-266fea4814f2,MIMOSA,enabled,increase
+generic,B. MORGON VIEILLES VIGNES LAPIERRE RG,B. MORGON VIEILLES VIGNES LAPIERRE RG,disabled,,,81a134d7-e223-4d5a-b87e-7f0aa6e41450,"B._Morgon_""Vieilles Vignes"", Domaine Marcel Lapierre_RGE_75CL",enabled,increase
+generic,B. DOM. ROUILLERE GR RESERVE ROSE,B. DOM. ROUILLERE GR RESERVE ROSE,disabled,,,6b5d6e1e-d3d6-4535-bfb7-e0e41f06866e,"B._Côtes-de-Provence_""Grande Reserve"", Domaine La Rouillère _RSE_75CL",enabled,increase
+generic,B. FENTIMANS TONIC 20CL,B. SCHWEPPES TONIC 20CL,enabled,,,06c34727-da71-4f03-9441-d5a14c04bc7e,B. TONIC WATER VP 20cl,enabled,increase
+generic,CALICES,CALICES,disabled,,,,,,none
+generic,B. EMINENTE 7 ANS,B. EMINENTE 7 ANS,enabled,,,15bbaffd-01bf-42c9-aaf0-5a7030428058,B. RHUM 7ANS VERSE 70CL,enabled,increase
+generic,CHOCOLAT CHAUD,CHOCOLAT CHAUD,enabled,,,,,,none
+generic,LYLA DETOX,GAIA,enabled,,,,,,none
+generic,V. PASTIS 51,V. PASTIS 51,enabled,,,d534c9c9-6682-47af-b4dd-3896ce567dbe,V. PASTIS 51,enabled,increase
+generic,B.CROZES H CHASSELIERE ST JEMMS,B.CROZES H CHASSELIERE ST JEMMS BLC,enabled,,,4bdc4933-eee3-4afb-99b8-13089ddf9674,"B._Crozes-Hermitage_""La Chasselière"", Michelas St Jemms_BLC_75CL",enabled,increase
+generic,V. IGP PEYRASSOL,V. IGP MAÏONNETTE,enabled,,,b991d3b8-e84a-4c9b-a447-a791e14fc9e4,V. MEDITERRANNE PEYRASOL BLC,enabled,increase
+generic,SIROP ENFANT,SIROP ENFANT,enabled,,,,,,none
+generic,COCA ZERO FESTIVE,COCA ZERO FESTIVE,enabled,,,13634ef9-71de-42ba-a494-7d50b8014896,B. COCA COLA VERRE BOUTEILLE,enabled,increase
+generic,V. ANANAS FRAIS,V. ANANAS FRAIS,enabled,,,,,,none
+generic,M. RUMOR,M. RUMOR,disabled,,,78f171a3-5f2a-42aa-8bd0-7a79465f87e0,M._ Côtes-De-Provence_ Rumor_RSE_150CL,enabled,increase
+generic,B. DOM. CORTON GRAND CRU CLOS DU ROI RGE,B. DOM. CORTON GRAND CRU CLOS DU ROI RGE,disabled,,,,,,none
+generic,VIRGIN MOJITO,VIRGIN MOJITO,enabled,,,318b44c0-b748-4768-a24d-2d8ef5618025,VIRGIN MOJITO,enabled,increase
+generic,B. VEUVE CLICQUOT BRUT,B. VEUVE CLICQUOT BRUT,enabled,,,79af7041-e198-4c08-986f-37465bd0363a,"B._ Veuve Clicquot ""Brut""_75CL",enabled,increase
+generic,LIMONCELLO SPRITZ,LIMONCELLO SPRITZ,enabled,,,c292878d-4095-47b6-ac6c-bd0bff75a2d1,LIMONCELLO SPRITZ,enabled,increase
+generic,B. RUMOR,B. RUMOR,enabled,,,7e9714ca-1123-4440-b0c8-aa962edced9a,B._Côtes de Provence_Domaine Rumor_75CL,enabled,increase
+generic,V. SUZE,V. SUZE,enabled,,,1ba08f54-5b2e-432c-98da-7f5694fbf1fd,V. SUZE,enabled,increase
+generic,V. TANQUERAY,V. TANQUERAY,enabled,,,d5ad3135-84df-4e3a-a3d3-b8e97f2fe9da,V. GIN VERSE,enabled,increase
+generic,B. DOM. DES CAMPAUX ECUYER RGE,B. CH. MARRES PRESTIGE RGE,disabled,,,db45f0f9-28c0-4436-ae1d-ec51b58f3c39,"B. PROVENCE CHATEAU DES MARRES ""Prestige"" RGE 75CL",enabled,increase
+generic,DOS CABILLAUD,DOS CABILLAUD,enabled,,,,,,none
+generic,S. HAVANA 3 ANS,S. HAVANA 3 ANS,disabled,,,,,,none
+generic,VIRGIN PINA COLADA,VIRGIN PINA COLADA,enabled,,,d5509bd7-c1ba-4271-b70d-f7dd6f0f1487,V. VIRGIN COLADA,enabled,increase
+generic,B.INSTANT ROSE MAIONNETTE,B.INSTANT ROSE MAIONNETTE,disabled,,,f722d051-3858-4ab1-be24-7a38f32874fc,"B. PROVENCE AOP ""Instant"" DOM. DE LA MAIONETTE RSE 75CL",enabled,increase
+generic,DIVER PLAT,DIVER PLAT,enabled,,,,,,none
+generic,B. NUITS ST GOERGES 1ER CRU MURGERS RGE,B. NUITS ST GEORGES 1ER CRU MURGERS RGE,enabled,,,42716048-1845-4733-9bd9-fc4fb57a11ae,"B._ Nuits-Saint-Georges 1er cru_ ""Les Murgers"", Domaine Bertagna_RGE_75CL",enabled,increase
+generic,KIR ROYAL,KIR ROYAL,enabled,,,1aa7ff43-b896-41a0-a3ba-32802f2fe149,KIR ROYAL,enabled,increase
+generic,MARGARITA,MARGARITA,enabled,,,c36c7827-f289-4075-ab69-a6c14dfc127b,MARGARITA ALTOS REPOSADO,enabled,increase
+generic,ACC. CRANBERRY,ACC. CRANBERRY,enabled,,,185b9f25-8107-43bf-be26-ca550c670a5f,SUP. CRANBERRY,enabled,increase
+generic,B. DOM. ROUILLERE,B. DOM. ROUILLERE GR RESERVE ROSE,disabled,,,6b5d6e1e-d3d6-4535-bfb7-e0e41f06866e,"B._Côtes-de-Provence_""Grande Reserve"", Domaine La Rouillère _RSE_75CL",enabled,increase
+generic,B.THE RGE ACALA,B.THE RGE ACALA,enabled,,,e92fa302-4a88-47f1-8740-b4d93a10e811,B. ACALA RED 75CL,enabled,increase
+generic,ACC BTL. COCA,ACC BTL. COCA,enabled,,,67819713-f875-4f84-82b3-4d5f2b1e2ad4,ACC. BTL COCA CARAFE PABLO,enabled,increase
+generic,B. FEVER TREE GINGER BEER 20CL,B. FENTIMANS GINGER BEER 20CL,disabled,,,a71d480f-b1ec-452f-93f0-4db5ecb8521b,B. GINGER BEER VP 20CL,enabled,increase
+generic,SCHNITZEL,SCHNITZEL,disabled,,,,,,none
+generic,MEXICAN MULE,MEXICAN MULE,enabled,,,178e7539-ee1c-4f32-be94-d362ae145eea,MEXICAN MULE ALTOS,enabled,increase
+generic,GREEN DETOX,FRESH GREEN,disabled,,,,,,none
+generic,JUG CITRONNADE,JUG CITRONNADE,enabled,,,,,,none
+generic,B. PROSCECO,B. PROSCECO,enabled,,,e0c15827-31c9-40ab-85c0-5c5c06adb08b,B. PROSECCO 11° 75CL,enabled,increase
+generic,B. DOM PERIGNON 2013,B. DOM PERIGNON 2013,disabled,,,,,,none
+generic,MARGARITA FESTIF,MARGARITA FESTIF,enabled,,,c36c7827-f289-4075-ab69-a6c14dfc127b,MARGARITA ALTOS REPOSADO,enabled,increase
+generic,B. EVIAN 75,B. EVIAN 75,enabled,,,a5a0a2f0-c895-40cf-9cbc-d2c70ab60e54,B. EVIAN VP 75CL,enabled,increase
+generic,PARASOL,PARASOL,enabled,,,,,,none
+generic,B. CH.PAMPELONNE BLC,B. CH.PAMPELONNE BLC,enabled,,,32004631-423d-422b-b06d-e2fcd5e2de70,B._Cotes de Provence_ Château de Pampelonne_BLC_75Cl,enabled,increase
+generic,FUZE TEA FESTIVE,FUZE TEA FESTIVE,enabled,,,0ea6bce4-998b-4655-bf35-605fc7296e0a,B. FUZE TEA PECHE 25CL VC,enabled,increase
+generic,DECA ALLONGE,DECA ALLONGE,enabled,,,072e1a16-3991-45e8-adba-345d427a7bc8,DECA DOSETTES,enabled,increase
+generic,B. MOREY ST DENIS 1ER CRU LA RIOTTE RGE,B. CHAMBOLLE MUSIGNY VIEILLES VIGNES RGE,disabled,,,a47a6a7a-193b-4abe-a9fb-cc6e6d2b4988,B. BOURGOGNE CHASSAGNE MONTRACHET DOM. MOREY COFFINET BLC 75CL,enabled,increase
+generic,M. DOM. BOULANGER BEAUNE EN LULUNNE BLC,M. DOM. BOULANGER BEAUNE EN LULUNNE BLC,disabled,,,,,,none
+generic,V. CH. DE BACCHUS RSE,V. CH. DE BACCHUS RSE,disabled,,,,,,none
+generic,RIKAKAT,RIKAKAT,enabled,,,,,,none
+generic,PURA VIDA,PURA VIDA,enabled,,,c8092386-e075-4ce3-ac7f-2dc94e4ab977,PURA VIDA,enabled,increase
+generic,P. CH. MINUTY PRESTIGE RSE,P. CH. MINUTY PRESTIGE RSE,disabled,,,,,,none
+generic,BB. ADICCION REPOSADO,BB. ADICCION REPOSADO,disabled,,,,,,none
+generic,LILLET BLANC TONIC,LILLET BLANC TONIC,enabled,,,4af0ff3d-6e21-4c0d-89bf-a89cd417114d,LILLET BLANC TONIC,enabled,increase
+generic,ROYAL MEZZES,ROYAL MEZZES,enabled,,,,,,none
+generic,MANHATTAN,MANHATTAN,enabled,,,e6e3c5f4-fe2f-4802-bfce-c60b944447fd,MANHATTAN BLACK LABEL,enabled,increase
+generic,S. LIMONCELLO,S. LIMONCELLO,enabled,,,5f54d749-4456-43b3-aead-629eba07eabb,S. LIMONCELLO 3CL,enabled,increase
+generic,SUPP. PECHE,SUPP. PECHE,enabled,,,50318031-515d-4c49-b9a1-31467d04626b,SIROP. PECHE,enabled,increase
+generic,B. CHAMBERTIN 1ER CRU CHAMPONNETS RGE,B. CHAMBERTIN 1ER CRU CHAMPONNETS RGE,disabled,,,,,,none
+generic,B. ST ESTEPHE MONTROSE RGE,B. ST ESTEPHE MONTROSE RGE,disabled,,,7d9aebe1-de20-443d-a0b7-4156b88da830,"B. BORDEAUX SAINT ESTEPHE ""Le Saint Estèphe"" CHATEAU MONTROSE RGE 75CL",enabled,increase
+generic,B. MARGAUX BLANSON D'ISSAN RGE,B. MARGAUX BLANSON D'ISSAN RGE,disabled,,,fe2a2808-3a79-4aab-b489-8b0c45c57d05,"B. MARGAUX ""Blason d'Issan"" CHATEAU D'ISSAN RGE 75CL",enabled,increase
+generic,DEMI MONACO,DEMI MONACO,disabled,,,8a5cf97e-7627-4d94-9c65-443d492a0d4f,DEMI MONACO,enabled,increase
+generic,SIROP. PECHE,SIROP. PECHE,enabled,,,50318031-515d-4c49-b9a1-31467d04626b,SIROP. PECHE,enabled,increase
+generic,B. MONTAGNE ST EMILION BEL AIR,B. MONTAGNE ST EMILION BEL AIR,disabled,,,,,,
+generic,PDT GRENAILLE DIR,PDT GRENAILLE DIR,enabled,,,,,,none
+generic,V. LIQUEUR FRAISE DES BOIS A JOE,LIQUEUR ABRICOT JMR,disabled,,,c9e6d07f-0d6d-445d-b698-5db40343d247,V. FRAISE DES BOIS À JOE,enabled,increase
+generic,SUP SAUCE,SUPP. SAUCE,disabled,,,,,,none
+generic,INDIE VODKA,INDIE VODKA,enabled,,,d568dca5-ed04-4d86-b0fd-cd454976bb14,INDIE VODKA,enabled,increase
+generic,TI PUNCH EMINENTE,TI PUNCH EMINENTE 7,disabled,,,,,,none
+generic,MOSCOW MULE FESTIF,MOSCOW MULE FESTIF,enabled,,,9353e864-7827-4b84-9e04-1071822e4f74,MOSCOW MULE,enabled,increase
+generic,SUPP. MENTHE,SUPP. MENTHE,enabled,,,e5146373-2408-41cb-bb00-23ca5043b5d9,SIROP. MENTHE,enabled,increase
+generic,S. VOLCAN BLANCO,S. CASAMIGOS REPOSADO,enabled,,,670401a6-a3c7-48e1-8d6e-97c5b98c8b39,S. VOLCAN BLANCO 3CL,enabled,increase
+generic,SEMOULE DIR,ASPERGES DIR,enabled,,,,,,none
+generic,CHERRY SOUR,CHERRY SOUR,disabled,,,,,,none
+generic,B. MACHIAVELLI DI TOSCANA II PRINCIPE RG,B. MACHIAVELLI DI TOSCANA II PRINCIPE RG,disabled,,,,,,none
+generic,HUILE SOLAIRE,HUILE SOLAIRE,enabled,,,,,,none
+generic,V. DIABOLO,V. DIABOLO,enabled,,,7551484b-937e-4015-947c-88236a445e4c,DIABOLO,enabled,increase
+generic,POISSON ARRIVAGE,LOUP 1kg SUGG.,enabled,,,,,,none
+generic,V.CH BACCHUS RGE,V.CH BACCHUS RGE,disabled,,,1e8c8389-0fa3-443d-8a01-41d7c57c9b5f,V. CHA BACCHUS RGE,enabled,increase
+generic,KEFTA,KEFTEDES,disabled,,,,,,none
+generic,BATARD MONTRACHET,B. MACON VILLAGES COTEAUX DE MARGOT BLC,disabled,,,f68adaf0-ef80-444a-84f3-156296845ef3,B. BATARD MONTRACHET GD CRU DOM. DEVENEY MARS BLC 75CL,enabled,increase
+generic,EXPRESSO MARTINI RHUM,EXPRESSO MARTINI RHUM,enabled,,,b93e863e-4dc0-427f-b828-dfd97997b972,EXPRESSO MARTINI RHUM,enabled,increase
+generic,TI PUNCH EMINENTE 7 ANS,TI PUNCH EMINENTE 7 ANS,enabled,,,58b27ea7-4b33-4a17-9dd6-1bd1a08233a5,TI PUNCH EMINENTE 7,enabled,increase
+generic,B. CH. CANTENAC BROWN MARGAUX RGE,B. CH. CANTENAC BROWN MARGAUX RGE,disabled,,,,,,none
+generic,B. NUITS ST GEORGES CAMUZET RGE,B. NUITS ST GEORGES CAMUZET RGE,disabled,,,400fa82c-9498-4226-9fcd-1261090f11db,B. BOURGOGNE NUITS-SAINT-GEORGES  DOMEO CAMUZET RGE 75CL,enabled,increase
+generic,DIVER BAR,DIVER BAR,enabled,,,,,,none
+generic,JALAPITA,JALAPITA,enabled,,,aba63e30-5107-42e3-9e73-eef81c085f72,JALAPITA,enabled,increase
+generic,KUSMI TEA,KUSMI TEA,enabled,,,7e8cb6d3-78f5-4e59-acf1-8610ff85ad8a,THE,enabled,increase
+generic,B. MEURSAULT JOSEPH PASCAL BLC,B. MEURSAULT JOSEPH PASCAL BLC,disabled,,,f80656fe-0052-468e-b0e2-7469c85e786d,B. BOURGOGNE MEURSAULT DOM. JOSEPH PASCAL BLC 75CL,enabled,increase
+generic,B. CH. MINUTY BLANC ET OR,B. CH. MINUTY BLANC ET OR,enabled,,,29448160-34d4-4527-bc39-4f19e4687f2d,"B._ Côtes-de-Provence_ ""Blanc et Or"", Château Minuty_BLC_75CL",enabled,increase
+generic,CARPANO CLASSICO,CARPANO CLASSICO,enabled,,,ae25288d-dd04-4905-af11-2d1b820884b5,V. MARTINI ROUGE,enabled,increase
+generic,P. FRISSON GAUTHERON BLC,V.VOUVRAY ALAIN ROBERT,disabled,,,a21b6c17-d523-4c98-b5b6-488bc0582f10,V. CHARDONNAY FRISSON,enabled,increase
+generic,B. CH.PEYRASSOL ROSE,B. CH.PEYRASSOL ROSE,enabled,,,7dfb37a8-d892-49c4-af27-526b2edf0b17,B._Côtes-de-Provence_Château Peyrassol_RSE_75CL,enabled,increase
+generic,B. PJ BLC DE BLC,B. PJ BLC DE BLC,enabled,,,421eaf48-c7e0-4db6-97c0-e3b7e105581b,"B._ Perrier Jouet_""Blanc de Blancs""_75CL",enabled,increase
+generic,B. SANTENAY BEAUREGARD ROGER BELLAND BLC,B. SANTENAY BEAUREGARD ROGER BELLAND BLC,enabled,,,a84f1493-ba58-4507-b70f-7dc176421035,B. BOURGOGNE SANTENAY-BEAUREGARD 1ER CRU DOM. ROGER BELLAND BLC 75CL,enabled,increase
+generic,TENTACULE DE POULPE,POULPE GRILLE,enabled,,,,,,none
+generic,CAMPARI ORANGE,CAMPARI ORANGE,enabled,,,db2bda7f-e882-421a-a59e-96add7cb18fb,V. CAMPARI,enabled,increase
+generic,S. AVION 44,S. AVION 44,disabled,,,,,,none
+generic,PUREE DE CAROTTES DIR,COURGETTES GRILLEES DIR,enabled,,,,,,none
+generic,TZATZIKI,MUTABAL,enabled,,,,,,none
+generic,MARTINI DRY GIN,MARTINI DRY GIN,enabled,,,db1e0427-1663-437b-ba48-86a2ca591bb2,MARTINI DRY GIN VERSE,enabled,increase
+generic,B. HTE COTES NUITS CH. PREMEAUX RGE,B. HTE COTES NUITS CH. PREMEAUX RGE,disabled,,,902fc445-c4f3-46b7-be40-0146c91d2c32,B. BOURGOGNE HAUTES COTES DE NUITS CHATEAU DE PREMEAUX RGE 75CL,enabled,increase
+generic,SUPP PAIN PITA,SUPP PAIN PITA,enabled,,,,,,none
+generic,V. GET 31 PERRIER,V. GET 31 PERRIER,enabled,,,579ef435-55db-4d54-a326-bf954faaf39e,V. GET 31,enabled,increase
+generic,LOUP ENTIER,LOUP ENTIER,disabled,,,,,,none
+generic,V. ALTOS REPOSADO,V. CODIGO REPOSADO,enabled,,,066a0db6-d4df-4124-a439-ce7831a35c02,V. ALTOS REPOSADO,enabled,increase
+generic,B. GEVREY CHAMBERTIN 1ER CRU RGE,B. GEVREY CHAMBERTIN 1ER CRU RGE,enabled,,,1ddcdc20-1b28-4a48-b0b9-28b558c99562,"B._Gevrey-Chambertin 1er Cru_""La Perrière"", Domaine Arnaud Mortet_RGE_75CL",enabled,increase
+generic,ASPERGES VERTES ET LABNEH,ASPERGES VERTES ET LABNEH,disabled,,,,,,none
+generic,V. MALARD BRUT,V. MALARD BRUT,enabled,,,7aa2bda4-e278-4762-9ef0-6b8a380dff93,V. MALARD BRUT,enabled,increase
+generic,V. IGP MEDITERRANEE PEYRASSOL,V. IGP MEDITERRANEE PEYRASSOL,disabled,,,,,,
+generic,COTE TEST,COTE TEST,enabled,,,,,,none
+generic,V.COTEAUX MARGOTS MACON,V.COTEAUX MARGOTS MACON,enabled,,,de250239-2fea-4635-a45a-c8498cfb7830,V. COTEAUX DE MARGOTS,enabled,increase
+generic,V LILLET ROUGE,V LILLET ROUGE,disabled,,,,,,none
+generic,B. TANQUERAY TEN,B. TANQUERAY TEN,enabled,,,ef98905b-4902-40b4-bf5e-656c665522a0,B. TANQUERAY TEN 70CL,enabled,increase
+generic,ACC. EAU PETILLANTE,ACC. EAU PETILLANTE,enabled,,,00d3ab30-72b0-42b6-9e40-e136dc36bf7b,ACC EAU PETILLANTE,enabled,increase
+generic,B. VENTOUX CHATEAU BACCHUS RGE,B. VENTOUX CHATEAU BACCHUS RGE,disabled,,,26c31a65-d037-49a6-b36b-e59ab762ecff,"B._Ventoux_""Château de Bacchus"", Claret Tournier_RGE_75CL",enabled,increase
+generic,CAMPARI SPRITZ,CAMPARI SPRITZ,enabled,,,7c5e5808-97ce-4536-a86f-2b85cad1fc87,CAMPARI SPRITZ,enabled,increase
+generic,V. CAMPAUX RSE,V. MINUTY PRESTIGE RSE,enabled,,,0e8c4cab-fdae-4777-82e5-060fbe570876,V. MINUTY PRESTIGE ROSE,enabled,increase
+generic,B. BELVEDERE FESTIF,B. BELVEDERE FESTIF,enabled,,,0537a249-5852-4e64-ab99-ca295e816b8e,B. VODKA VERSE 70CL,enabled,increase
+generic,KEFTA A LA GRECQUE,KEFTA A LA GRECQUE,enabled,,,,,,none
+generic,B. CH. NEUF DU PAPE PART DES ANGES RGE,B. CH. NEUF DU PAPE PART DES ANGES RGE,disabled,,,d5bcdb03-d922-4f96-bdc8-143c42089982,"B. RHONE CHATEAUNEUF-DU-PAPE ""La Part des Anges"" DOMAINE RAYMOND USSEGLIO & FILS RGE 75CL",enabled,increase
+generic,V. DOM. COTEAUX MARGOT RGE,V. DOM. COTEAUX MARGOT RGE,enabled,,,de250239-2fea-4635-a45a-c8498cfb7830,V. COTEAUX DE MARGOTS,enabled,increase
+generic,B. COCA COLA 33CL,B. COCA COLA 33CL,enabled,,,13634ef9-71de-42ba-a494-7d50b8014896,B. COCA COLA VERRE BOUTEILLE,enabled,increase
+generic,S. GET 27 FESTIF,S. GET 27 FESTIF,enabled,,,93c807d9-ac65-4231-a012-d1df12e1f90b,S. GET 27 3CL,enabled,increase
+generic,J. CHABLIS GAUTHERON,J. CHABLIS GAUTHERON,enabled,,,615dd210-d1ff-49ab-977f-e3387854fcee,J._ Chablis _ Domaine Gautheron_BLC_300CL,enabled,increase
+generic,B. MINUTY BLC & OR BLC,B. ROUILLERE GRDE RESERVE BLC,disabled,,,29448160-34d4-4527-bc39-4f19e4687f2d,"B._ Côtes-de-Provence_ ""Blanc et Or"", Château Minuty_BLC_75CL",enabled,increase
+generic,B. DOM. DUBOIS SAVIGNY LES BEAUNES RGE,B. DOM. DUBOIS SAVIGNY LES BEAUNES RGE,disabled,,,,,,none
+generic,GLACE 2 BOULES,GLACE 2 BOULES,enabled,,,,,,none
+generic,MOCKTAIL DU JOUR,MOCKTAIL DU JOUR,enabled,,,,,,none
+generic,SERVIETTES,SERVIETTES,enabled,,,,,,none
+generic,JUG DIVERS SOFT,JUG DIVERS SOFT,enabled,,,,,,none
+generic,SASHIMI DE SERIOLE,SASHIMI DE SERIOLE,enabled,,,,,,none
+generic,GLACE 1 BOULE,GLACE 1 BOULE,enabled,,,,,,none
+generic,V. BELVEDERE GET 27,V. BELVEDERE GET 27,disabled,,,,,,none
+generic,B. VEUVE CLICQUOT RSE,B. VEUVE CLICQUOT RSE,enabled,,,0556334f-c8dd-49fc-8466-9883996423d3,"B._ Veuve Clicquot ""Rosé""_75CL",enabled,increase
+generic,GLACE EN BRANCHE,GLACE EN BRANCHE,enabled,,,,,,none
+generic,B. AMARRETTO,B. AMARRETTO,enabled,,,84a965e4-1a85-4325-8ca9-59bd69c6f5a3,B. AMARETTO 70CL,enabled,increase
+generic,B. RINAUDO COEUR BLANC BLC,B. RINAUDO COEUR BLANC BLC,enabled,,,de21f175-5072-445e-b4c5-24242ac95fd0,"B._ Cotes de Provence_ ""Cœur Blanc"", Domaine Rinaudo_BLC_75CL",enabled,increase
+generic,PORNSTAR MARSEILLAIS,PORNSTAR MARSEILLAIS,enabled,,,3a1f91c8-89db-4c61-9069-1a20aa668c15,PORNSTAR MARSEILLAIS,enabled,increase
+generic,SALADE GRECQUE,SALADE GRECQUE,enabled,,,,,,none
+generic,B. ALTOS,B. ALTOS,disabled,,,bd94fd24-7853-4c2f-a5dc-9281046511af,B. ALTOS REPOSADO 70CL,enabled,increase
+generic,V. AMARETTO,V. AMARETTO,enabled,,,a50ac98d-066f-456b-84f2-7c777a2fb20a,V. AMARETTO,enabled,increase
+generic,SALADE DIR,SALADE DIR,enabled,,,,,,none
+generic,V. CHIVAS XV,V. CHIVAS XV,enabled,,,df9df82f-5770-4e2d-ab46-c20831a93845,V. CHIVAS 15ANS,enabled,increase
+generic,B. DON JULIO BLANCO,B. DON JULIO BLANCO,enabled,,,c60619b8-649f-4443-9e28-ffc0302702c1,B. DON JULIO BLANCO 70CL,enabled,increase
+generic,B. B DE BACCHUS RSE,B. MEDITERRANEE PEYRASSOL RSE,disabled,,,c84b6835-3a20-4c6c-a6e4-fe6028809157,"B._ IGP Méditérranée_ ""Méditérranée"", Peyrassol_RSE_75CL",enabled,increase
+generic,PERROQUET,PERROQUET,disabled,,,,,,none
+generic,V. JB,V. JB,enabled,,,ccffee29-38cc-4893-bdae-f696100b5c40,V. JB,enabled,increase
+generic,evian 33cl,evian 33cl,enabled,,,f9793cd7-6da0-496d-842a-189ab4a42fbe,B. EVIAN VP 33CL,enabled,increase
+generic,B. VENTOUX CHAPELLE BACCHUS RGE,B. VENTOUX CHAPELLE BACCHUS RGE,disabled,,,a6bb30c3-34fc-45ce-8bc0-f8efb45d6acc,"B._Ventoux_""La Chapelle de Bacchus"", Claret-Tournier_RGE_75CL",enabled,increase
+generic,RHUM SOUR,RHUM SOUR,enabled,,,c2b5898a-84a9-4de0-9f83-107c6b318e0f,RHUM SOUR,enabled,increase
+generic,MARGARITA PASTEQUE,MARGARITA PASTEQUE,enabled,,,c36c7827-f289-4075-ab69-a6c14dfc127b,MARGARITA ALTOS REPOSADO,enabled,increase
+generic,B. SAKE GINJO,B. SAKE GINJO,enabled,,,8937df73-944d-4d5e-9a36-7024f78c8621,B. HEAVENSAKE JUNMAI GINJO- HAKUSHIKA 72CL,enabled,increase
+generic,V. SANGRIA BLANCHE,V. SANGRIA BLANCHE,enabled,,,1dc11729-3636-4624-b364-8dcee88fd162,V. SANGRIA BLANCHE INDIE,enabled,increase
+generic,B. CH. CARPE DIEM RGE,B. CH. CARPE DIEM RGE,disabled,,,2c5d7262-355a-4d9b-ad49-1a437e3fb5b1,B. PROVENCE CHÂTEAU CARPE DIEM RGE 75CL,enabled,increase
+generic,S. DON JULIO BLANCO,S. DON JULIO BLANCO,enabled,,,ac782598-4f23-4033-b37d-9b6b41d5ac33,S. DON JULIO BLANCO 3CL,enabled,increase
+generic,TARTARE DE BOEUF,TARTARE DE BOEUF,enabled,,,,,,none
+generic,V. CHARTREUSE VERTE,V. CHARTREUSE VERTE,enabled,,,34e830fd-3fe0-4dd0-bceb-c4db6b218336,V. CHARTREUSE VERTE,enabled,increase
+generic,B. CH. BRANAIRE DUCRU DULUC RGE,B. CH. BRANAIRE DUCRU DULUC RGE,disabled,,,,,,none
+generic,NOIX D'ENTRECOTE,ENTRECOTE ANGUS,enabled,,,,,,none
+generic,B. CH. PAMPELONNE RSE,B. CH. PAMPELONNE RSE,disabled,,,,,,none
+generic,CARAFE EAU,CARAFE EAU,enabled,,,,,,none
+generic,TEQUILA SUNRISE,TEQUILA SUNRISE,enabled,,,c7ec3083-d539-4f05-b5b8-ea9e0595a0ec,TEQUILA SUNRISE,enabled,increase
+generic,V. LIMONCELLO,V. LIMONCELLO,enabled,,,aebc6942-3ea1-4f38-b8c1-1fd8fb5bb0ec,V. LIMONCELLO,enabled,increase
+generic,V. CODIGO BLANCO,V. CODIGO BLANCO,enabled,,,493e019a-8d57-4256-9e83-2c56f5365f0e,V. CODIGO BLANCO,enabled,increase
+generic,V. BAILEYS,V. HENNESSY XO,disabled,,,99b925b3-8eba-4a4f-85d7-f322e44cb63d,V. BAILEYS,enabled,increase
+generic,S.CASAMIGOS ESPADIN,S.CASAMIGOS ESPADIN,enabled,,,d6c27461-9d6e-4eb1-a396-d1776351bc4b,S. CASAMIGOS MEZCAL 3CL,enabled,increase
+generic,POISSON ARRIVAGE du jour,POISSON ARRIVAGE du jour,enabled,,,,,,none
+generic,V. MAIONNETTE BLC,V. MAIONNETTE BLC,enabled,,,0bf73844-cd61-41ff-a9e4-f3ecdf0936d9,V. MAIONETTE BLC,enabled,increase
+generic,V. CROIX ST JACQUES PINOT NOIR RGE,V. CROIX ST JACQUES PINOT NOIR RGE,disabled,,,,,,none
+generic,B. TEMPIER BANDOL LULU ET LUCIEN RGE,B. TEMPIER BANDOL LULU ET LUCIEN RGE,disabled,,,,,,none
+generic,LIQUEUR CAFE BORGHETTI,LIQUEUR CAFE BORGHETTI,enabled,,,6440d8a7-58bb-4592-a9de-8ec47cae6197,V. KAHLUA,enabled,increase
+generic,B. GIVRY 1ER CRU CLOS ST PIERRE THENARD,M. GIVRY 1ER CRU CLOS ST PIERRE THENARD,disabled,,,16ebd906-0302-407f-9078-7308a04ff961,"B. BOURGOGNE GIVRY 1ER CRU ""Clos Saint Pierre"" DOM. THENARD RGE 75CL",enabled,increase
+generic,B. VOLNAY DOM. DUBREUIL RG,B. VOLNAY DOM. DUBREUIL RG,enabled,,,e226d5b9-d2b0-46c6-a527-f64bcea60528,B._ Volnay_ Domaine Dubreuil Fontaine_RGE_75CL,enabled,increase
+generic,M. DOM. CAMPAUX CUVEE LES CANISSONS RSE,M. DOM. CAMPAUX CUVEE LES CANISSONS RSE,enabled,,,36f8b23c-8cbf-44fc-ae1f-6bb51d5fb991,"M._ Cotes de Provence_ ""Cuvée les Cannissons"", Domaine des Campaux_RSE_75CL",enabled,increase
+generic,DAIQUIRI,DAIQUIRI,enabled,,,e0c0f7ca-2eab-496d-bea0-30d7edbc8dd7,DAIQUIRI,enabled,increase
+generic,COSMO,COSMO,enabled,,,e9cf03ed-2d06-43d6-8874-12c22faf00be,COSMOPOLITAN,enabled,increase
+generic,NOIX DE COCO,NOIX DE COCO,enabled,,,,,,none
+generic,MARGARITA DON JULIO REP,MARGARITA DON JULIO REP,enabled,,,02dcb6e4-4ac7-47bd-a3b9-73c913472bd7,MARGARITA DON JULIO REP,enabled,increase
+generic,INFUSION VERVEINE,INFUSION TILLEUL,disabled,,,7a305bc7-0879-4ce7-a5b1-40e0c924871f,INFUSION VERVEINE,disabled,increase
+generic,NEGRONI,NEGRONI,enabled,,,8b2c666e-3ed3-44cc-bd50-35c860d322db,NEGRONI,enabled,increase
+generic,MARGARITA DON JULIO 1942,MARGARITA DON JULIO 1942,enabled,,,77ec826a-3127-4eb8-b836-b8b62683f034,MARGARITA DON JULIO 1942,enabled,increase
+generic,B. BOULANGER VOLNAY VIELLES VIGNES RGE,B. BOULANGER VOLNAY VIELLES VIGNES RGE,disabled,,,,,,none
+generic,UBE LATTE,UBE LATTE,enabled,,,,,,none
+generic,ACC. FENTIMANS GINGER BEER,ACC. FENTIMANS GINGER BEER,enabled,,,85c4b7af-9d07-4e3c-a630-9b544e484325,ACC. FEVER TREE GINGER BEER,enabled,increase
+generic,CAFE CREME,CAFE CREME,enabled,,,d2b7cbfe-961b-4321-8d3d-6ccb1415ad0f,CAFE INDIE MALONGO,enabled,increase
+generic,B. SANCERRE LA GRAVELIERE BLC,B. SANCERRE LA GRAVELIERE BLC,enabled,,,ae581807-b3d8-4c77-af06-adff8eed9de8,B._ Sancerre_ « La Gravelière » Domaine Joseph Mellot_BLC_150CL,enabled,increase
+generic,1/2 ASSIETTE DE PASTEQUE,1/2 ASSIETTE DE PASTEQUE,disabled,,,,,,none
+generic,MOUSSE PASSION,MOUSSE PASSION,enabled,,,,,,none
+generic,EVIAN TAKE AWAY,EVIAN TAKE AWAY,enabled,,,bb17bfe7-7406-4552-8574-fc3d072af436,B. EVIAN PET 50CL,enabled,increase
+generic,CORONA,CORONA,enabled,,,27f42cc6-3328-49a0-942b-d58a868586f3,"B. CORONA 33 CL VP 4,5°",enabled,increase
+generic,B. KETEL ONE,B. KETEL ONE,disabled,,,,,,none
+generic,COTE DE BOEUF 3 PERS,COTE DE BOEUF 3 PERS,disabled,,,,,,none
+generic,V. FRISSON GAUTHERON BLC,V. IGP PEYRASSOL,disabled,,,b991d3b8-e84a-4c9b-a447-a791e14fc9e4,V. MEDITERRANNE PEYRASOL BLC,enabled,increase
+generic,V. GET 31,V. GET 31,enabled,,,579ef435-55db-4d54-a326-bf954faaf39e,V. GET 31,enabled,increase
+generic,B. BANDOL CH. ROMASSAN RGE,B. BANDOL CH. ROMASSAN RGE,enabled,,,17080599-1603-4bd3-956f-2a0316df573f,"B._ Bandol_ ""Chateau Romassan"", Domaine d'Ott_RGE_75CL",enabled,increase
+generic,B. CH. REVELETTE CUVEE GRAND BLC,B. CH. REVELETTE CUVEE GRAND BLC,disabled,,,,,,none
+generic,B. CH. B DE BACCHUS RSE,B. CH. B DE BACCHUS RSE,disabled,,,3ef452db-f42c-4936-aef4-3feb121951cc,"B. RHONE VENTOUX ""B de Bacchus"" CLARET-TOURNIER PROPRIÉTAIRE RSE 75CL",enabled,increase
+generic,B. GAJA BAROLO DAGROMIS TOSCANE RGE,B. GAJA BAROLO DAGROMIS TOSCANE RGE,disabled,,,,,,none
+generic,B. CORONA,B. CORONA,disabled,,,,,,none
+generic,CHOCOLAT FRAPPE,CHOCOLAT FRAPPE,enabled,,,,,,none
+generic,V. DON JULIO FESTIF,V. DON JULIO FESTIF,enabled,,,a3143ce3-050d-46aa-8fde-5bf6df519d96,V. DON JULIO REPOSADO,enabled,increase
+generic,1/2 MANGUE,1/2 MANGUE,enabled,,,,,,none
+generic,B. BELVEDERE,B. BELVEDERE,enabled,,,0537a249-5852-4e64-ab99-ca295e816b8e,B. VODKA VERSE 70CL,enabled,increase
+generic,S. GET 27,S. GET 27,enabled,,,93c807d9-ac65-4231-a012-d1df12e1f90b,S. GET 27 3CL,enabled,increase
+generic,V.CASAMIGOS ESPADIN,V.CASAMIGOS ESPADIN,enabled,,,85e9205e-3892-46c2-a86a-c9e8f10db744,V. CASAMIGOS MEZCAL,enabled,increase
+generic,SOURIS AGNEAU,kefta,enabled,,,,,,none
+generic,ASPERGES CROUSTILLANTES,ASPERGES CROUSTILLANTES,enabled,,,,,,none
+generic,BTL ROSE MAIME,BTL ROSE MAIME,disabled,,,,,,none
+generic,V.THE RGE ACALA,V.THE RGE ACALA,enabled,,,a2acc7f8-3b41-450c-ac85-a63b8079e035,V. ACALA,enabled,increase
+generic,B. CHA. DU PAPE USSEGLIO & FILS RGE,B. CROZES HERMITAGE SYRAHNE ST JEMMS RGE,disabled,,,68872b01-d849-4420-8d96-b576273b066a,B. CHATEAUNEUF-DU-PAPE DOM. RAYMOND USSEGLIO & FILS RGE 75CL,enabled,increase
+generic,FAVA GRECQUE,FAVA GRECQUE,enabled,,,,,,none
+generic,B. VOUVRAY EMPREINTE ROBERT BLC,B. VOUVRAY EMPREINTE ROBERT BLC,enabled,,,e8acac5c-a62d-464d-9a0a-9adc89ba15a3,"B._Vouvray sec_""Empreinte"", Vignoble Alain Robert_BLC_75CL",enabled,increase
+generic,SALADE VERTE,SALADE LAITUE ROMAINE,disabled,,,,,,none
+generic,S. VODKA GET 27,S. VODKA GET 27,enabled,,,3c4222ff-1faa-4e08-aed7-14a92d5eccc5,S. VODKA GET 3CL,enabled,increase
+generic,LIQUEUR VERVEINE VERTE MJ,LIQUEUR MENTHE DIST. ST VERAN,enabled,,,25c8db72-1368-4f54-86d3-aad4049ee39d,V. LIQUEUR VERVEINE VERTE,enabled,increase
+generic,B. POMMEROL CH BEAUREGARD RGE,B. POMMEROL CH BEAUREGARD RGE,disabled,,,4444f2cc-1045-4e7d-8efe-c80bedca648f,B._Pomerol_Château Beauregard_RGE_75CL,enabled,increase
+generic,M. CH. MINUTY ROSE ET OR,M. CH. MINUTY ROSE ET OR,enabled,,,80db3f97-7451-48d4-aee6-6e9bdb7242fb,"M._ Cotes de Provence_ ""Rose et Or"", Château Minuty_RSE_150CL",enabled,increase
+generic,FALAFELS QUINOA,FALAFELS QUINOA,disabled,,,,,,none
+generic,MARLBORO RED,MARLBORO RED,enabled,,,dd1e789c-efb6-4b10-b431-3ed352dabf57,CIGARETTE,enabled,increase
+generic,M. GIVRY 1ER CLOS CELLIER AUX MOINES BLC,M. GIVRY 1ER CLOS CELLIER AUX MOINES BLC,disabled,,,,,,none
+generic,B. CH. MARRES PRESTIGE BLC,B. CH. MARRES PRESTIGE BLC,disabled,,,d77f4a93-3278-4c18-a232-e6a938a82c88,"B._ Côtes-de-Provence_ ""Prestige"", Château des Marres_BLC_75CL",enabled,increase
+generic,BLOODY MARY MEZCAL,BLOODY MARY MEZCAL,enabled,,,0513731c-9865-4581-b3cf-06f49b310395,BLOODY MARY MEZCAL,enabled,increase
+generic,V. CALVADOS A.CAMUT,V. CALVADOS A.CAMUT,enabled,,,87c0919d-10b8-4c4a-88b7-3096d880e7ac,V. CALVADOS ADRIEN CAMUT,enabled,increase
+generic,B. GRANIT AJACCIO VACCELLI RGE,B. GRANIT AJACCIO VACCELLI RGE,disabled,,,e52b68ae-6929-41e0-a472-43e8382b9e4b,"B._ Ajaccio_ ""Granit "", Domaine Vaccelli_RGE_75CL",enabled,increase
+generic,B. BONNEGE JEAN LORON RGE,B.BROUILLY BONNEGE JEAN LORON RGE,enabled,,,613f64c0-d52d-4888-bd80-e0bd6c214a1a,"B._ Brouilly_ ""Bonnège"", Domaine Jean Loron_RGE_75CL",enabled,increase
+generic,V. MONKEY 47,V. MONKEY 47,enabled,,,6c1a7ea6-880c-4a92-8052-91bfd5f6a9c3,V. MONKEY 47,enabled,increase
+generic,V.BULLEIT BOURBON,V.BULLEIT BOURBON,enabled,,,e968e513-5b6f-429f-8a2b-e61637842c82,V. BULLEIT,enabled,increase
+generic,B. SANTENAY 1ER CRU LE BEAUREGARD RGE,B. CLOS VOUGEOT GRD CRU PRIEUR RGE,disabled,,,4d30d4e4-af8f-4393-aaa9-b0d1f652241b,"B. BOURGOGNE SANTENAY 1ER CRU  ""Le Beauregard"" DOM. ROGER BELLAND RGE 75CL",enabled,increase
+generic,V. SAKE GINJO,V. SAKE GINJO,enabled,,,10d6fcb7-77ff-4488-9ae3-74f79e5bdd6f,V. SAKE HEAVENSAKE JUNMAI LABEL NOIR,enabled,increase
+generic,MATBUCHA,TZATZIKI,enabled,,,,,,none
+generic,B. BELUGA VODKA,B. BELUGA VODKA,enabled,,,0537a249-5852-4e64-ab99-ca295e816b8e,B. VODKA VERSE 70CL,enabled,increase
+generic,V. EMINENTE,V. EMINENTE,disabled,,,,,,none
+generic,NO SHOW,NO SHOW,enabled,,,,,,none
+generic,B. TERRAZAS DE LOS ANDES ARGENTINE RGE,B. TERRAZAS DE LOS ANDES ARGENTINE RGE,disabled,,,,,,none
+generic,SUGGESTION DESSERT,SUGGESTION DESSERT,enabled,,,,,,none
+generic,KIR PECHE,KIR PECHE,enabled,,,b814762b-3f81-4620-b206-ce66b052b748,PECHE,enabled,increase
+generic,B. WHISPERING ANGEL RSE,B. WHISPERING ANGEL RSE,enabled,,,3150a68a-19ce-4d89-aba1-17950a99da9d,"B._Côtes De Provence_""Whispering Angel"", Château d'Esclans_RSE_75CL",enabled,increase
+generic,CARRIBEAN MULE,CARRIBEAN MULE,enabled,,,8e635dc4-3fd2-47b0-b4c1-e626f6b609f9,CARRIBEAN MULE,enabled,increase
+generic,MINI GRANOLA JUJU,MINI GRANOLA JUJU,enabled,,,,,,none
+generic,MARTINI DIRTY VODKA,MARTINI DIRTY VODKA,enabled,,,1cd2a26b-caa7-4aee-b51d-fe956f31857c,DRY MARTINI VODKA VERSE,enabled,increase
+generic,V. RICARD,V. RICARD,enabled,,,562cbe50-5297-4e24-b3f0-0bdcc1b825e7,V. RICARD,enabled,increase
+generic,B. DOM MAIONNETTE BLC,B. VIOGNIER CH.ST MAUR BLC,disabled,,,3eccc378-04cf-4b32-8fae-34afd5c2c4c2,B._ IGP Méditérranée_  Domaine la Maïonnette_BLC_75CL,enabled,increase
+generic,S. AVION REPOSADO,S. AVION REPOSADO,enabled,,,3284242f-24f4-41f5-957c-ef8168d9cf15,S. AVION REPOSADO,disabled,increase
+generic,SUPP HARISSA A LA ROSE,SUPP HARISSA A LA ROSE,enabled,,,,,,none
+generic,S. LIQUEUR ABSINTHE A JOE,S. LIQUEUR ABSINTHE A JOE,enabled,,,dacdaa77-784e-4a80-9b16-27daf0589ffb,S. LIQUEUR ABSINTHE A JOE 3CL,enabled,increase
+generic,B. NUIT INTENSE RINAUDO  RGE,B. NUIT INTENSE RINAUDO  RGE,disabled,,,72bf6b6f-9256-4605-9952-ed5abbf537e1,"B. PROVENCE ""Nuit Intense"" DOMAINE RINAUDO RGE 75CL",enabled,increase
+generic,FRUITS DE LA PASSION,FRUITS DE LA PASSION,enabled,,,,,,none
+generic,B. VOSS PLATE,B. VOSS PLATE,disabled,,,,,,none
+generic,B.HAVANA 7 ANS,B.HAVANA 7 ANS,enabled,,,15bbaffd-01bf-42c9-aaf0-5a7030428058,B. RHUM 7ANS VERSE 70CL,enabled,increase
+generic,PDT GRENAILLE,SUPP PDT GRENAILLE,enabled,,,,,,none
+generic,V.ROSE UZUME,V.ROSE UZUME,enabled,,,b09f96fb-834f-408a-8335-2468b23801eb,V. UZUME,enabled,increase
+generic,B. LYS DES SABLES FONDUGUES BLC,B. LYS DES SABLES FONDUGUES BLC,disabled,,,b1baa808-6ea9-4e39-b7fd-e00532ffc5b5,"B._Vin de France, Provence_""Lys des Sables"", Fonduges-Pradugues_BLC_75CL",enabled,increase
+generic,V. LIQUEUR POIRE A JOE,GRAPPA NONINO MOSCATO,disabled,,,af122d82-8de5-4d36-8165-351c9cac7be0,V. POIRE À JOE,enabled,increase
+generic,B. MEURSAULT MEIX CHAVAUX DOM MUZARD BLC,B. MEURSAULT JOSEPH PASCAL BLC,disabled,,,f80656fe-0052-468e-b0e2-7469c85e786d,B. BOURGOGNE MEURSAULT DOM. JOSEPH PASCAL BLC 75CL,enabled,increase
+generic,TIAN DE LEGUMES DIR,BROCOLI GRILLE DIR,enabled,,,,,,none
+generic,V. GET 27,V. GET 27,enabled,,,3aa56d1c-ff16-45f8-8534-ac229bf877e0,V. GET 27,enabled,increase
+generic,DECA CAPPUCCINO,DECA CAPPUCCINO,enabled,,,072e1a16-3991-45e8-adba-345d427a7bc8,DECA DOSETTES,enabled,increase
+generic,SUPP. ORGEAT,SUPP. ORGEAT,enabled,,,b2cd4645-43b8-4111-b029-8451f6b608ba,SIROP. ORGEAT,enabled,increase
+generic,PAGO JUS DE POMME,PAGO JUS DE POMME,enabled,,,100fd8aa-197a-41d3-860f-17d618f5cc50,B. JUS DE FRUIT 20CL,enabled,increase
+generic,S. BAILEYS,S. BAILEYS,enabled,,,6428da75-c8e9-4a8e-927c-ae9d99eb51e2,S. BAILEYS 3CL,enabled,increase
+generic,AJOUT COMMANDE,AJOUT COMMANDE,enabled,,,,,,none
+generic,V. MARTINI BLANC,V. MARTINI BLANC,enabled,,,10dcccdc-f0f6-48dd-abd3-b4782208ca40,V. MARTINI BLANC,enabled,increase
+generic,V. GET 27 PERRIER,V. GET 27 PERRIER,enabled,,,3aa56d1c-ff16-45f8-8534-ac229bf877e0,V. GET 27,enabled,increase
+generic,B. VOSS PETILLANTE,B. VOSS PETILLANTE,disabled,,,,,,none
+generic,FRITES,SUPP FRITES,enabled,,,,,,none
+generic,B. BADOIT VERTE 75,B. BADOIT VERTE 75,enabled,,,1772481a-d3f9-4e07-996f-e8c0f23b5735,B. BADOIT VERTE VP 75cl,enabled,increase
+generic,BASIL SMACH,BASIL SMACH,enabled,,,80225e6d-8341-4872-9ad3-47c960c195c8,BASIL SMASH GIN VERSE,enabled,increase
+generic,PAIN PERDU,PAIN PERDU,enabled,,,,,,none
+generic,B. DOM. CROZE HERMITAGE ESPIEGLE RGE,B. DOM. DES MARTINELLES ST JOSEPH RGE,disabled,,,29624961-82ad-47be-b390-f495f9420b61,B._ Saint-Joseph_ Domaine des Martinelles_RGE_75CL,enabled,increase
+generic,V.VOUVRAY ALAIN ROBERT,V.VOUVRAY ALAIN ROBERT,disabled,,,fa736dda-c2b5-431e-8696-884f91618528,V. VOUVRAY ALAIN ROBERT BLC,enabled,increase
+generic,PUREE DE CAROTTES,COURGETTES GRILLEES,enabled,,,,,,none
+generic,PLAYAMIGOS RHUM,KORALLION RHUM,enabled,,,85e035f3-aab8-4a9c-abd5-aa8bcc9a71a6,PLAYAMIGOS RHUM,enabled,increase
+generic,COTE DE BOEUF 1PAX,COTE DE BOEUF 1PAX,enabled,,,,,,none
+generic,MARGARITA MEZCAL,MARGARITA MEZCAL,enabled,,,97905712-81a3-4b06-85e8-c651030a694c,MARGARITA DEL MAGUEY MEZCAL,enabled,increase
+generic,1/2 PASTEQUE,1/2 PASTEQUE,enabled,,,,,,none
+generic,V. GET 27 FESTIG,V. GET 27 FESTIG,enabled,,,3aa56d1c-ff16-45f8-8534-ac229bf877e0,V. GET 27,enabled,increase
+generic,ORANGE GLOW,ORANGE GLOW,enabled,,,,,,none
+generic,AVEC TEQUILA REP DON JULIO,AVEC TEQUILA REP DON JULIO,enabled,,,a3143ce3-050d-46aa-8fde-5bf6df519d96,V. DON JULIO REPOSADO,enabled,increase
+generic,B. FONDUGUES EAU DE RSE,B. FONDUGUES EAU DE RSE,enabled,,,6d155703-2195-4d0c-8fd4-c65755848860,"B._ Vin de France, Provence_ ""Eau de Rosée"", Fondugues-Pradugues_ RSE_75CL",enabled,increase
+generic,V. JUS CITRON JAUNE FRAIS,V. JUS CITRON JAUNE FRAIS,enabled,,,,,,none
+generic,MARTINI DIRTY BELVEDERE,MARTINI DIRTY BELVEDERE,disabled,,,,,,none
+generic,B. PULIGNY 1ER CRU LE CAILLERET BLC,B. PULIGNY 1ER CRU LE CAILLERET BLC,disabled,,,,,,none
+generic,PATE ENF,PATE ENF,enabled,,,,,,none
+generic,B. CH. ESCLANS ROCK ANGEL RSE,B. DOM. JEANNE RSE,disabled,,,a5d1ef9d-32ea-432b-b50d-cde629398f36,B._ Cotes de Provence_ Domaine de Jeanne_RSE_75CL,enabled,increase
+generic,V. FRAISE PASTEQUE FRAIS,V. FRAISE PASTEQUE FRAIS,disabled,,,,,,none
+generic,B.CH.PAMPELONNE RSE,B.CH.PAMPELONNE RSE,enabled,,,a3a89c37-efd4-415f-ab80-57e12f102fbb,"B._ Cotes de Provence_ ""Toison d'Or"", Château de Pampelonne_RSE_75CL",enabled,increase
+generic,P. MALARD BRUT,P. MALARD BRUT,enabled,,,fd7838bf-c070-4704-9399-71dbfccad005,P. MALARD BRUT,enabled,increase
+generic,DEMI HEINEKEN,DEMI HEINEKEN,enabled,,,f6fee045-3f9d-484f-9f08-a1027cfc3ab0,DEMI HEINEKEN,enabled,increase
+generic,S. TEQUILA FESTIF,S. TEQUILA FESTIF,enabled,,,8dffaa75-6885-408d-a4ac-0e1068416ef1,S. ALTOS REPOSADO 3CL,enabled,increase
+generic,B. SAUMUR CHAMPIGNY ROCHES NEUVES RGE,B. SAUMUR CHAMPIGNY ROCHES NEUVES RGE,enabled,,,e6d9c544-a347-4d38-a913-85a1ce3d5bc3,"B._ Saumur Champigny_ ""Domaine"", Domaine des Roches Neuves_RGE_75CL",enabled,increase
+generic,B.KETEL ONE,B.KETEL ONE,enabled,,,0ce1ac88-595c-43a1-a577-305d85a7bf42,VODKA VERSE,enabled,increase
+generic,ORANGINA FESTIVE,ORANGINA FESTIVE,enabled,,,bc5d72d8-4f2c-48df-b7d1-63350269aa3d,B. ORANGINA VP 25CL,enabled,increase
+generic,DIVER ENTREE,DIVER ENTREE,enabled,,,,,,none
+generic,B. PESSAC LEOGNAN PAUL RGE,B. PESSAC LEOGNAN PAUL RGE,disabled,,,07d8caa7-706d-4af5-bbdf-4744781d4a99,"B._ Pessac-Leognan_ ""Cuvée Paul"", Château Haut-Bergey_RGE_75CL",enabled,increase
+generic,TIAN LEGUME,TIAN LEGUME,disabled,,,,,,none
+generic,CHOUX AMIGOS,CHOUX AMIGOS,enabled,,,,,,none
+generic,V. SANGRIA ROUGE,V. SANGRIA ROUGE,enabled,,,1c192759-0d0c-4e82-a5a7-ef41acd4f341,V. SANGRIA ROUGE OR,enabled,increase
+generic,V. DON JULIO BLANCO,V. DON JULIO BLANCO,enabled,,,8caf6947-fec8-4900-ab04-51b234b8b7d8,V. DON JULIO BLANCO,enabled,increase
+generic,P. B DE BACCHUS RSE,V.CH DES MARRES ROSE,disabled,,,bddc9509-a171-4a31-80bd-6e8926dcf99c,V. B DE BACCHUS RSE,enabled,increase
+generic,V. COINTREAU,V. COINTREAU,enabled,,,222a827d-7bde-4a5b-8930-8f7f99aa9489,V. COINTREAU,enabled,increase
+generic,S. LIQUEUR POIRE A JOE,S. LIQUEUR POIRE A JOE,enabled,,,cd2fefa2-a47e-4392-aa65-1acabf4f14f5,S. LIQUEUR POIRE A JOE 3CL,enabled,increase
+generic,MOJITO EMINENTE 7 ANS,MOJITO EMINENTE 7 ANS,enabled,,,02b89e20-9166-4102-95cb-59e1a73b809b,MOJITO EMINENTE 7,enabled,increase
+generic,S. CASAMIGOS REPOSADO,S. CASAMIGOS REPOSADO,disabled,,,,,,none
+generic,VOSS PETILLANTE,VOSS PETILLANTE,disabled,,,8b753fcf-d136-4694-af38-d6846ace7e1f,B. VOSS GAZ VP 80CL,enabled,increase
+generic,B. POUILLY FUME SILEX DOM. LA LOGE BLC,B. POUILLY FUME DOM. LA LOGE BLC,disabled,,,f2817719-97bf-4f91-96b0-111a545e4c8e,"B. LOIRE POUILLY-FUME  ""Silex"" DOM. DE LA LOGE BLC 75CL",enabled,increase
+generic,B. PULI MONTRACHET JEAN PASCAL BLC,B. PULI MONTRACHET JEAN PASCAL BLC,enabled,,,7cd34b5c-b85a-43c5-b120-c481c9066179,B. BOURGOGNE PULIGNY- MONTRACHET DOM. JEAN-PASCAL BLC 75CL,enabled,increase
+generic,SUPP. SAUCE,SUPP. SAUCE,enabled,,,,,,none
+generic,V. JB FESTIF,V. JB FESTIF,enabled,,,ccffee29-38cc-4893-bdae-f696100b5c40,V. JB,enabled,increase
+generic,S. DON JULIO REPOSADO,S. DON JULIO REPOSADO,enabled,,,96e35ec9-7d07-4cb9-af72-4d423ede507c,S. DON JULIO REPOSADO 3CL,enabled,increase
+generic,DECA,DECA,enabled,,,072e1a16-3991-45e8-adba-345d427a7bc8,DECA DOSETTES,enabled,increase
+generic,V. CH. MINUTY PRESTIGE RSE,V. CH. MINUTY PRESTIGE RSE,disabled,,,,,,none
+generic,FENTIMANS GINGER FESTIVE,FENTIMANS GINGER FESTIVE,enabled,,,a71d480f-b1ec-452f-93f0-4db5ecb8521b,B. GINGER BEER VP 20CL,enabled,increase
+generic,B. MEURSAULT 1ER CRU BLAGNY BLC,B. MEURSAULT 1ER CRU BLAGNY BLC,enabled,,,683e36f1-edfb-49a3-91e7-50618299b2c7,"B._ Meursault 1er Cru_ ""Blagny"", Domaine Vincent Girardin_BLC_75CL",enabled,increase
+generic,B. FENTIMANS GINGER BEER 20CL,B. SCHWEPPES GINGER BEER 20CL,enabled,,,a71d480f-b1ec-452f-93f0-4db5ecb8521b,B. GINGER BEER VP 20CL,enabled,increase
+generic,PUREE CAROTTE,PUREE CAROTTE,disabled,,,,,,none
+generic,KIR MURE,KIR MURE,enabled,,,37243980-821a-413f-9732-06c907bb2a62,V. KIR MURE PLAYAMIGOS,enabled,increase
+generic,B.CASAMIGOS ESPADIN,B.CASAMIGOS ESPADIN,enabled,,,5415ee21-a4bd-42a3-951a-3480b86eb401,B. CASAMIGOS ESPADIN MEZCAL 40° 70CL,enabled,increase
+generic,JUG SANGRIA BLANCHE,JUG SANGRIA BLANCHE,enabled,,,521bfc34-45ad-4589-a03f-b18f1bd388ea,JUG SANGRIA BLANCHE,enabled,increase
+generic,NEGRONI RHUM,NEGRONI RHUM,enabled,,,d4da6772-1442-4a46-a032-a3bb410cc668,NEGRONI RHUM,enabled,increase
+generic,B. FOURNIER SANCERRE LES BELLES V BLC,B. FOURNIER SANCERRE LES BELLES V BLC,disabled,,,,,,none
+generic,MATELAS,MATELAS,enabled,,,,,,none
+generic,PERRIER FESTIVE,PERRIER FESTIVE,enabled,,,7bd34663-f631-4078-8410-db7e7e3b2eda,B. BADOIT ROUGE VP 33CL,enabled,increase
+generic,B. IGP MED. DOM. MAIONETTE BLC,B. IGP MED. DOM. MAIONETTE BLC,enabled,,,3eccc378-04cf-4b32-8fae-34afd5c2c4c2,B._ IGP Méditérranée_  Domaine la Maïonnette_BLC_75CL,enabled,increase
+generic,P. CH. B DE BACCHUS RSE,P. CH. B DE BACCHUS RSE,disabled,,,,,,none
+generic,B. FUZE TEA,B. FUZE TEA,enabled,,,0ea6bce4-998b-4655-bf35-605fc7296e0a,B. FUZE TEA PECHE 25CL VC,enabled,increase
+generic,B. EXCELLENCE CH. ST MAUR CRU RGE,B. EXCELLENCE CH. ST MAUR CRU RGE,disabled,,,1f2a5067-592e-4f08-95c5-bc244dd690c5,"B. PROVENCE ""L'Excellence"" CHATEAU SAINT-MAUR RGE 75CL",enabled,increase
+generic,B. GET 31,B. GET 31,enabled,,,6ae635b9-92f9-4db3-abde-bea63ab06b8b,GET 31 24°,enabled,increase
+generic,STICK SOLAIRE,STICK SOLAIRE,enabled,,,,,,none
+generic,V. HONEST BLACK,V. HONEST BLACK,enabled,,,,,,
+generic,MARGARITA CLASE AZUL REP,MARGARITA CLASE AZUL REP,disabled,,,,,,none
+generic,B. MEDITERRANEE PEYRASSOL RSE,B. IGP PEYRASSOL RSE,enabled,,,c84b6835-3a20-4c6c-a6e4-fe6028809157,"B._ IGP Méditérranée_ ""Méditérranée"", Peyrassol_RSE_75CL",enabled,increase
+generic,V.THE BLC NEPAL JASBIRE,V.THE BLC NEPAL JASBIRE,enabled,,,16cbb344-d6bb-4291-b6f7-4e4b8faff841,V. JASBIRE,enabled,increase
+generic,VENTRECHE,VENTRECHE,disabled,,,,,,none
+generic,MARLBORO GOLD,MARLBORO GOLD,enabled,,,dd1e789c-efb6-4b10-b431-3ed352dabf57,CIGARETTE,enabled,increase
+generic,V. CHARTREUSE JAUNE,V. CHARTREUSE VERTE,disabled,,,4507bcdc-ebbc-4852-94e9-0fb8e135a2ff,V. CHARTREUSE JAUNE,enabled,increase
+generic,MEZCAL SOUR,MEZCAL SOUR,enabled,,,a1857153-fd44-4371-bab2-fb36ef1bba48,MEZCAL SOUR,enabled,increase
+generic,PLAYAMIGOS MEZCAL,KORALLION MEZCAL,enabled,,,b9a307ac-e007-42c4-9590-1e996b26e813,PLAYAMIGOS MEZCAL,enabled,increase
+generic,V. THE GLACE,V. THE GLACE,enabled,,,,,,none
+generic,COM. BAR,COM. BAR,enabled,,,,,,none
+generic,ICE TEA CANETTE,ICE TEA CANETTE,enabled,,,ca1cd5ae-5d60-4aa8-b2b5-76c7387cab87,CANETTE ICE TEA PECHE 33CL,enabled,increase
+generic,TOM COLLINS,TOM COLLINS,enabled,,,f659f5a0-fe4b-438e-ba64-e37ee92247b3,TOM COLLINS,enabled,increase
+generic,PINTE HEINEKEN,PINTE HEINEKEN,enabled,,,391d7520-c64e-4e04-854c-d18c056300a9,PINTE HEINEKEN,enabled,increase
+generic,INFUSION TILLEUL,INFUSION TILLEUL,enabled,,,,,,none
+generic,TOMATE,TOMATE,enabled,,,7ce208e9-a394-4f0b-8ab1-d676806c99da,TOMATE,enabled,increase
+generic,PABLO,PABLO,enabled,,,94c4b6ed-277c-4aea-8288-5a4196755910,PABLO,enabled,increase
+generic,AFFOGATO,AFFOGATO,enabled,,,3a200038-0726-4ffb-bfe4-5ffa8581f33a,CAFE DOSETTE,enabled,increase
+generic,B. MOREY CHASSAGNE MONTRACHET BLC,B. MOREY CHASSAGNE MONTRACHET BLC,disabled,,,,,,none
+generic,ACC. ANANAS,ACC. ANANAS,enabled,,,c1e39b13-8319-404e-a7a2-0f0ea727e9a3,SUP. ANANAS,enabled,increase
+generic,ASSIETTE DE FRUITS FRAIS,ASS. FRUITS DE SAISON,enabled,,,,,,none
+generic,V. HAVANA 3ANS,V. HAVANA 3ANS,disabled,,,,,,none
+generic,PINK GRAPPEFRUIT,PINK GRAPPEFRUIT,enabled,,,825fe5f5-9892-4c79-a171-f99c2d967a52,B. DIVERS SODA 20CL,enabled,increase
+generic,SUPP. VENTRECHE,SUPP. VENTRECHE,enabled,,,,,,none
+generic,ACC. POMME,ACC. POMME,enabled,,,59bb9e06-208b-4a52-8f82-a2378e2cdb70,SUP. POMME,enabled,increase
+generic,B. POUILLY FUME DOM. LA LOGE BLC,B. POUILLY FUME DOM. LA LOGE BLC,disabled,,,672b7fdc-e3c2-48ec-926a-afc78d621054,"B. LOIRE POUILLY-FUME ""La Loge"" DOM. DE LA LOGE BLC 75CL",enabled,increase
+generic,ACC BTL. FENTIMANS TONIC,ACC BTL. FENTIMANS TONIC,enabled,,,a2a615e2-cebd-4d42-9622-a4f0ccf761f0,PACK TONIC*5,enabled,increase
+generic,LANGOUSTE ROSE A LA PLANCHA,LANGOUSTE ROSE A LA PLANCHA,enabled,,,,,,none
+generic,YUMI,YUMI,enabled,,,4a69dd1d-301d-42f3-8091-4205d6b2a3fc,YUMI,enabled,increase
+generic,AVEC TEQUILA DON JULIO REP,AVEC TEQUILA DON JULIO REP,disabled,,,,,,
+generic,LIMONCE,LIMONCEE,enabled,,,aebc6942-3ea1-4f38-b8c1-1fd8fb5bb0ec,V. LIMONCELLO,enabled,increase
+generic,PDT GRENAILLES,PDT GRENAILLES,disabled,,,,,,none
+generic,CAFE FRAPPE,CAFE FRAPPE,enabled,,,d2b7cbfe-961b-4321-8d3d-6ccb1415ad0f,CAFE INDIE MALONGO,enabled,increase
+generic,V. JACK DANIELS,V. JACK DANIELS,disabled,,,,,,none
+generic,MATCHA FRAPPÉ,MATCHA FRAPPÉ,enabled,,,,,,none
+generic,V. BLC MARRES FESTIF,V. BLC MARRES FESTIF,enabled,,,d37ec969-9440-44e7-932f-e6f9fe085bab,V. MARRE BLANC,enabled,increase
+generic,M. WHISPERING ANGEL RSE,M. WHISPERING ANGEL RSE,enabled,,,988eaca2-09bf-4938-8c7c-3b849dcf27c9,"M._Côtes De Provence_""Whispering Angel"", Château d'Esclans_RSE_150CL",enabled,increase
+generic,ASSIETTE DE PASTEQUE,ASSIETTE DE PASTEQUE,enabled,,,,,,none
+generic,SUGG. COTELETTES AGNEAU,SUGG. COTELETTES AGNEAU,enabled,,,,,,
+generic,MATELAS PREMIERE LIGNE,MATELAS PREMIERE LIGNE,enabled,,,,,,none
+generic,HALLOUMI GRILLE,SHAKSHUKA,enabled,,,,,,none
+generic,SERVIETTE,SERVIETTE,enabled,,,,,,none
+generic,B. GIVRY 1ER CLOS CELLIER AUX MOINES BLC,B. SAINT VERAN ROCHE MER BLC,disabled,,,4c301b83-6900-4412-b885-3b38d435927e,"B. BOURGOGNE GIVRY 1ER CRU ""Clos du Cellier aux Moines"" DOM. THENARD BLC 75CL",enabled,increase
+generic,AUBERGINE,AUBERGINE,disabled,,,,,,none
+generic,V.ZACAPA,V.ZACAPA,disabled,,,d2a806ab-e497-49cc-b46f-fcf498521e17,V. ZACAPA 23ANS,enabled,increase
+generic,V. DON JULIO REPOSADO,V. DON JULIO REPOSADO,enabled,,,a3143ce3-050d-46aa-8fde-5bf6df519d96,V. DON JULIO REPOSADO,enabled,increase
+generic,S. LIQUEUR FRAISE DES BOIS A JOE,S. LIQUEUR FRAISE DES BOIS A JOE,enabled,,,64331573-9a4b-4bed-b096-79a4d1c10405,S. LIQUEUR FRAISE DES BOIS A JOE 3CL,enabled,increase
+generic,COTE DE BOEUF 1 PERS,COTE DE BOEUF 1 PERS,disabled,,,,,,none
+generic,M. CASTILLON DOM. AURAGE RGE,M. CASTILLON DOM. AURAGE RGE,disabled,,,89261a27-05ec-4144-b3f4-69435d38c436,M. BORDEAUX CASTILLON DOM. DE L AURAGE RGE 150CL,enabled,increase
+generic,LILLEY SPRITZ,LILLEY SPRITZ,enabled,,,4af8c907-86c3-4ab1-9a1c-dc9a23db9444,V. LILLET BLANC,enabled,increase
+generic,VOGUE,VOGUE,enabled,,,dd1e789c-efb6-4b10-b431-3ed352dabf57,CIGARETTE,enabled,increase
+generic,SUGG. LOUP 4 PAX,SUGG. LOUP 4 PAX,enabled,,,,,,none
+generic,SUCRINE GRILLE,CHOUX FLEUR ROTI,disabled,,,,,,none
+generic,SUGGESTION ENTREE,SUGG ASPERGES BLANCHES,enabled,,,,,,none
+generic,V. VODKA GET PERRIER,V. VODKA GET PERRIER,enabled,,,d11aa14c-93f5-4a37-9f96-434b7706d76f,V. VODKA GET PERRIER,enabled,increase
+generic,B. FRISSONS GAUTHERON BLC,B. FRISSONS GAUTHERON BLC,enabled,,,d3ff85ae-0ee7-4b2d-b332-3060da96e16b,"B._Bourgogne Chardonnay_""Frissons"", Domaine Gautheron_BLC_75CL",enabled,increase
+generic,S.ZACAPA,S.ZACAPA,disabled,,,eaa14bb3-de7f-475e-91d8-8796ff49d25e,S. ZACAPA 23 3CL,enabled,increase
+generic,CITRON JAUNE,CITRON JAUNE,enabled,,,,,,none
+generic,V. LIQUEUR POIRE METTE,V. LIQUEUR POIRE METTE,disabled,,,,,,none
+generic,B. ADICCION ANEJO,B. ADICCION ANEJO,enabled,,,8a860aec-d271-4d32-88ba-f994f6f5e53c,B. ADICCION ANEJO 70CL,enabled,increase
+generic,B. COTE DE NUITS VILLAGES DOM. ARLOT RGE,B. COTE DE NUITS VILLAGES DOM. ARLOT RGE,enabled,,,e61773f9-8a22-453b-9183-eff33e892bfc,"B._ Nuits-Saint-Georges_ ""Le Petit Arlot"", Domaine de l'Arlot_RGE_75CL",enabled,increase
+generic,S. TEQUILA SUNRISE,S. TEQUILA SUNRISE,enabled,,,2e84a686-0b6f-40ba-9799-0b80d15ae557,S. TEQUILA SUNRINE 3CL,enabled,increase
+generic,ORANGE,ORANGE,enabled,,,,,,none
+generic,PINK SODA FESTIVE,PINK SODA FESTIVE,enabled,,,825fe5f5-9892-4c79-a171-f99c2d967a52,B. DIVERS SODA 20CL,enabled,increase
+generic,NAMI,NAMI SPRITZ,enabled,,,f51ba28b-e484-4177-9a11-a58c9b7ef298,NAMI,enabled,increase
+generic,PACK ACC. SOFT FESTIF,PACK ACC. SOFT FESTIF,enabled,,,,,,none
+generic,BANILLA SOFT,BANILLA SOFT,enabled,,,938c2d16-7099-4523-8cc1-de6e169a1613,BANILLA SOFT,enabled,increase
+generic,MOJITO FRUIT,MOJITO FRUIT,enabled,,,f5fa4334-6f06-4c71-b6d3-ffe0cef661cb,MOJITO,enabled,increase
+generic,V. HAVANA 7ANS,V. HAVANA 7ANS,disabled,,,,,,none
+generic,B. AVION 44,B. AVION 44,disabled,,,,,,none
+generic,TARTARE BOEUF,TARTARE BOEUF,disabled,,,,,,none
+generic,B. ROSE PETILLANT CARPE DIEM,B. ROSE PETILLANT CARPE DIEM,disabled,,,b5cb7efe-1cbf-465a-93f9-72ee3881fa32,B. PETILLANT NATUREL ROSÉ CHÂTEAU CARPE DIEM RSE 75CL,enabled,increase
