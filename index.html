@@ -1125,6 +1125,7 @@
       <button class="tab" data-tab="batches">Batchs</button>
       <button class="tab admin-only" data-tab="liaisons" style="display:none;">Liaisons</button>
       <button class="tab admin-only" data-tab="alerts" style="display:none;">Alertes</button>
+      <button class="tab admin-only" data-tab="dataproduct" style="display:none;">Data Product</button>
   <button class="tab" data-tab="export">Saisies</button>
 </div>
 
@@ -1153,6 +1154,10 @@
 
   <div class="view" id="vAlerts">
     <div id="alertsView"></div>
+  </div>
+
+  <div class="view" id="vDataProduct">
+    <div id="dataProductView"></div>
   </div>
 
   <div class="view" id="vLiaisons">
@@ -1975,6 +1980,7 @@ function switchTab(name){
   if (name === 'batches') renderBatches();
   if (name === 'liaisons') renderLiaisons();
   if (name === 'alerts') renderAlerts();
+  if (name === 'dataproduct') renderDataProduct();
   if (name === 'demandes') renderDemandes();
   // scroll reset
   document.querySelector('main').scrollTop = 0;
@@ -2074,6 +2080,200 @@ function renderBatches() {
 // ============================================================
 // RENDU : vue Liaisons (admin uniquement)
 // ============================================================
+
+
+// ============================================================
+// RENDU : Onglet Data Product (admin)
+// Parcourir le catalogue, cliquer sur un produit pour gérer ses mots-clés
+// Les mots-clés sont stockés comme des liaisons manuelles classiques
+// ============================================================
+
+let dataProductFilter = '';
+let dataProductSelected = null;  // produit Yokitup sélectionné
+
+function renderDataProduct() {
+  const root = document.getElementById('dataProductView');
+  if (!root) return;
+
+  if (!currentAuth || currentAuth.role !== 'admin') {
+    root.innerHTML = '<div class="prod-empty">Accès réservé à l\'admin.</div>';
+    return;
+  }
+
+  if (dataProductSelected) {
+    renderDataProductEditor(root);
+    return;
+  }
+
+  let html = '';
+  html += '<div class="batches-header">';
+  html += '  <div class="batches-header-info">Clique sur un produit pour ajouter/retirer des <b>mots-clés</b> qui alimenteront la recherche du V.</div>';
+  html += '  <input type="text" id="dataProductSearch" placeholder="Rechercher un produit..." value="' + escape(dataProductFilter) + '" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:14px; margin-bottom:8px;">';
+  html += '</div>';
+
+  // Filtrer le catalogue
+  const q = dataProductFilter.trim().toLowerCase();
+  const filtered = q
+    ? CATALOGUE.filter(p => p.y.toLowerCase().includes(q) || p.s.toLowerCase().includes(q))
+    : CATALOGUE;
+
+  html += '<div style="padding: 0 16px 80px;">';
+  html += '  <div style="font-size:12px; color:var(--ink-2); margin-bottom:8px;">' + filtered.length + ' produit' + (filtered.length > 1 ? 's' : '') + '</div>';
+
+  // Liaisons existantes par produit (pour afficher les mots-clés actuels en aperçu)
+  const liaisons = loadLiaisons();
+  const kwByProduct = new Map();
+  for (const l of liaisons) {
+    if (!kwByProduct.has(l.productYokitup)) kwByProduct.set(l.productYokitup, []);
+    kwByProduct.get(l.productYokitup).push(l.keyword);
+  }
+
+  // Limiter à 300 pour fluidité
+  const items = filtered.slice(0, 300);
+  items.forEach(p => {
+    const existingKw = kwByProduct.get(p.y) || [];
+    const kwBadge = existingKw.length > 0
+      ? ' <span style="font-size:10px; font-weight:500; background:var(--accent-soft); color:var(--accent-dark); padding:2px 6px; border-radius:6px; margin-left:4px;">' + existingKw.length + ' mot' + (existingKw.length > 1 ? 's' : '') + '-clé' + (existingKw.length > 1 ? 's' : '') + '</span>'
+      : '';
+    html += '<div class="dp-item" data-y="' + escape(p.y) + '" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:6px; cursor:pointer;">';
+    html += '  <div style="font-size:14px; font-weight:600; margin-bottom:2px;">' + escape(p.s) + kwBadge + '</div>';
+    html += '  <div style="font-size:11px; color:var(--ink-2);">' + escape(p.y) + '</div>';
+    html += '</div>';
+  });
+
+  if (filtered.length > 300) {
+    html += '<div style="font-size:12px; color:var(--ink-2); text-align:center; padding:12px;">' + (filtered.length - 300) + ' produits supplémentaires non affichés. Affine ta recherche.</div>';
+  }
+
+  html += '</div>';
+
+  root.innerHTML = html;
+
+  // Events
+  const searchInput = document.getElementById('dataProductSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      dataProductFilter = e.target.value;
+      renderDataProduct();
+      // Refocus
+      const newInput = document.getElementById('dataProductSearch');
+      if (newInput) {
+        newInput.focus();
+        newInput.setSelectionRange(newInput.value.length, newInput.value.length);
+      }
+    });
+  }
+
+  root.querySelectorAll('.dp-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const y = item.dataset.y;
+      dataProductSelected = CATALOGUE.find(p => p.y === y);
+      renderDataProduct();
+    });
+  });
+}
+
+function renderDataProductEditor(root) {
+  const p = dataProductSelected;
+  const liaisons = loadLiaisons();
+  const myKw = liaisons.filter(l => l.productYokitup === p.y);
+
+  let html = '';
+  html += '<div class="batches-header">';
+  html += '  <button type="button" id="dpBackBtn" style="padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; font-size:13px; cursor:pointer; margin-bottom:12px;">← Retour au catalogue</button>';
+  html += '  <div style="background:var(--accent-soft); padding:12px 14px; border-radius:10px; margin-bottom:8px;">';
+  html += '    <div style="font-size:15px; font-weight:700; margin-bottom:4px;">' + escape(p.s) + '</div>';
+  html += '    <div style="font-size:11px; color:var(--ink-2);">' + escape(p.y) + '</div>';
+  if (p.t && p.t.length > 0) {
+    html += '    <div style="font-size:10px; color:var(--ink-2); margin-top:6px;">Tags : ' + p.t.map(escape).join(', ') + '</div>';
+  }
+  html += '  </div>';
+  html += '</div>';
+
+  html += '<div style="padding: 0 16px 80px;">';
+
+  // Liste des mots-clés actuels
+  html += '<div style="font-size:13px; font-weight:600; margin: 12px 0 8px;">Mots-clés existants (' + myKw.length + ')</div>';
+  if (myKw.length === 0) {
+    html += '<div style="font-size:12px; color:var(--ink-2); background:var(--bg); padding:10px; border-radius:8px; margin-bottom:12px;">Aucun mot-clé. Ajoute-en ci-dessous.</div>';
+  } else {
+    html += '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">';
+    myKw.forEach(l => {
+      const scope = l.etab === 'ALL' ? '(tous)' : '(' + l.etab + ')';
+      html += '<div style="display:inline-flex; align-items:center; gap:6px; background:var(--accent-soft); color:var(--accent-dark); padding:6px 10px; border-radius:20px; font-size:12px;">';
+      html += '  <span><b>' + escape(l.keyword) + '</b> <span style="color:var(--ink-2); font-size:10px;">' + escape(scope) + '</span></span>';
+      html += '  <button type="button" class="dp-kw-remove" data-id="' + escape(l.id) + '" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:0; font-weight:600; font-size:14px; line-height:1;">×</button>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  // Formulaire d'ajout
+  html += '<div style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:12px;">';
+  html += '  <div style="font-size:13px; font-weight:600; margin-bottom:10px;">Ajouter un ou plusieurs mots-clés</div>';
+  html += '  <input type="text" id="dpNewKw" placeholder="ex: hibiscus, mandarine, figleaf" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:14px; margin-bottom:8px;">';
+  html += '  <div style="font-size:11px; color:var(--ink-2); margin-bottom:10px;">Sépare plusieurs mots-clés par une virgule. Ils seront ajoutés d\'un coup.</div>';
+  html += '  <label style="font-size:13px; display:block; margin-bottom:10px;">Portée : <select id="dpScope" style="padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-family:inherit; font-size:13px;"><option value="ALL">Tous les établissements</option>';
+  for (const etab of Object.keys(ETAB_TO_TAG)) {
+    html += '<option value="' + escape(etab) + '">' + escape(etab) + '</option>';
+  }
+  html += '</select></label>';
+  html += '  <button type="button" id="dpAddKwBtn" class="batches-add-btn" style="width:100%;">Ajouter</button>';
+  html += '</div>';
+
+  // Bouton d'export rappel
+  html += '<div style="font-size:11px; color:var(--ink-2); padding:10px; background:var(--bg); border-radius:8px;">Pense à aller dans <b>Liaisons</b> puis <b>Exporter JSON</b> pour sauvegarder tes changements sur GitHub et les propager aux autres appareils.</div>';
+
+  html += '</div>';
+
+  root.innerHTML = html;
+
+  // Events
+  document.getElementById('dpBackBtn').addEventListener('click', () => {
+    dataProductSelected = null;
+    renderDataProduct();
+  });
+
+  root.querySelectorAll('.dp-kw-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const list = loadLiaisons().filter(l => l.id !== id);
+      saveLiaisons(list);
+      renderDataProductEditor(root);
+      toast('Mot-clé retiré');
+    });
+  });
+
+  document.getElementById('dpAddKwBtn').addEventListener('click', () => {
+    const raw = document.getElementById('dpNewKw').value.trim();
+    if (!raw) { toast('Tape au moins un mot-clé'); return; }
+    const scope = document.getElementById('dpScope').value;
+    const kws = raw.split(',').map(s => s.trim()).filter(Boolean);
+    if (kws.length === 0) { toast('Aucun mot-clé valide'); return; }
+
+    const list = loadLiaisons();
+    let added = 0;
+    for (const kw of kws) {
+      // Éviter les doublons
+      const exists = list.some(l => l.keyword.toLowerCase() === kw.toLowerCase() 
+                                    && l.productYokitup === p.y 
+                                    && l.etab === scope);
+      if (!exists) {
+        list.push({
+          id: uidLiaison(),
+          keyword: kw,
+          productYokitup: p.y,
+          etab: scope,
+          createdAt: new Date().toISOString()
+        });
+        added++;
+      }
+    }
+    saveLiaisons(list);
+    toast(added + ' mot' + (added > 1 ? 's' : '') + '-clé' + (added > 1 ? 's' : '') + ' ajouté' + (added > 1 ? 's' : ''));
+    renderDataProductEditor(root);
+  });
+}
 
 // ============================================================
 // RENDU : vue Alertes (admin uniquement)
@@ -3544,13 +3744,29 @@ function resolveToCatalog(productName) {
   if (exact) return exact;
   // 2. Nettoyer et re-chercher
   const cleaned = stripFormat(stripPrefix(productName));
-  if (!cleaned || cleaned === productName) return null;
+  if (!cleaned) return null;
+  const cleanedU = cleaned.toUpperCase();
   // Match exact sur nom nettoyé
-  exact = CATALOGUE.find(p => p.y.toUpperCase() === cleaned.toUpperCase());
+  exact = CATALOGUE.find(p => p.y.toUpperCase() === cleanedU);
   if (exact) return exact;
   // Match par début
-  exact = CATALOGUE.find(p => p.y.toUpperCase().startsWith(cleaned.toUpperCase()));
+  exact = CATALOGUE.find(p => p.y.toUpperCase().startsWith(cleanedU));
   if (exact) return exact;
+  // 3. Match par MOTS-CLÉS : si tous les mots du nom nettoyé (>= 3 car) sont dans un produit
+  // Ex: "ALTOS REPOSADO" trouve "OLMECA ALTOS REPOSADO 38°"
+  const cleanedWords = cleanedU.split(/[\s_]+/).filter(w => w.length >= 3);
+  if (cleanedWords.length >= 2) {
+    const candidates = CATALOGUE.filter(p => {
+      const pU = p.y.toUpperCase();
+      return cleanedWords.every(w => pU.includes(w));
+    });
+    if (candidates.length === 1) return candidates[0];
+    if (candidates.length > 1) {
+      // Préférer le plus court (moins spécifique) ou celui qui contient le plus de mots du cleaned
+      candidates.sort((a, b) => a.y.length - b.y.length);
+      return candidates[0];
+    }
+  }
   return null;
 }
 
@@ -3558,10 +3774,12 @@ function resolveToCatalog(productName) {
 // (utile quand le produit VERSE n'a pas de touche caisse propre)
 const VERSE_KEYWORDS = [
   { keywords: ['coca', 'cola', 'cocacola', 'cocazero'], product: 'COCA COLA VERSE' },
-  { keywords: ['tonic', 'schweppes', 'fevertree'], product: 'TONIC VERSE' },
-  { keywords: ['ginger'], product: 'GINGER BEER VERSE' },
-  { keywords: ['limonade', 'lemonade', 'sprite', 'ale'], product: 'LIMONADE VERSE' },
+  { keywords: ['tonic', 'schweppes'], product: 'TONIC VERSE' },
+  { keywords: ['ginger', 'fentimans', 'fevertree', 'thomas henry', '1724'], product: 'GINGER BEER VERSE' },
+  { keywords: ['limonade', 'lemonade', 'sprite'], product: 'LIMONADE VERSE' },
   { keywords: ['jus', 'ananas', 'orange', 'pomme', 'passion', 'cranberry', 'fraise', 'tomate', 'pago', 'peche', 'abricot', 'multifruit'], product: 'JUS DE FRUIT VERSE' },
+  // Sodas exotiques → tous comptés dans B. DIVERS SODA 20CL (bucket fourre-tout)
+  { keywords: ['hibiscus', 'figleaf', 'fig leaf', 'mandarine', 'pink grapefruit', 'pamplemousse', 'framboise', 'sureau'], product: 'B. DIVERS SODA 20CL' },
 ];
 
 // Mots qui RENFORCENT l'intention VERSE (contenant en plastique = destiné au service au verre)
@@ -3936,17 +4154,35 @@ function handleInverseQuery(inverse) {
 
 // Liste de mots qui indiquent que c'est UN COCKTAIL (pas juste un alcool)
 const COCKTAIL_KEYWORDS = [
-  'sour', 'spritz', 'martini', 'mojito', 'margarita', 'fashionned', 'fashioned',
+  'sour', 'spritz', 'mojito', 'margarita', 'fashionned', 'fashioned',
   'negroni', 'daiquiri', 'manhattan', 'cosmopolitan', 'cosmo', 'moscow mule',
   'caipirinha', 'piña colada', 'pina colada', 'colada', 'bloody mary',
   'smash', 'fizz', 'gimlet', 'side car', 'sidecar', 'tom collins',
   'pornstar', 'porn star', 'french 75', 'french75', 'aperitif', 'ramos',
   'penicillin', 'godfather', 'kir royal', 'bellini', 'mimosa',
-  'eastside', 'east side', 'southside', 'hugo', 'spicy', 'clear colada'
+  'eastside', 'east side', 'southside', 'hugo', 'spicy', 'clear colada',
+  // Variantes "martini cocktail" (ne pas confondre avec la marque Martini)
+  'espresso martini', 'expresso martini', 'dry martini'
 ];
 
+// Fonction qui vérifie si la query contient un keyword cocktail
+// Particularité : "martini" seul = marque (vermouth), pas cocktail.
+// Seul "espresso martini", "expresso martini", "dry martini" est cocktail.
+function queryMatchesCocktailKeyword(normalizedQuery) {
+  for (const k of COCKTAIL_KEYWORDS) {
+    // Les entrées multi-mots (ex 'espresso martini') doivent matcher en tant que séquence
+    if (k.includes(' ')) {
+      if (normalizedQuery.includes(k)) return true;
+    } else {
+      // Mot simple : match mot entier ou sous-chaîne longue
+      if (normalizedQuery.split(/\s+/).includes(k) || normalizedQuery.includes(k)) return true;
+    }
+  }
+  return false;
+}
+
 function isCocktailQuery(normalizedQuery) {
-  return COCKTAIL_KEYWORDS.some(k => normalizedQuery.includes(k));
+  return queryMatchesCocktailKeyword(normalizedQuery);
 }
 
 // Chercher tous les cocktails qui matchent le mot-clé dans POS
