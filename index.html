@@ -1226,6 +1226,7 @@
   <div class="view" id="vSession">
     <div class="sess-header">
       <div id="sessAuthInfo" class="sess-auth-info">—</div>
+      <button id="btnShowPins" type="button" class="sess-logout-btn admin-only" style="display:none; margin-right:8px;">🔑 PINs</button>
       <button id="btnLogout" type="button" class="sess-logout-btn">Se déconnecter</button>
     </div>
 
@@ -1373,6 +1374,18 @@
 
 <!-- Sheet détail inventaire (depuis historique) -->
 <div class="overlay" id="ovInvDetail"></div>
+<div class="sheet" id="shPins">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title">🔑 PINs des établissements</div>
+    <div class="sheet-sub">Pense-bête admin — ne pas diffuser</div>
+  </div>
+  <div class="sheet-body" id="pinsBody"></div>
+  <div class="sheet-foot">
+    <button type="button" class="btn-cancel" id="pinsClose" style="flex:1;">Fermer</button>
+  </div>
+</div>
+<div class="overlay" id="ovPins"></div>
 <div class="sheet" id="shInvDetail">
   <div class="sheet-handle"></div>
   <div class="sheet-head">
@@ -1485,7 +1498,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v67';
+const APP_VERSION = 'v68';
 
 /* === ITM APP === */
 (function(){
@@ -6215,6 +6228,84 @@ async function exportAndMailInventory(inv) {
 let currentDetailInvId = null;
 let currentDetailFilter = '';
 
+// ============================================================
+// Pense-bête admin : liste des PINs par établissement
+// ============================================================
+function openPinsSheet() {
+  if (!currentAuth || currentAuth.role !== 'admin') return;
+
+  const body = document.getElementById('pinsBody');
+  if (!body) return;
+
+  // Construire la liste : admin d'abord, puis étabs par ordre alphabétique de label
+  const entries = Object.entries(PINS);
+  const adminEntries = entries.filter(([pin, info]) => info.role === 'admin');
+  const userEntries = entries.filter(([pin, info]) => info.role !== 'admin')
+    .sort((a, b) => a[1].label.localeCompare(b[1].label, 'fr'));
+  const ordered = [...adminEntries, ...userEntries];
+
+  let html = '<div style="padding: 12px 16px 8px; font-size: 11px; color: var(--ink-2); line-height: 1.5;">';
+  html += 'Tape sur le PIN pour le copier dans le presse-papier.';
+  html += '</div>';
+  html += '<div style="padding: 0 16px 20px;">';
+
+  ordered.forEach(([pin, info]) => {
+    const isAdmin = info.role === 'admin';
+    html += '<div style="display:flex; align-items:center; gap:12px; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:8px;' + (isAdmin ? ' border-color: var(--accent); background: var(--accent-soft);' : '') + '">';
+    html += '  <div style="flex:1; min-width:0;">';
+    html += '    <div style="font-size:14px; font-weight:600; color:' + (isAdmin ? 'var(--accent-dark)' : 'var(--ink)') + '; margin-bottom:2px;">' + escape(info.label) + '</div>';
+    if (info.etab) {
+      html += '    <div style="font-size:11px; color:var(--ink-2);">' + escape(info.etab) + '</div>';
+    }
+    html += '  </div>';
+    html += '  <button type="button" class="pin-copy-btn mono" data-pin="' + escape(pin) + '" data-label="' + escape(info.label) + '" style="background:' + (isAdmin ? 'var(--accent)' : 'var(--bg)') + '; color:' + (isAdmin ? 'white' : 'var(--ink)') + '; border:1px solid ' + (isAdmin ? 'var(--accent)' : 'var(--border)') + '; border-radius:8px; padding:10px 16px; font-size:18px; font-weight:700; letter-spacing:2px; cursor:pointer; font-family:inherit; min-width:90px;">' + escape(pin) + '</button>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  body.innerHTML = html;
+
+  // Handlers : clic sur PIN = copie au presse-papier
+  body.querySelectorAll('.pin-copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const pin = btn.dataset.pin;
+      const label = btn.dataset.label;
+      const orig = btn.textContent;
+      try {
+        // API Clipboard (HTTPS requis, ce qui est le cas sur GitHub Pages)
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(pin);
+        } else {
+          // Fallback pour très vieux navigateurs : input temporaire
+          const tmp = document.createElement('input');
+          tmp.value = pin;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand('copy');
+          document.body.removeChild(tmp);
+        }
+        btn.textContent = '✓ copié';
+        btn.style.background = 'var(--accent-dark)';
+        btn.style.color = 'white';
+        btn.style.borderColor = 'var(--accent-dark)';
+        toast('PIN ' + label + ' copié');
+        setTimeout(() => {
+          btn.textContent = orig;
+          // Restaurer le style initial selon admin ou pas
+          const isAdmin = PINS[pin] && PINS[pin].role === 'admin';
+          btn.style.background = isAdmin ? 'var(--accent)' : 'var(--bg)';
+          btn.style.color = isAdmin ? 'white' : 'var(--ink)';
+          btn.style.borderColor = isAdmin ? 'var(--accent)' : 'var(--border)';
+        }, 1800);
+      } catch (e) {
+        toast('Erreur copie : ' + e.message);
+      }
+    });
+  });
+
+  openSheet('shPins', 'ovPins');
+}
+
 function openInventoryDetail(invId) {
   const inv = state.inventories.find(i => i.id === invId);
   if (!inv) return;
@@ -7353,6 +7444,20 @@ function init(){
         logout();
       }
     });
+  }
+  // Bouton PINs (admin)
+  const btnShowPins = document.getElementById('btnShowPins');
+  if (btnShowPins) {
+    btnShowPins.addEventListener('click', openPinsSheet);
+  }
+  // Fermer le sheet PINs
+  const pinsClose = document.getElementById('pinsClose');
+  if (pinsClose) {
+    pinsClose.addEventListener('click', () => closeSheet('shPins', 'ovPins'));
+  }
+  const ovPins = document.getElementById('ovPins');
+  if (ovPins) {
+    ovPins.addEventListener('click', () => closeSheet('shPins', 'ovPins'));
   }
   // Afficher le label du compte connecté
   const sessAuthInfo = document.getElementById('sessAuthInfo');
