@@ -1482,7 +1482,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v65';
+const APP_VERSION = 'v66';
 
 /* === ITM APP === */
 (function(){
@@ -4633,6 +4633,12 @@ function scoreMatch(queryWord, text) {
     if (w.includes(queryWord) && queryWord.length / w.length >= 0.6) {
       return queryWord.length * 0.5;
     }
+  }
+  // Dernière chance : match dans le texte SANS ses espaces (ex: "cotedor" tapé attaché,
+  // à matcher contre "cote d or" dans le catalogue). Score modéré.
+  if (queryWord.length >= 3) {
+    const textFused = text.replace(/\s+/g, '');
+    if (textFused.includes(queryWord)) return queryWord.length * 0.7;
   }
   return 0;
 }
