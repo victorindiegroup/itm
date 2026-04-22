@@ -716,6 +716,20 @@
     vertical-align: middle;
   }
 
+  .prod-kw-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 1px 7px;
+    margin-left: 8px;
+    border-radius: 8px;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    letter-spacing: 0.2px;
+    vertical-align: middle;
+    border: 1px solid rgba(29, 110, 79, 0.25);
+  }
+
   .chat-suggestion-badge-other {
     display: inline-block;
     background: var(--accent-soft);
@@ -1498,7 +1512,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v69';
+const APP_VERSION = 'v70';
 
 /* === ITM APP === */
 (function(){
@@ -2530,18 +2544,48 @@ const ETAB_TO_TAG = {
   "Pablo (Saint-Barthélemy)": "PABLO SBH"
 };
 
+// Map globale pour passer l'info "produit trouvé via liaison" au rendu catalogue
+// Reset à chaque recherche ; contient productId → keyword matché (ex: 12345 → "bulle de bacchus")
+let searchKeywordMatches = {};
+
 function searchProducts(term){
   const t = normalize(term.trim());
   const words = t ? t.split(/\s+/).filter(Boolean) : [];
-  // On part de TOUT le catalogue, pas seulement les produits de l'établissement courant
-  // (les produits hors carte sont affichés différemment mais restent inventoriables)
+  searchKeywordMatches = {};
+
   const base = CATALOGUE;
   if (!words.length) return base;
-  return base.filter(p => {
+
+  // 1. Recherche classique dans le nom/recherche des produits
+  const byName = base.filter(p => {
     const s = normalize(p._search);
-    // Chaque mot de la query doit matcher (tolérant aux espaces dans le catalogue)
     return words.every(w => matchWord(w, s));
   });
+  const byNameIds = new Set(byName.map(p => p.id));
+
+  // 2. Recherche dans les liaisons manuelles (mots-clés admin) de l'étab courant
+  const liaisons = getLiaisonsForCurrentEtab();
+  const viaKeyword = [];
+  for (const l of liaisons) {
+    const kwNorm = normalize(l.keyword);
+    if (!kwNorm) continue;
+    const kwWords = kwNorm.split(/\s+/).filter(Boolean);
+    // Match si tous les mots de la query sont dans le keyword OU tous les mots du keyword sont dans la query
+    const allQueryInKw = words.every(w => matchWord(w, kwNorm));
+    const allKwInQuery = kwWords.every(w => matchWord(w, t));
+    if (!allQueryInKw && !allKwInQuery) continue;
+
+    // Trouver le produit catalogue lié
+    const prod = CATALOGUE.find(p => p.y === l.productYokitup);
+    if (!prod) continue;
+    if (byNameIds.has(prod.id)) continue;  // déjà trouvé par nom, skip
+    if (searchKeywordMatches[prod.id]) continue;  // déjà ajouté via une autre liaison
+    searchKeywordMatches[prod.id] = l.keyword;
+    viaKeyword.push(prod);
+  }
+
+  // Fusionner : produits trouvés par nom en premier, puis par liaison
+  return byName.concat(viaKeyword);
 }
 
 // Helper : un produit est-il dans la carte de l'établissement actuel ?
@@ -3626,9 +3670,12 @@ function renderCatalogue(){
       const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
       const tag = '<span class="prod-tag ' + pillClass + '">' + escape(pillLabel) + '</span>';
       const offmenuBadge = isInCurrentEtab(p) ? '' : '<span class="prod-offmenu-badge">hors carte</span>';
+      // Badge "via mot-clé" si trouvé via une liaison manuelle
+      const viaKw = searchKeywordMatches[p.id];
+      const kwBadge = viaKw ? '<span class="prod-kw-badge" title="trouvé via mot-clé">🔎 via « ' + escape(viaKw) + ' »</span>' : '';
       html += '<div class="prod' + saisi + offmenu + '" data-pid="' + p.id + '">';
       html += '  ' + tag;
-      html += '  <div class="prod-name">' + escape(p.s) + offmenuBadge + '</div>';
+      html += '  <div class="prod-name">' + escape(p.s) + offmenuBadge + kwBadge + '</div>';
       html += '</div>';
     });
   });
