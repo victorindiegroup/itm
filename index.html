@@ -1498,7 +1498,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v68';
+const APP_VERSION = 'v69';
 
 /* === ITM APP === */
 (function(){
@@ -1757,11 +1757,96 @@ function getBatchesForEtab(etab) {
   return all[etab] || [];
 }
 
-// Sauve la liste des batchs pour un établissement
+// Sauve la liste des batchs pour un établissement (local + push Cloudflare)
 function setBatchesForEtab(etab, list) {
+  const now = new Date().toISOString();
+  // Tagger les batchs modifiés avec updatedAt
+  const existing = getBatchesForEtab(etab);
+  const existingMap = {};
+  existing.forEach(b => { if (b.id) existingMap[b.id] = b; });
+  list.forEach(b => {
+    if (!b.updatedAt) b.updatedAt = b.createdAt || now;
+    const prev = existingMap[b.id];
+    if (!prev) {
+      b.updatedAt = now;
+    } else {
+      const changed = prev.name !== b.name
+        || prev.capacity !== b.capacity
+        || prev.unit !== b.unit
+        || JSON.stringify(prev.compo || []) !== JSON.stringify(b.compo || []);
+      if (changed) b.updatedAt = now;
+    }
+  });
+
+  // Sauvegarde locale
   const all = loadBatches();
   all[etab] = list;
   saveBatches(all);
+
+  // Push vers Cloudflare en arrière-plan (silencieux, retry auto via pendingBatches)
+  pushBatchesForEtab(etab, list)
+    .then(ok => { if (ok) console.log('Batchs sync OK pour ' + etab); })
+    .catch(err => { console.warn('Push batchs échoué, mis en pending :', err.message); });
+}
+
+// Merger deux listes de batchs : pour chaque id, garde la version au updatedAt le plus récent
+function mergeBatchesLists(local, remote) {
+  const byId = {};
+  (remote || []).forEach(b => { if (b.id) byId[b.id] = { ...b }; });
+  (local || []).forEach(b => {
+    if (!b.id) return;
+    const prev = byId[b.id];
+    if (!prev) {
+      byId[b.id] = { ...b };
+    } else {
+      const localTs = b.updatedAt || b.createdAt || '';
+      const remoteTs = prev.updatedAt || prev.createdAt || '';
+      if (localTs > remoteTs) byId[b.id] = { ...b };
+    }
+  });
+  return Object.values(byId);
+}
+
+// Synchroniser les batchs d'un étab avec Cloudflare (merge intelligent)
+// Appelé au démarrage et au changement d'étab (silencieux en arrière-plan)
+async function syncBatchesForEtab(etab) {
+  if (!etab) return;
+  const slug = etabSlug(etab);
+  // Récupérer la version distante directement (pas via le cache fetchBatchesForEtab)
+  try {
+    const response = await fetch(BACKEND_URL + '/batches/' + encodeURIComponent(slug), {
+      cache: 'no-cache',
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const data = await response.json();
+    const remote = data.batches || [];
+    const local = getBatchesForEtab(etab);
+    const merged = mergeBatchesLists(local, remote);
+
+    // Sauvegarde locale directement (sans re-pusher pour éviter boucle)
+    const all = loadBatches();
+    all[etab] = merged;
+    saveBatches(all);
+
+    // Si local avait des batchs non encore sur Cloudflare → push pour que le cloud soit à jour
+    const localIds = new Set(local.map(b => b.id));
+    const remoteIds = new Set(remote.map(b => b.id));
+    const localOnly = merged.filter(b => localIds.has(b.id) && !remoteIds.has(b.id));
+    if (localOnly.length > 0) {
+      await pushBatchesForEtab(etab, merged).catch(() => {});
+    }
+
+    // Rafraîchir la vue Batchs si elle est visible
+    const batchesView = document.getElementById('batchesView');
+    if (batchesView && batchesView.offsetParent !== null) {
+      renderBatches();
+    }
+    return { total: merged.length, localOnly: localOnly.length, fromRemote: merged.filter(b => !localIds.has(b.id)).length };
+  } catch (e) {
+    console.warn('Sync batchs ' + etab + ' échouée (offline ?) :', e.message);
+    return null;
+  }
 }
 
 function uidBatch() { return 'btch_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -2482,12 +2567,15 @@ function renderBatches() {
 
   let html = '';
   html += '<div class="batches-header">';
-  html += '  <div class="batches-header-info">Recettes de bouteilles de mise en place pour <b>' + escape(state.estab) + '</b></div>';
-  html += '  <button type="button" class="batches-add-btn" id="btnAddBatch">+ Créer un batch</button>';
+  html += '  <div class="batches-header-info">Recettes de bouteilles de mise en place pour <b>' + escape(state.estab) + '</b>. Partagées entre tous les appareils connectés à cet établissement.</div>';
+  html += '  <div style="display:flex; gap:8px;">';
+  html += '    <button type="button" class="batches-add-btn" id="btnAddBatch" style="flex:1;">+ Créer un batch</button>';
+  html += '    <button type="button" id="btnSyncBatches" style="padding:12px 14px; background:var(--surface); color:var(--accent-dark); border:1px solid var(--accent); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;" title="Rafraîchir depuis le cloud">🔄</button>';
+  html += '  </div>';
   html += '</div>';
 
   if (!batches.length) {
-    html += '<div class="prod-empty">Aucun batch pour cet établissement.<br>Clique sur "Créer un batch" pour commencer.</div>';
+    html += '<div class="prod-empty">Aucun batch pour cet établissement.<br>Clique sur "Créer un batch" pour commencer, ou sur 🔄 pour récupérer depuis un autre appareil.</div>';
   } else {
     html += '<div class="batches-list">';
     batches.forEach(batch => {
@@ -2513,6 +2601,31 @@ function renderBatches() {
   root.innerHTML = html;
 
   document.getElementById('btnAddBatch').addEventListener('click', () => openBatchEditor(null));
+
+  const syncBtn = document.getElementById('btnSyncBatches');
+  if (syncBtn) {
+    syncBtn.addEventListener('click', async () => {
+      syncBtn.disabled = true;
+      const orig = syncBtn.textContent;
+      syncBtn.textContent = '…';
+      try {
+        const result = await syncBatchesForEtab(state.estab);
+        if (result) {
+          let msg = result.total + ' batch' + (result.total > 1 ? 's' : '') + ' sync';
+          if (result.fromRemote > 0) msg += ' · ' + result.fromRemote + ' reçu' + (result.fromRemote > 1 ? 's' : '');
+          toast(msg);
+        } else {
+          toast('Hors-ligne, impossible de synchroniser');
+        }
+      } catch (err) {
+        toast('Erreur : ' + err.message);
+      } finally {
+        syncBtn.disabled = false;
+        syncBtn.textContent = orig;
+      }
+    });
+  }
+
   root.querySelectorAll('.batch-item').forEach(el => {
     el.addEventListener('click', () => openBatchEditor(el.dataset.bid));
   });
@@ -5986,6 +6099,8 @@ function selectEstab(nom){
     saveState();
     loadPosData();
   loadLiaisonsRemote();
+  // Sync batchs pour le nouvel étab
+  syncBatchesForEtab(nom).catch(() => {});
   // Essayer de vider la file de logs si connexion dispo
   flushLogQueue().catch(() => {});
   // Retry la file toutes les 2 min
@@ -7352,6 +7467,20 @@ function init(){
       .then(r => { console.log('Sync liaisons auto :', r); })
       .catch(err => { console.warn('Sync liaisons auto échouée (normale si Worker pas encore déployé) :', err.message); });
   }
+
+  // Sync des batchs pour l'étab courant (tous les rôles — admin ou chef)
+  if (state.estab) {
+    syncBatchesForEtab(state.estab)
+      .then(r => { if (r) console.log('Sync batchs ' + state.estab + ' :', r); })
+      .catch(err => { console.warn('Sync batchs échouée :', err.message); });
+  }
+
+  // Au retour du focus (app en arrière-plan puis ramenée devant) → re-sync batchs
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && state.estab) {
+      syncBatchesForEtab(state.estab).catch(() => {});
+    }
+  });
 
   renderHeader();
   renderCatalogue();
