@@ -1482,7 +1482,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v64';
+const APP_VERSION = 'v65';
 
 /* === ITM APP === */
 (function(){
@@ -2398,7 +2398,22 @@ function switchTab(name){
 
 /* ---------- Catalogue list ---------- */
 let searchTerm = '';
-function normalize(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function normalize(s){
+  // Lowercase + suppression des accents
+  let n = (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // Remplacer toute ponctuation (apostrophes, tirets, guillemets, virgules, underscores, etc.) par un espace
+  n = n.replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return n;
+}
+
+// Helper : teste si un mot de query est présent dans un texte normalisé, en étant tolérant aux espaces dans le texte
+// Ex: 'cotedor' in 'cote d or' → true (via fusion sans espaces)
+function matchWord(word, text) {
+  if (!word || !text) return false;
+  if (text.indexOf(word) !== -1) return true;
+  // Fallback : chercher dans le texte sans ses espaces (cas "cotedor" tapé attaché alors que catalogue a "cote d'or")
+  return text.replace(/\s+/g, '').indexOf(word) !== -1;
+}
 
 // Mapping nom d'établissement (UI) → tag Yokitup (stocké dans p.t)
 const ETAB_TO_TAG = {
@@ -2423,7 +2438,8 @@ function searchProducts(term){
   if (!words.length) return base;
   return base.filter(p => {
     const s = normalize(p._search);
-    return words.every(w => s.includes(w));
+    // Chaque mot de la query doit matcher (tolérant aux espaces dans le catalogue)
+    return words.every(w => matchWord(w, s));
   });
 }
 
@@ -3435,7 +3451,7 @@ function renderCatalogue(){
     const words = t.split(/\s+/).filter(Boolean);
     batches = batches.filter(b => {
       const n = normalize(b.name);
-      return words.every(w => n.includes(w));
+      return words.every(w => matchWord(w, n));
     });
   }
 
@@ -6522,7 +6538,7 @@ function renderBatchPicker() {
   if (words.length > 0) {
     matches = CATALOGUE.filter(p => {
       const s = normalize(p._search);
-      return words.every(w => s.includes(w));
+      return words.every(w => matchWord(w, s));
     });
   }
 
@@ -7023,7 +7039,7 @@ function renderLiaisonProductResults() {
 
   matches = CATALOGUE.filter(p => {
     const s = normalize(p._search);
-    return words.every(w => s.includes(w));
+    return words.every(w => matchWord(w, s));
   }).slice(0, 30);
 
   if (matches.length === 0) {
