@@ -1532,7 +1532,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v72';
+const APP_VERSION = 'v73';
 
 /* === ITM APP === */
 (function(){
@@ -2929,10 +2929,18 @@ function renderDpCatalog(container) {
   html += '  <input type="text" id="dataProductSearch" placeholder="Rechercher un produit..." value="' + escape(dataProductFilter) + '" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:14px; margin-bottom:8px;">';
   html += '</div>';
 
-  const q = dataProductFilter.trim().toLowerCase();
-  const filtered = q
-    ? CATALOGUE.filter(p => p.y.toLowerCase().includes(q) || p.s.toLowerCase().includes(q))
-    : CATALOGUE;
+  const q = dataProductFilter.trim();
+  let filtered;
+  if (!q) {
+    filtered = CATALOGUE;
+  } else {
+    const qn = normalize(q);
+    const words = qn.split(/\s+/).filter(Boolean);
+    filtered = CATALOGUE.filter(p => {
+      const s = normalize(p._search);
+      return words.every(w => matchWord(w, s));
+    });
+  }
 
   html += '<div style="padding: 0 16px 80px;">';
   html += '  <div style="font-size:12px; color:var(--ink-2); margin-bottom:8px;">' + filtered.length + ' produit' + (filtered.length > 1 ? 's' : '') + '</div>';
@@ -2950,8 +2958,9 @@ function renderDpCatalog(container) {
     const kwBadge = existingKw.length > 0
       ? ' <span style="font-size:10px; font-weight:500; background:var(--accent-soft); color:var(--accent-dark); padding:2px 6px; border-radius:6px; margin-left:4px;">' + existingKw.length + ' mot' + (existingKw.length > 1 ? 's' : '') + '-clé' + (existingKw.length > 1 ? 's' : '') + '</span>'
       : '';
+    const dot = wineDotHtml(p.c);
     html += '<div class="dp-item" data-y="' + escape(p.y) + '" style="background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:6px; cursor:pointer;">';
-    html += '  <div style="font-size:14px; font-weight:600; margin-bottom:2px;">' + escape(p.s) + kwBadge + '</div>';
+    html += '  <div style="font-size:14px; font-weight:600; margin-bottom:2px;">' + dot + escape(p.s) + kwBadge + '</div>';
     html += '  <div style="font-size:11px; color:var(--ink-2);">' + escape(p.y) + '</div>';
     html += '</div>';
   });
@@ -3132,7 +3141,7 @@ function renderDataProductEditor(root) {
   html += '<div class="batches-header">';
   html += '  <button type="button" id="dpBackBtn" style="padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:8px; font-size:13px; cursor:pointer; margin-bottom:12px;">← Retour au catalogue</button>';
   html += '  <div style="background:var(--accent-soft); padding:12px 14px; border-radius:10px; margin-bottom:8px;">';
-  html += '    <div style="font-size:15px; font-weight:700; margin-bottom:4px;">' + escape(p.s) + '</div>';
+  html += '    <div style="font-size:15px; font-weight:700; margin-bottom:4px;">' + wineDotHtml(p.c) + escape(p.s) + '</div>';
   html += '    <div style="font-size:11px; color:var(--ink-2);">' + escape(p.y) + '</div>';
   if (p.t && p.t.length > 0) {
     html += '    <div style="font-size:10px; color:var(--ink-2); margin-top:6px;">Tags : ' + p.t.map(escape).join(', ') + '</div>';
@@ -4347,7 +4356,7 @@ function renderExport(){
     html += '<div class="saisie-item" data-lid="' + escape(line.id) + '">';
     html += '  <div class="saisie-main">';
     html += '    ' + pill;
-    html += '    <div class="saisie-name">' + escape(p.s) + '</div>';
+    html += '    <div class="saisie-name">' + wineDotHtml(p.c) + escape(p.s) + '</div>';
     html += '    ' + zoneChip;
     html += '  </div>';
     if (detail) {
@@ -7491,9 +7500,10 @@ function renderLiaisonProductResults() {
   matches.forEach(p => {
     const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
     const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
+    const dot = wineDotHtml(p.c);
     html += '<div class="liaison-prod-result" data-pid="' + p.id + '" style="padding:10px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; cursor:pointer;">';
     html += '  <span class="prod-tag ' + pillClass + '">' + escape(pillLabel) + '</span>';
-    html += '  <div style="flex:1; font-size:13px;">' + escape(p.s) + '</div>';
+    html += '  <div style="flex:1; font-size:13px;">' + dot + escape(p.s) + '</div>';
     html += '</div>';
   });
   div.innerHTML = html;
