@@ -1378,11 +1378,14 @@
   <div class="sheet-head">
     <div class="sheet-title" id="invDetailTitle">Inventaire</div>
     <div class="sheet-sub" id="invDetailSub">—</div>
+    <div id="invDetailSearchWrap" style="margin-top: 12px;">
+      <input type="search" id="invDetailSearch" placeholder="Rechercher un produit..." style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; background: var(--bg);">
+    </div>
   </div>
   <div class="sheet-body" id="invDetailBody"></div>
   <div class="sheet-foot">
     <button type="button" class="btn-cancel" id="invDetailClose">Fermer</button>
-    <button type="button" class="btn-sec" id="invDetailDelete" style="color: var(--danger); border-color: var(--danger);">Supprimer</button>
+    <button type="button" class="btn-sec admin-only" id="invDetailDelete" style="color: var(--danger); border-color: var(--danger);">Supprimer</button>
     <button type="button" class="btn-valid" id="invDetailResend">Renvoyer par mail</button>
   </div>
 </div>
@@ -1482,7 +1485,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v66';
+const APP_VERSION = 'v67';
 
 /* === ITM APP === */
 (function(){
@@ -6210,36 +6213,128 @@ async function exportAndMailInventory(inv) {
 
 /* ---------- Détail inventaire depuis historique ---------- */
 let currentDetailInvId = null;
+let currentDetailFilter = '';
+
 function openInventoryDetail(invId) {
   const inv = state.inventories.find(i => i.id === invId);
   if (!inv) return;
   currentDetailInvId = invId;
+  currentDetailFilter = '';
 
   document.getElementById('invDetailTitle').textContent = fmtDate(inv.date);
   const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
   const sub = momentLbl + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + inv.lines.length + ' produit(s)';
   document.getElementById('invDetailSub').textContent = sub;
 
-  // Liste simplifiée des produits saisis
-  const body = document.getElementById('invDetailBody');
-  let html = '';
-  if (inv.lines.length === 0) {
-    html = '<div class="prod-empty">Aucun produit dans cet inventaire.</div>';
-  } else {
-    html += '<div style="padding: 0 16px;">';
-    inv.lines.forEach(l => {
+  // Reset le champ de recherche
+  const searchInput = document.getElementById('invDetailSearch');
+  if (searchInput) searchInput.value = '';
+
+  // Attacher l'événement de recherche (une seule fois par ouverture)
+  if (searchInput && !searchInput._handlerAttached) {
+    searchInput.addEventListener('input', (e) => {
+      currentDetailFilter = e.target.value;
+      renderInventoryDetailBody();
+    });
+    searchInput._handlerAttached = true;
+  }
+
+  renderInventoryDetailBody();
+  openSheet('shInvDetail', 'ovInvDetail');
+}
+
+// Agréger les lignes d'un inventaire par produit, en gardant le détail par zone.
+// Retourne [{ product, lines: [{zone, qty}, ...], total }]
+function aggregateInventoryForDisplay(inv) {
+  const byProduct = new Map();
+
+  function addEntry(key, productLabel, zone, qty) {
+    if (!byProduct.has(key)) {
+      byProduct.set(key, { key, label: productLabel, zones: [], total: 0 });
+    }
+    const entry = byProduct.get(key);
+    // Essayer de fusionner si la même zone existe déjà
+    const existingZone = entry.zones.find(z => z.zone === zone);
+    if (existingZone) {
+      existingZone.qty = Math.round((existingZone.qty + qty) * 1000) / 1000;
+    } else {
+      entry.zones.push({ zone, qty: Math.round(qty * 1000) / 1000 });
+    }
+    entry.total = Math.round((entry.total + qty) * 1000) / 1000;
+  }
+
+  (inv.lines || []).forEach(l => {
+    const zone = l.zone || '—';
+    if (l.batchId) {
+      // Batch : affichage spécial, on garde la ligne batch telle quelle
+      const key = 'batch:' + l.batchId + ':' + zone;
+      const label = (l.batchName || 'Batch') + ' (batch)';
+      addEntry(key, label, zone, l.batchCount || 0);
+    } else {
       const p = CATALOGUE[l.productId];
       if (!p) return;
-      html += '<div style="padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">';
-      html += '<span style="font-size: 13px;">' + escape(p.s) + '</span>';
-      html += '<span class="mono" style="font-size: 12px; color: var(--ink-2);">' + fmtQty(l.total) + '</span>';
+      addEntry('p:' + p.y, p.s, zone, l.total || 0);
+    }
+  });
+
+  return Array.from(byProduct.values()).sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+}
+
+function renderInventoryDetailBody() {
+  const body = document.getElementById('invDetailBody');
+  if (!body) return;
+  const inv = state.inventories.find(i => i.id === currentDetailInvId);
+  if (!inv) return;
+
+  const items = aggregateInventoryForDisplay(inv);
+
+  // Filtrer si recherche
+  let filtered = items;
+  if (currentDetailFilter.trim()) {
+    const q = normalize(currentDetailFilter.trim());
+    const words = q.split(/\s+/).filter(Boolean);
+    filtered = items.filter(it => {
+      const n = normalize(it.label);
+      return words.every(w => matchWord(w, n));
+    });
+  }
+
+  let html = '';
+  if (items.length === 0) {
+    html = '<div class="prod-empty">Aucun produit dans cet inventaire.</div>';
+  } else if (filtered.length === 0) {
+    html = '<div class="prod-empty" style="padding: 40px 20px;">Aucun produit ne correspond à « ' + escape(currentDetailFilter) + ' ».</div>';
+  } else {
+    // Compteur si filtre actif
+    if (currentDetailFilter.trim()) {
+      html += '<div style="padding: 12px 16px 8px; font-size: 11px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">' + filtered.length + ' produit' + (filtered.length > 1 ? 's' : '') + ' · sur ' + items.length + '</div>';
+    }
+    html += '<div style="padding: 0 16px 16px;">';
+    filtered.forEach(it => {
+      const hasMultipleZones = it.zones.length > 1;
+      html += '<div style="padding: 10px 0; border-bottom: 1px solid var(--border);">';
+      html += '  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px;">';
+      html += '    <span style="font-size: 14px; font-weight: 500;">' + escape(it.label) + '</span>';
+      html += '    <span class="mono" style="font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap;">' + fmtQty(it.total) + '</span>';
+      html += '  </div>';
+      if (hasMultipleZones) {
+        // Ventilation par zone
+        html += '  <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px;">';
+        it.zones.forEach(z => {
+          html += '<span style="font-size: 11px; color: var(--ink-2); background: var(--bg); padding: 3px 8px; border-radius: 12px; border: 1px solid var(--border);">';
+          html += escape(z.zone) + ' · <span class="mono" style="font-weight: 600; color: var(--ink);">' + fmtQty(z.qty) + '</span>';
+          html += '</span>';
+        });
+        html += '  </div>';
+      } else if (it.zones.length === 1 && it.zones[0].zone !== '—') {
+        // Une seule zone : afficher juste le nom de la zone sans répéter la quantité
+        html += '  <div style="margin-top: 4px; font-size: 11px; color: var(--ink-3);">' + escape(it.zones[0].zone) + '</div>';
+      }
       html += '</div>';
     });
     html += '</div>';
   }
   body.innerHTML = html;
-
-  openSheet('shInvDetail', 'ovInvDetail');
 }
 
 function deleteInventoryDetail() {
