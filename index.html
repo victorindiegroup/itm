@@ -730,6 +730,26 @@
     border: 1px solid rgba(29, 110, 79, 0.25);
   }
 
+  /* Pastille de couleur pour identifier la robe des vins d'un coup d'œil */
+  .wine-dot {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: -1px;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12);
+  }
+  .wine-dot-rouge   { background: #7B1826; }      /* rouge sombre */
+  .wine-dot-blanc   { background: #EDE4B8; }      /* jaune paille clair */
+  .wine-dot-rose    { background: #F4A7A7; }      /* rosé doux */
+  .wine-dot-orange  { background: #D97A3C; }      /* orange ambré */
+  .wine-dot-bulles  { background: #F7E27A;        /* jaune paillette avec léger accent or */
+                      box-shadow: inset 0 0 0 1px rgba(180, 140, 0, 0.3); }
+  .wine-dot-porto   { background: #4A1220; }      /* rouge très foncé / brun */
+  .wine-dot-sake    { background: #F5F1E6; }      /* blanc nacré */
+
   .chat-suggestion-badge-other {
     display: inline-block;
     background: var(--accent-soft);
@@ -1512,7 +1532,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v71';
+const APP_VERSION = 'v72';
 
 /* === ITM APP === */
 (function(){
@@ -3673,9 +3693,11 @@ function renderCatalogue(){
       // Badge "via mot-clé" si trouvé via une liaison manuelle
       const viaKw = searchKeywordMatches[p.id];
       const kwBadge = viaKw ? '<span class="prod-kw-badge" title="trouvé via mot-clé">🔎 via « ' + escape(viaKw) + ' »</span>' : '';
+      // Point coloré si c'est un vin
+      const dot = wineDotHtml(p.c);
       html += '<div class="prod' + saisi + offmenu + '" data-pid="' + p.id + '">';
       html += '  ' + tag;
-      html += '  <div class="prod-name">' + escape(p.s) + offmenuBadge + kwBadge + '</div>';
+      html += '  <div class="prod-name">' + dot + escape(p.s) + offmenuBadge + kwBadge + '</div>';
       html += '</div>';
     });
   });
@@ -3695,6 +3717,38 @@ function renderCatalogue(){
 function isBatchSaisi(batchId) {
   if (!state.currentInventory) return false;
   return state.currentInventory.lines.some(l => l.batchId === batchId && l.zone === state.currentZone);
+}
+
+// Déterminer la couleur d'un vin à partir de sa catégorie c
+// Retourne 'rouge' | 'blanc' | 'rose' | 'orange' | 'bulles' | 'porto' | 'sake' | null
+function wineColor(c) {
+  if (!c) return null;
+  const cu = c.toUpperCase();
+  if (!cu.includes('VIN') && !cu.includes('CHAMPAGNE')) return null;
+  if (cu.includes('CHAMPAGNE') || cu.includes('PROSECCO') || cu.includes('CREMANT') || cu.includes('EFFERVESCENT') || cu.includes('BULLES')) return 'bulles';
+  if (cu.includes('PORTO') || cu.includes('MADERE') || cu.includes('MADÈRE')) return 'porto';
+  if (cu.includes('SAKE') || cu.includes('SAKÉ')) return 'sake';
+  if (cu.includes('VIN ORANGE') || cu.includes('ORANGE')) return 'orange';
+  if (cu.includes('ROSE') || cu.includes('ROSÉ')) return 'rose';
+  if (cu.includes('BLANC')) return 'blanc';
+  if (cu.includes('ROUGE')) return 'rouge';
+  return null;
+}
+
+// Génère le HTML du petit point de couleur pour les vins
+function wineDotHtml(c) {
+  const col = wineColor(c);
+  if (!col) return '';
+  const labels = {
+    'rouge': 'vin rouge',
+    'blanc': 'vin blanc',
+    'rose': 'vin rosé',
+    'orange': 'vin orange',
+    'bulles': 'bulles / champagne',
+    'porto': 'porto / vin muté',
+    'sake': 'saké'
+  };
+  return '<span class="wine-dot wine-dot-' + col + '" title="' + labels[col] + '"></span>';
 }
 
 function cleanCat(c){
@@ -5977,15 +6031,17 @@ function buildSuggestionButton(s) {
   btn.className = cls;
 
   let pillHtml = '';
+  let dotHtml = '';
   if (s.productId !== null && s.productId !== undefined) {
     const prod = CATALOGUE[s.productId];
     if (prod && prod.p) {
       const pillCls = 'pill-' + (prod.p === '½' ? 'DEMI' : prod.p);
       pillHtml = '<span class="chat-suggestion-pill ' + pillCls + '">' + escape(prod.p) + '</span> ';
     }
+    if (prod) dotHtml = wineDotHtml(prod.c);
   }
 
-  let innerHtml = pillHtml + '<b>' + escape(s.name) + '</b>';
+  let innerHtml = pillHtml + dotHtml + '<b>' + escape(s.name) + '</b>';
   if (s.inCatalogue === false) {
     innerHtml += ' <span class="chat-suggestion-badge">non trouvé</span>';
   }
@@ -6941,9 +6997,10 @@ function renderBatchPicker() {
       const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
       const viaKw = kwMatches[p.id];
       const kwBadge = viaKw ? '<span class="prod-kw-badge" title="trouvé via mot-clé">🔎 via « ' + escape(viaKw) + ' »</span>' : '';
+      const dot = wineDotHtml(p.c);
       html += '<div class="prod" data-pid="' + p.id + '">';
       html += '  <span class="prod-tag ' + pillClass + '">' + escape(pillLabel) + '</span>';
-      html += '  <div class="prod-name">' + escape(p.s) + kwBadge + '</div>';
+      html += '  <div class="prod-name">' + dot + escape(p.s) + kwBadge + '</div>';
       html += '</div>';
     });
   }
