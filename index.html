@@ -1512,7 +1512,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v70';
+const APP_VERSION = 'v71';
 
 /* === ITM APP === */
 (function(){
@@ -6889,11 +6889,38 @@ function renderBatchPicker() {
   const term = normalize(batchPickerSearchTerm.trim());
   const words = term ? term.split(/\s+/).filter(Boolean) : [];
   let matches = CATALOGUE;
+  // Map locale pour ce rendu : productId → keyword qui a matché (pour afficher le badge)
+  const kwMatches = {};
+
   if (words.length > 0) {
-    matches = CATALOGUE.filter(p => {
+    // 1. Recherche classique par nom
+    const byName = CATALOGUE.filter(p => {
       const s = normalize(p._search);
       return words.every(w => matchWord(w, s));
     });
+    const byNameIds = new Set(byName.map(p => p.id));
+
+    // 2. Recherche via liaisons manuelles de l'étab courant
+    //    (skip en mode liaison pour éviter la récursion conceptuelle)
+    const viaKeyword = [];
+    if (!pickerModeForLiaison) {
+      const liaisons = getLiaisonsForCurrentEtab();
+      for (const l of liaisons) {
+        const kwNorm = normalize(l.keyword);
+        if (!kwNorm) continue;
+        const kwWords = kwNorm.split(/\s+/).filter(Boolean);
+        const allQueryInKw = words.every(w => matchWord(w, kwNorm));
+        const allKwInQuery = kwWords.every(w => matchWord(w, term));
+        if (!allQueryInKw && !allKwInQuery) continue;
+        const prod = CATALOGUE.find(p => p.y === l.productYokitup);
+        if (!prod) continue;
+        if (byNameIds.has(prod.id)) continue;
+        if (kwMatches[prod.id]) continue;
+        kwMatches[prod.id] = l.keyword;
+        viaKeyword.push(prod);
+      }
+    }
+    matches = byName.concat(viaKeyword);
   }
 
   // Filtre des produits déjà utilisés : seulement en mode batch
@@ -6912,9 +6939,11 @@ function renderBatchPicker() {
     matches.forEach(p => {
       const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
       const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
+      const viaKw = kwMatches[p.id];
+      const kwBadge = viaKw ? '<span class="prod-kw-badge" title="trouvé via mot-clé">🔎 via « ' + escape(viaKw) + ' »</span>' : '';
       html += '<div class="prod" data-pid="' + p.id + '">';
       html += '  <span class="prod-tag ' + pillClass + '">' + escape(pillLabel) + '</span>';
-      html += '  <div class="prod-name">' + escape(p.s) + '</div>';
+      html += '  <div class="prod-name">' + escape(p.s) + kwBadge + '</div>';
       html += '</div>';
     });
   }
