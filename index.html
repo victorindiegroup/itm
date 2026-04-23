@@ -1396,6 +1396,14 @@
       </div>
     </div>
     <div class="field">
+      <label class="field-lbl">Type d'inventaire</label>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvType" value="alcool_soft" checked> <span>🍸 Alcool / Soft (bar)</span></label>
+        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvType" value="vin"> <span>🍷 Vin (cave)</span></label>
+        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvType" value="total"> <span>📦 Total (tout)</span></label>
+      </div>
+    </div>
+    <div class="field">
       <label class="field-lbl">Nom de la personne</label>
       <input type="text" id="startInvPersonne" class="field-input" placeholder="Ex: Paul, Sarah, Marc..." autocomplete="name">
     </div>
@@ -1532,7 +1540,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v73';
+const APP_VERSION = 'v74';
 
 /* === ITM APP === */
 (function(){
@@ -1735,6 +1743,7 @@ function startInventory(meta) {
     id: 'inv_' + Date.now(),
     date: meta.date || new Date().toISOString().slice(0,10),
     moment: meta.moment || 'avant',  // 'avant' | 'apres'
+    type: meta.type || 'total',       // 'alcool_soft' | 'vin' | 'total'
     personne: meta.personne || '',
     startedAt: new Date().toISOString(),
     lines: []
@@ -1754,6 +1763,7 @@ function finishInventory() {
     id: state.currentInventory.id,
     date: state.currentInventory.date,
     moment: state.currentInventory.moment,
+    type: state.currentInventory.type || 'total',
     personne: state.currentInventory.personne,
     startedAt: state.currentInventory.startedAt,
     lines: [...state.currentInventory.lines],
@@ -2459,6 +2469,16 @@ function fmtQty(v){
 function fmtDate(iso){
   const d = new Date(iso);
   return d.toLocaleDateString('fr-FR', {day: '2-digit', month: 'long', year: 'numeric'});
+}
+
+// Retourne un label lisible pour un type d'inventaire
+function invTypeLabel(type) {
+  switch (type) {
+    case 'vin':         return '🍷 Vin';
+    case 'alcool_soft': return '🍸 Alcool/Soft';
+    case 'total':
+    default:            return '📦 Total';
+  }
 }
 
 function toast(msg){
@@ -4189,9 +4209,10 @@ function renderSession(){
   if (state.currentInventory) {
     const inv = state.currentInventory;
     const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
+    const typeLbl = invTypeLabel(inv.type);
     html += `<div class="sess-current">
       <div class="sess-current-title">⚠ Inventaire en cours</div>
-      <div class="sess-current-meta"><b>${fmtDate(inv.date)}</b> · ${momentLbl}</div>
+      <div class="sess-current-meta"><b>${fmtDate(inv.date)}</b> · ${momentLbl} · ${typeLbl}</div>
       ${inv.personne ? `<div class="sess-current-meta">Par : <b>${escape(inv.personne)}</b></div>` : ''}
       <div class="sess-current-count">${inv.lines.length} produit${inv.lines.length > 1 ? 's' : ''} saisi${inv.lines.length > 1 ? 's' : ''}</div>
       <div class="sess-current-actions">
@@ -4210,11 +4231,12 @@ function renderSession(){
     html += `<div class="sess-history-title">Historique</div>`;
     state.inventories.forEach(inv => {
       const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
+      const typeLbl = invTypeLabel(inv.type);
       const statusClass = inv.exported ? 'exported' : 'not-exported';
       const statusLbl = inv.exported ? '✓ Envoyé' : '⚠ Non envoyé';
       const personLbl = inv.personne ? ` · ${escape(inv.personne)}` : '';
       html += `<div class="sess-inv-item" data-inv="${inv.id}">
-        <div class="sess-inv-date">${fmtDate(inv.date)} · ${momentLbl}</div>
+        <div class="sess-inv-date">${fmtDate(inv.date)} · ${momentLbl} · ${typeLbl}</div>
         <div class="sess-inv-sub">
           <span>${inv.lines.length} produit${inv.lines.length > 1 ? 's' : ''}${personLbl}</span>
           <span class="sess-inv-status ${statusClass}">${statusLbl}</span>
@@ -4504,6 +4526,105 @@ function addChatMsg(role, text){
   root.appendChild(div);
   root.scrollTop = root.scrollHeight;
   return div;
+}
+
+// Ajouter un message du V avec HTML (pour gras, etc.) — utilisé pour les rappels au lancement
+function addChatMsgHtml(role, htmlText){
+  chatMsgs.push({role, text: htmlText, isHtml: true});
+  const root = document.getElementById('chatMsgs');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'user' ? 'msg-u' : 'msg-a');
+  div.innerHTML = htmlText;
+  root.appendChild(div);
+  root.scrollTop = root.scrollHeight;
+  return div;
+}
+
+// Ouvrir le chat et y afficher un avertissement du V
+function showLeVAdvisory(htmlText) {
+  // Ouvrir le chat s'il ne l'est pas
+  const panel = document.getElementById('chatPanel');
+  if (panel && !panel.classList.contains('open')) {
+    openChat();
+  }
+  addChatMsgHtml('assistant', htmlText);
+}
+
+// Afficher un check de clôture avec 2 boutons : "Oui j'en ai plus" / "Je complète"
+// missingList : tableau de { label, count } pour les catégories manquantes
+// onConfirm : callback si l'utilisateur clique "Oui j'en ai plus"
+// onComplete : callback si l'utilisateur clique "Je complète"
+function showLeVCloseCheck(missingList, onConfirm, onComplete) {
+  const panel = document.getElementById('chatPanel');
+  if (panel && !panel.classList.contains('open')) {
+    openChat();
+  }
+  const root = document.getElementById('chatMsgs');
+  const names = missingList.map(m => '<b>' + escape(m.label) + '</b>').join(', ');
+
+  // Bulle message du V
+  let html = '👋 Avant que tu clôtures, un petit check :<br><br>';
+  html += 'Tu n\'as <b>rien compté</b> dans ' + names + '.<br><br>';
+  html += 'Est-ce que c\'est normal ?';
+
+  const div = document.createElement('div');
+  div.className = 'msg msg-a';
+  div.innerHTML = html;
+  root.appendChild(div);
+
+  // Boutons d'action (pas dans la bulle, en dessous)
+  const actions = document.createElement('div');
+  actions.className = 'chat-close-actions';
+  actions.style.cssText = 'display:flex; gap:8px; padding:4px 0 8px; flex-wrap:wrap;';
+
+  const btnConfirm = document.createElement('button');
+  btnConfirm.type = 'button';
+  btnConfirm.textContent = '✅ Oui, j\'en ai plus';
+  btnConfirm.style.cssText = 'flex:1; min-width:140px; padding:12px 14px; background:var(--accent); color:white; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;';
+  btnConfirm.addEventListener('click', () => {
+    actions.remove();
+    addChatMsg('assistant', 'OK, je clôture.');
+    if (typeof onConfirm === 'function') onConfirm();
+  });
+
+  const btnComplete = document.createElement('button');
+  btnComplete.type = 'button';
+  btnComplete.textContent = '✏️ Je complète';
+  btnComplete.style.cssText = 'flex:1; min-width:140px; padding:12px 14px; background:var(--surface); color:var(--accent-dark); border:1px solid var(--accent); border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;';
+  btnComplete.addEventListener('click', () => {
+    actions.remove();
+    addChatMsg('assistant', 'Parfait, je te laisse compléter. Reclique "Terminer" quand tu as fini.');
+    if (typeof onComplete === 'function') onComplete();
+  });
+
+  actions.appendChild(btnConfirm);
+  actions.appendChild(btnComplete);
+  root.appendChild(actions);
+  root.scrollTop = root.scrollHeight;
+}
+
+// Vérifier les catégories obligatoires (cigarettes, bitters, cafetière) pour un inventaire ALCOOL/SOFT ou TOTAL
+// Retourne la liste des catégories manquantes (vide si tout est OK)
+function checkRequiredCategories(inventory) {
+  if (!inventory || !inventory.lines) return [];
+  const REQUIRED = [
+    { key: 'cigarettes', label: 'cigarettes', test: c => /CIGARETTE/i.test(c || '') },
+    { key: 'bitters',    label: 'bitters',    test: c => /LIQUIDE\s*-\s*ALCOOL\s*-\s*BITTER/i.test(c || '') },
+    { key: 'cafeterie',  label: 'cafetière',  test: c => /CAFETERIE/i.test(c || '') }
+  ];
+
+  // Pour chaque ligne, récupérer la catégorie du produit catalogue et vérifier
+  const covered = new Set();
+  inventory.lines.forEach(l => {
+    if (l.batchId) return;  // batchs maison, pas catégorisés
+    const p = CATALOGUE[l.productId];
+    if (!p) return;
+    REQUIRED.forEach(req => {
+      if (req.test(p.c)) covered.add(req.key);
+    });
+  });
+
+  return REQUIRED.filter(req => !covered.has(req.key));
 }
 
 function sendChat(){
@@ -6258,23 +6379,47 @@ function confirmFinishInventory(){
     toast('Aucun produit saisi, rien à exporter');
     return;
   }
-  confirmCb = () => {
+
+  // Callback qui fait la clôture effective (confirmé par l'utilisateur)
+  const doFinish = () => {
     // 1. Archiver l'inventaire dans state.inventories + clear currentInventory
     const inv = finishInventory();
     if (!inv) return;
-
     // 2. Marquer exporté + sauver AVANT tout (pour que le localStorage soit fiable)
     inv.exported = true;
     saveState();
-
     // 3. Re-render l'UI avant le mailto (qui peut suspendre l'exécution)
     renderSession();
     renderHeader();
     renderCatalogue();
-
     // 4. Export CSV + partage (dernier, peut être async)
     exportAndMailInventory(inv);
   };
+
+  // Check catégories obligatoires pour les types alcool_soft et total
+  const invType = state.currentInventory.type || 'total';
+  if (invType === 'alcool_soft' || invType === 'total') {
+    const missing = checkRequiredCategories(state.currentInventory);
+    if (missing.length > 0) {
+      // Afficher le check du V avec les boutons "Oui j'en ai plus" / "Je complète"
+      showLeVCloseCheck(
+        missing,
+        // onConfirm : on passe à la confirmation standard
+        () => {
+          confirmCb = doFinish;
+          document.getElementById('confirmTitle').textContent = 'Terminer l\'inventaire ?';
+          document.getElementById('confirmMsg').textContent = state.currentInventory.lines.length + ' produit(s) seront archivés et envoyés.';
+          openSheet('shConfirm','ovConfirm');
+        },
+        // onComplete : on ne fait rien, l'utilisateur reste sur l'inventaire
+        () => { /* rien */ }
+      );
+      return;
+    }
+  }
+
+  // Type VIN ou aucune catégorie manquante : confirmation standard directe
+  confirmCb = doFinish;
   document.getElementById('confirmTitle').textContent = 'Terminer l\'inventaire ?';
   document.getElementById('confirmMsg').textContent = state.currentInventory.lines.length + ' produit(s) seront archivés et envoyés.';
   openSheet('shConfirm','ovConfirm');
@@ -6541,7 +6686,8 @@ function openInventoryDetail(invId) {
 
   document.getElementById('invDetailTitle').textContent = fmtDate(inv.date);
   const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
-  const sub = momentLbl + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + inv.lines.length + ' produit(s)';
+  const typeLbl = invTypeLabel(inv.type);
+  const sub = momentLbl + ' · ' + typeLbl + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + inv.lines.length + ' produit(s)';
   document.getElementById('invDetailSub').textContent = sub;
 
   // Reset le champ de recherche
@@ -7744,18 +7890,30 @@ function init(){
   document.getElementById('startInvOk').addEventListener('click', () => {
     const date = document.getElementById('startInvDate').value;
     const moment = document.querySelector('input[name="startInvMoment"]:checked').value;
+    const typeInput = document.querySelector('input[name="startInvType"]:checked');
+    const type = typeInput ? typeInput.value : 'total';
     const personne = document.getElementById('startInvPersonne').value.trim();
     if (!date) { toast('Date requise'); return; }
     if (!personne) { toast('Nom requis'); return; }
     // Mémoriser le nom pour la prochaine fois
     localStorage.setItem('itm_last_personne', personne);
-    startInventory({ date, moment, personne });
+    startInventory({ date, moment, personne, type });
     closeSheet('shStartInv','ovStartInv');
     renderSession();
     renderHeader();
     // Basculer sur le catalogue pour commencer
     switchTab('catalogue');
     toast('Inventaire démarré');
+    // Si type VIN : Le V rappelle de ne pas compter le Prosecco
+    if (type === 'vin') {
+      setTimeout(() => {
+        showLeVAdvisory(
+          '⚠️ <b>Inventaire VIN</b> — petit rappel :<br><br>' +
+          'Le <b>Prosecco</b> et les autres bulles servies au bar sont <b>comptés par le chef de bar</b>. ' +
+          'Ne les compte pas ici, ça ferait un doublon.'
+        );
+      }, 700);
+    }
   });
 
   // InvDetail sheet
