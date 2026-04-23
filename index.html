@@ -1540,7 +1540,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v75';
+const APP_VERSION = 'v77';
 
 /* === ITM APP === */
 (function(){
@@ -4662,8 +4662,8 @@ const POS_FILES = {
   'Pablo (Saint-Tropez)':    'pos_pablo.csv',
   'Pablo (Saint-Barthélemy)':'pos_pablo_sbh.csv',
   'Café de l\'Ormeau':       'pos_ormeau.csv',
+  'Indie Beach':             'pos_indie_beach.csv',
   // À compléter au fur et à mesure :
-  // 'Indie Beach':           'pos_indie.csv',
   // 'La Sauvageonne (Ramatuelle)': 'pos_sauvageonne.csv',
   'Playamigos':            'pos_playamigos.csv',
   // 'Cherry (Saint-Tropez)': 'pos_cherry.csv',
@@ -6616,7 +6616,24 @@ function openPinsSheet() {
     .sort((a, b) => a[1].label.localeCompare(b[1].label, 'fr'));
   const ordered = [...adminEntries, ...userEntries];
 
-  let html = '<div style="padding: 12px 16px 8px; font-size: 11px; color: var(--ink-2); line-height: 1.5;">';
+  // URL de l'app (telle que chargée — s'adapte automatiquement si le domaine change)
+  const appUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+
+  let html = '';
+
+  // Bloc URL de partage en tête
+  html += '<div style="padding: 12px 16px 16px;">';
+  html += '  <div style="font-size:11px; color:var(--ink-2); text-transform:uppercase; letter-spacing:1px; font-weight:600; margin-bottom:8px;">🔗 Lien de l\'app</div>';
+  html += '  <div style="display:flex; align-items:center; gap:10px; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px;">';
+  html += '    <div style="flex:1; min-width:0; font-size:12px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:ui-monospace, SFMono-Regular, Menlo, monospace;" title="' + escape(appUrl) + '">' + escape(appUrl) + '</div>';
+  html += '    <button type="button" id="copyAppUrlBtn" data-url="' + escape(appUrl) + '" style="background:var(--accent); color:white; border:none; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;">Copier</button>';
+  html += '  </div>';
+  html += '</div>';
+
+  html += '<div style="height:1px; background:var(--border); margin:0 16px;"></div>';
+
+  html += '<div style="padding: 16px 16px 8px; font-size: 11px; color: var(--ink-2); text-transform:uppercase; letter-spacing:1px; font-weight:600;">🔑 PINs</div>';
+  html += '<div style="padding: 0 16px 8px; font-size: 11px; color: var(--ink-2); line-height: 1.5;">';
   html += 'Tape sur le PIN pour le copier dans le presse-papier.';
   html += '</div>';
   html += '<div style="padding: 0 16px 20px;">';
@@ -6674,6 +6691,36 @@ function openPinsSheet() {
       }
     });
   });
+
+  // Handler : bouton "Copier" URL de l'app
+  const copyUrlBtn = document.getElementById('copyAppUrlBtn');
+  if (copyUrlBtn) {
+    copyUrlBtn.addEventListener('click', async () => {
+      const url = copyUrlBtn.dataset.url;
+      const orig = copyUrlBtn.textContent;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const tmp = document.createElement('input');
+          tmp.value = url;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand('copy');
+          document.body.removeChild(tmp);
+        }
+        copyUrlBtn.textContent = '✓ copié';
+        copyUrlBtn.style.background = 'var(--accent-dark)';
+        toast('Lien copié');
+        setTimeout(() => {
+          copyUrlBtn.textContent = orig;
+          copyUrlBtn.style.background = 'var(--accent)';
+        }, 1800);
+      } catch (e) {
+        toast('Erreur copie : ' + e.message);
+      }
+    });
+  }
 
   openSheet('shPins', 'ovPins');
 }
