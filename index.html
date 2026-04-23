@@ -1540,7 +1540,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v74';
+const APP_VERSION = 'v75';
 
 /* === ITM APP === */
 (function(){
@@ -7908,9 +7908,9 @@ function init(){
     if (type === 'vin') {
       setTimeout(() => {
         showLeVAdvisory(
-          '⚠️ <b>Inventaire VIN</b> — petit rappel :<br><br>' +
-          'Le <b>Prosecco</b> et les autres bulles servies au bar sont <b>comptés par le chef de bar</b>. ' +
-          'Ne les compte pas ici, ça ferait un doublon.'
+          '🍾 <b>Rappel inventaire vin :</b><br><br>' +
+          'Le <b>Prosecco</b> est compté par le chef de bar (il s\'en sert pour les cocktails). ' +
+          'Ne le compte pas ici, ça ferait un doublon.'
         );
       }, 700);
     }
