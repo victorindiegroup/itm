@@ -1281,6 +1281,7 @@
     <div class="sess-header">
       <div id="sessAuthInfo" class="sess-auth-info">—</div>
       <button id="btnShowPins" type="button" class="sess-logout-btn admin-only" style="display:none; margin-right:8px;">🔑 PINs</button>
+      <button id="btnDiagInv" type="button" class="sess-logout-btn admin-only" style="display:none; margin-right:8px;">🐛 Diag</button>
       <button id="btnLogout" type="button" class="sess-logout-btn">Se déconnecter</button>
     </div>
 
@@ -1573,7 +1574,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v82';
+const APP_VERSION = 'v83';
 
 /* === ITM APP === */
 (function(){
@@ -6789,73 +6790,38 @@ function buildDiagReport() {
     return lines.join('\n');
   }
 
-  state.inventories.slice(0, 5).forEach((inv, idx) => {
-    lines.push('--- Inventaire #' + (idx + 1) + ' ---');
-    lines.push('id : ' + inv.id);
-    lines.push('date : ' + inv.date);
-    lines.push('moment : ' + inv.moment);
-    lines.push('type : ' + (inv.type || '(aucun)'));
-    lines.push('personne : ' + (inv.personne || '(aucun)'));
-    lines.push('lines.length : ' + (inv.lines || []).length);
-    lines.push('exported : ' + inv.exported);
+  // Diag du dernier inventaire principalement
+  const inv = state.inventories[0];
+  lines.push('--- Dernier inventaire ---');
+  lines.push('id : ' + inv.id);
+  lines.push('date : ' + inv.date);
+  lines.push('lines.length : ' + (inv.lines || []).length);
+  lines.push('');
 
-    let withProduct = 0, batches = 0, missingPid = 0, orphanPid = 0;
-    const orphanSamples = [];
-    const productIds = new Set();
-    const allProductIds = [];
-
-    (inv.lines || []).forEach(l => {
-      if (l.batchId) {
-        batches++;
-        return;
-      }
-      if (l.productId === null || l.productId === undefined) {
-        missingPid++;
-        if (orphanSamples.length < 3) {
-          orphanSamples.push('  ↳ id=' + l.id + ' total=' + l.total + ' zone=' + l.zone);
-        }
-        return;
-      }
-      allProductIds.push(l.productId);
-      const p = CATALOGUE[l.productId];
-      if (!p) {
-        orphanPid++;
-        if (orphanSamples.length < 5) {
-          orphanSamples.push('  ↳ productId=' + l.productId + ' (introuvable) total=' + l.total + ' zone=' + l.zone);
-        }
-      } else {
-        withProduct++;
-        productIds.add(l.productId);
-      }
-    });
-
-    lines.push('  → résolus catalogue : ' + withProduct);
-    lines.push('  → batchs : ' + batches);
-    lines.push('  → productId manquant : ' + missingPid);
-    lines.push('  → productId orphelin (pas dans catalogue) : ' + orphanPid);
-    lines.push('  → productId uniques : ' + productIds.size);
-
-    // Range des productIds (pour voir si on est en dehors des bornes du catalogue)
-    if (allProductIds.length > 0) {
-      const sorted = [...allProductIds].sort((a, b) => a - b);
-      lines.push('  → productId min/max : ' + sorted[0] + ' / ' + sorted[sorted.length - 1]);
-      lines.push('  → CATALOGUE max index : ' + (CATALOGUE.length - 1));
+  // Lister TOUS les noms de produits saisis (pour comparer avec l'export)
+  const products = new Map();  // productId → {name, totalQty, count, zones}
+  (inv.lines || []).forEach(l => {
+    if (l.batchId) return;
+    if (l.productId === null || l.productId === undefined) return;
+    const p = CATALOGUE[l.productId];
+    if (!p) return;
+    const key = l.productId;
+    if (!products.has(key)) {
+      products.set(key, { id: l.productId, y: p.y, name: p.s, totalQty: 0, count: 0, zones: new Set() });
     }
+    const e = products.get(key);
+    e.totalQty += (l.total || 0);
+    e.count++;
+    if (l.zone) e.zones.add(l.zone);
+  });
 
-    if (orphanSamples.length > 0) {
-      lines.push('  Exemples de lignes problématiques :');
-      orphanSamples.forEach(s => lines.push(s));
-    }
-
-    // Détection de doublons éventuels
-    const productIdCounts = {};
-    allProductIds.forEach(pid => { productIdCounts[pid] = (productIdCounts[pid] || 0) + 1; });
-    const dupes = Object.entries(productIdCounts).filter(([pid, n]) => n > 1);
-    if (dupes.length > 0) {
-      lines.push('  → productIds dupliqués (saisis plusieurs fois en différentes zones) : ' + dupes.length);
-    }
-
-    lines.push('');
+  lines.push('=== TOUS LES PRODUITS DISTINCTS (' + products.size + ') ===');
+  lines.push('Format : [id] qty_total | nom_yokitup');
+  lines.push('');
+  // Trier alphabétique par y
+  const sorted = Array.from(products.values()).sort((a, b) => a.y.localeCompare(b.y, 'fr'));
+  sorted.forEach(e => {
+    lines.push('[' + String(e.id).padStart(4) + '] ' + String(e.totalQty).padEnd(6) + ' | ' + e.y);
   });
 
   return lines.join('\n');
