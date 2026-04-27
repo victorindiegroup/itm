@@ -779,6 +779,16 @@
   .saisies-list {
     padding: 0 16px 40px;
   }
+
+  /* Espace bas dynamique : grandit quand le clavier mobile est ouvert pour permettre le scroll
+     jusqu'au dernier élément même si la liste est courte */
+  .kb-spacer {
+    height: 0;
+    transition: height 0.2s ease;
+  }
+  body.keyboard-open .kb-spacer {
+    height: 320px;
+  }
   .saisie-item {
     display: grid;
     grid-template-columns: 1fr auto;
@@ -1540,7 +1550,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v77';
+const APP_VERSION = 'v78';
 
 /* === ITM APP === */
 (function(){
@@ -3731,6 +3741,9 @@ function renderCatalogue(){
     });
   });
 
+  // Spacer en bas pour permettre le scroll même quand le clavier mobile cache la zone visible
+  html += '<div class="kb-spacer"></div>';
+
   root.innerHTML = html;
 
   // Clicks
@@ -4168,11 +4181,13 @@ function saveLine(){
     const idx = lines.findIndex(l => l.id === editingLineId);
     if (idx >= 0){
       draft.id = editingLineId;
+      draft.updatedAt = Date.now();
       lines[idx] = draft;
     }
     toast('Modifié');
   } else {
     draft.id = uid();
+    draft.updatedAt = Date.now();
     lines.push(draft);
     toast('Ajouté');
   }
@@ -4304,6 +4319,9 @@ function updateBadge(){
 }
 
 /* ---------- Export view ---------- */
+// Variable globale pour le filtre de recherche dans Saisies
+let saisiesFilter = '';
+
 function renderExport(){
   const root = document.getElementById('exportView');
   if (!root) return;
@@ -4313,15 +4331,63 @@ function renderExport(){
     return;
   }
 
-  const lines = state.currentInventory.lines;
+  const allLines = state.currentInventory.lines;
 
-  if (!lines.length){
+  if (!allLines.length){
     root.innerHTML = '<div class="prod-empty">Aucune saisie pour l\'instant.<br><br>Retourne au <b>Catalogue</b> pour commencer.</div>';
     return;
   }
 
-  // En-tête
-  let html = '<div class="saisies-header">' + lines.length + ' produit' + (lines.length > 1 ? 's' : '') + ' saisi' + (lines.length > 1 ? 's' : '') + '</div>';
+  // Tri : plus récent en haut. Priorité à updatedAt si présent, sinon timestamp décodé depuis l'id (uid = Date.now().toString(36) + ...)
+  function lineTs(l) {
+    if (l.updatedAt) return l.updatedAt;
+    if (l.id) {
+      // L'id commence par un timestamp en base 36 (Date.now()), de longueur ~9 chars
+      const ts = parseInt((l.id || '').slice(0, 9), 36);
+      if (!isNaN(ts)) return ts;
+    }
+    return 0;
+  }
+  const ordered = [...allLines].sort((a, b) => lineTs(b) - lineTs(a));
+
+  // Filtre selon la recherche
+  let lines = ordered;
+  if (saisiesFilter.trim()) {
+    const qn = normalize(saisiesFilter.trim());
+    const words = qn.split(/\s+/).filter(Boolean);
+    lines = ordered.filter(l => {
+      let searchText = '';
+      if (l.batchId) {
+        searchText = l.batchName || '';
+      } else {
+        const p = CATALOGUE[l.productId];
+        if (p) searchText = p._search || (p.s + ' ' + p.y);
+      }
+      if (l.zone) searchText += ' ' + l.zone;
+      const sn = normalize(searchText);
+      return words.every(w => matchWord(w, sn));
+    });
+  }
+
+  // Barre de recherche en haut + compteur
+  let html = '<div style="position:sticky; top:0; background:var(--bg); padding:10px 14px 6px; z-index:5;">';
+  html += '  <input type="search" id="saisiesSearch" placeholder="Rechercher dans les saisies..." value="' + escape(saisiesFilter) + '" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:14px; background:var(--surface);">';
+  html += '</div>';
+  html += '<div class="saisies-header">';
+  if (saisiesFilter.trim()) {
+    html += lines.length + ' / ' + allLines.length + ' produit' + (allLines.length > 1 ? 's' : '');
+  } else {
+    html += allLines.length + ' produit' + (allLines.length > 1 ? 's' : '') + ' saisi' + (allLines.length > 1 ? 's' : '') + ' · plus récent en haut';
+  }
+  html += '</div>';
+
+  if (!lines.length) {
+    html += '<div class="prod-empty" style="padding:40px 20px;">Aucune saisie ne correspond à « ' + escape(saisiesFilter) + ' ».</div>';
+    html += '<div class="kb-spacer"></div>';
+    root.innerHTML = html;
+    wireSaisiesSearch();
+    return;
+  }
 
   html += '<div class="saisies-list">';
   lines.forEach(line => {
@@ -4389,7 +4455,11 @@ function renderExport(){
   });
   html += '</div>';
 
+  // Spacer en bas pour permettre le scroll quand le clavier mobile est ouvert
+  html += '<div class="kb-spacer"></div>';
+
   root.innerHTML = html;
+  wireSaisiesSearch();
 
   // Clic sur une saisie : éditer
   root.querySelectorAll('.saisie-item').forEach(el => {
@@ -4405,6 +4475,28 @@ function renderExport(){
     });
   });
 }
+
+// Attache le handler de la barre de recherche Saisies (avec préservation du focus pendant le re-render)
+function wireSaisiesSearch() {
+  const input = document.getElementById('saisiesSearch');
+  if (!input) return;
+  // Si l'input avait le focus avant le re-render, le restaurer
+  if (saisiesSearchHadFocus) {
+    setTimeout(() => {
+      input.focus();
+      // Replacer le curseur en fin
+      const v = input.value;
+      input.setSelectionRange(v.length, v.length);
+    }, 0);
+  }
+  input.addEventListener('focus', () => { saisiesSearchHadFocus = true; });
+  input.addEventListener('blur', () => { saisiesSearchHadFocus = false; });
+  input.addEventListener('input', (e) => {
+    saisiesFilter = e.target.value;
+    renderExport();
+  });
+}
+let saisiesSearchHadFocus = false;
 
 function askResetSession(){
   openConfirm('Terminer la session ?',
@@ -7415,7 +7507,8 @@ function saveBatchLine() {
     // Pas de productId (c'est un batch)
     productId: null,
     total: currentBatchDraft.batchCount,  // total = nombre de bouteilles
-    unit: 'batch'
+    unit: 'batch',
+    updatedAt: Date.now()
   };
 
   if (editingBatchLineId) {
@@ -7817,6 +7910,36 @@ function init(){
       syncBatchesForEtab(state.estab).catch(() => {});
     }
   });
+
+  // Détecter l'ouverture du clavier mobile via visualViewport
+  // Quand le clavier est ouvert, le viewport visuel devient plus petit que la fenêtre
+  // → on ajoute la classe body.keyboard-open qui active le kb-spacer pour permettre le scroll
+  if (window.visualViewport) {
+    const vv = window.visualViewport;
+    const checkKeyboard = () => {
+      const heightDiff = window.innerHeight - vv.height;
+      // Au-delà de 150px de différence, on considère que le clavier est ouvert
+      if (heightDiff > 150) {
+        document.body.classList.add('keyboard-open');
+      } else {
+        document.body.classList.remove('keyboard-open');
+      }
+    };
+    vv.addEventListener('resize', checkKeyboard);
+    vv.addEventListener('scroll', checkKeyboard);
+  } else {
+    // Fallback pour les navigateurs sans visualViewport : tracker focus/blur des inputs
+    document.addEventListener('focusin', (e) => {
+      if (e.target.matches('input, textarea, [contenteditable]')) {
+        document.body.classList.add('keyboard-open');
+      }
+    });
+    document.addEventListener('focusout', (e) => {
+      if (e.target.matches('input, textarea, [contenteditable]')) {
+        document.body.classList.remove('keyboard-open');
+      }
+    });
+  }
 
   renderHeader();
   renderCatalogue();
