@@ -1281,7 +1281,6 @@
     <div class="sess-header">
       <div id="sessAuthInfo" class="sess-auth-info">—</div>
       <button id="btnShowPins" type="button" class="sess-logout-btn admin-only" style="display:none; margin-right:8px;">🔑 PINs</button>
-      <button id="btnDiagInv" type="button" class="sess-logout-btn admin-only" style="display:none; margin-right:8px;">🐛 Diag</button>
       <button id="btnLogout" type="button" class="sess-logout-btn">Se déconnecter</button>
     </div>
 
@@ -1574,7 +1573,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v81';
+const APP_VERSION = 'v82';
 
 /* === ITM APP === */
 (function(){
@@ -2513,6 +2512,25 @@ function invTypeLabel(type) {
     case 'total':
     default:            return '📦 Total';
   }
+}
+
+// Compte le nombre de produits distincts dans un inventaire (= nombre de lignes dans l'export Yokitup)
+// Différent de inv.lines.length qui inclut les doublons par zone.
+// Les batchs sont décomposés en leurs ingrédients, comme à l'export.
+function countDistinctProducts(inv) {
+  if (!inv || !inv.lines) return 0;
+  const ids = new Set();
+  inv.lines.forEach(l => {
+    if (l.batchId) {
+      // Batch : compter chaque ingrédient comme un produit distinct
+      (l.batchCompo || []).forEach(c => {
+        if (c.productId !== undefined && c.productId !== null) ids.add('p:' + c.productId);
+      });
+    } else if (l.productId !== undefined && l.productId !== null) {
+      ids.add('p:' + l.productId);
+    }
+  });
+  return ids.size;
 }
 
 function toast(msg){
@@ -4253,11 +4271,16 @@ function renderSession(){
     const inv = state.currentInventory;
     const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
     const typeLbl = invTypeLabel(inv.type);
+    const distinctNb = countDistinctProducts(inv);
+    const totalNb = inv.lines.length;
+    const countText = (distinctNb === totalNb)
+      ? totalNb + ' produit' + (totalNb > 1 ? 's' : '') + ' saisi' + (totalNb > 1 ? 's' : '')
+      : distinctNb + ' produit' + (distinctNb > 1 ? 's' : '') + ' · ' + totalNb + ' saisie' + (totalNb > 1 ? 's' : '');
     html += `<div class="sess-current">
       <div class="sess-current-title">⚠ Inventaire en cours</div>
       <div class="sess-current-meta"><b>${fmtDate(inv.date)}</b> · ${momentLbl} · ${typeLbl}</div>
       ${inv.personne ? `<div class="sess-current-meta">Par : <b>${escape(inv.personne)}</b></div>` : ''}
-      <div class="sess-current-count">${inv.lines.length} produit${inv.lines.length > 1 ? 's' : ''} saisi${inv.lines.length > 1 ? 's' : ''}</div>
+      <div class="sess-current-count">${countText}</div>
       <div class="sess-current-actions">
         <button type="button" class="sess-btn-continue" id="btnContinueInv">Continuer la saisie</button>
         <button type="button" class="sess-btn-finish" id="btnFinishInv">Terminer et exporter</button>
@@ -6528,7 +6551,7 @@ function confirmFinishInventory(){
         () => {
           confirmCb = doFinish;
           document.getElementById('confirmTitle').textContent = 'Terminer l\'inventaire ?';
-          document.getElementById('confirmMsg').textContent = state.currentInventory.lines.length + ' produit(s) seront archivés et envoyés.';
+          document.getElementById('confirmMsg').textContent = buildFinishConfirmMsg(state.currentInventory);
           openSheet('shConfirm','ovConfirm');
         },
         // onComplete : on ne fait rien, l'utilisateur reste sur l'inventaire
@@ -6541,8 +6564,18 @@ function confirmFinishInventory(){
   // Type VIN ou aucune catégorie manquante : confirmation standard directe
   confirmCb = doFinish;
   document.getElementById('confirmTitle').textContent = 'Terminer l\'inventaire ?';
-  document.getElementById('confirmMsg').textContent = state.currentInventory.lines.length + ' produit(s) seront archivés et envoyés.';
+  document.getElementById('confirmMsg').textContent = buildFinishConfirmMsg(state.currentInventory);
   openSheet('shConfirm','ovConfirm');
+}
+
+// Construit le message de confirmation à la clôture, avec produits distincts vs saisies brutes
+function buildFinishConfirmMsg(inv) {
+  const distinct = countDistinctProducts(inv);
+  const total = inv.lines.length;
+  if (distinct === total) {
+    return total + ' produit' + (total > 1 ? 's' : '') + ' ser' + (total > 1 ? 'ont' : 'a') + ' archivé' + (total > 1 ? 's' : '') + ' et envoyé' + (total > 1 ? 's' : '') + '.';
+  }
+  return distinct + ' produit' + (distinct > 1 ? 's' : '') + ' (' + total + ' saisie' + (total > 1 ? 's' : '') + ' au total avec d\u00e9tail par zone) seront archivés et envoyés.';
 }
 
 /* ---------- Annuler l'inventaire en cours ---------- */
@@ -6959,7 +6992,17 @@ function openInventoryDetail(invId) {
   document.getElementById('invDetailTitle').textContent = fmtDate(inv.date);
   const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
   const typeLbl = invTypeLabel(inv.type);
-  const sub = momentLbl + ' · ' + typeLbl + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + inv.lines.length + ' produit(s)';
+  // Compter les produits distincts (= ce qui sera réellement dans l'export Yokitup)
+  // vs les saisies brutes (= lignes dans inv.lines, qui peuvent être multiples si différentes zones)
+  const distinctProducts = countDistinctProducts(inv);
+  const totalLines = inv.lines.length;
+  let countLbl;
+  if (distinctProducts === totalLines) {
+    countLbl = totalLines + ' produit' + (totalLines > 1 ? 's' : '');
+  } else {
+    countLbl = distinctProducts + ' produit' + (distinctProducts > 1 ? 's' : '') + ' · ' + totalLines + ' saisie' + (totalLines > 1 ? 's' : '');
+  }
+  const sub = momentLbl + ' · ' + typeLbl + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + countLbl;
   document.getElementById('invDetailSub').textContent = sub;
 
   // Reset le champ de recherche
