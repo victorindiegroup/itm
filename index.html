@@ -1574,7 +1574,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v83';
+const APP_VERSION = 'v86';
 
 /* === ITM APP === */
 (function(){
@@ -1779,6 +1779,7 @@ function startInventory(meta) {
     moment: meta.moment || 'avant',  // 'avant' | 'apres'
     type: meta.type || 'total',       // 'alcool_soft' | 'vin' | 'total'
     personne: meta.personne || '',
+    etab: state.estab,                // figer l'étab au démarrage de l'inventaire
     startedAt: new Date().toISOString(),
     lines: []
   };
@@ -1799,6 +1800,7 @@ function finishInventory() {
     moment: state.currentInventory.moment,
     type: state.currentInventory.type || 'total',
     personne: state.currentInventory.personne,
+    etab: state.currentInventory.etab || state.estab,  // étab à la clôture (fallback sur étab actif si non renseigné au démarrage)
     startedAt: state.currentInventory.startedAt,
     lines: [...state.currentInventory.lines],
     finishedAt: new Date().toISOString(),
@@ -4301,11 +4303,16 @@ function renderSession(){
       const typeLbl = invTypeLabel(inv.type);
       const statusClass = inv.exported ? 'exported' : 'not-exported';
       const statusLbl = inv.exported ? '✓ Envoyé' : '⚠ Non envoyé';
-      const personLbl = inv.personne ? ` · ${escape(inv.personne)}` : '';
+      // Étab : utilise inv.etab si présent, sinon fallback sur l'étab actif (anciens inventaires sans champ)
+      const etabLbl = inv.etab ? `${escape(inv.etab)} · ` : '';
+      const personLbl = inv.personne ? `${escape(inv.personne)}` : '';
+      const subParts = [];
+      subParts.push(`${inv.lines.length} produit${inv.lines.length > 1 ? 's' : ''}`);
+      if (etabLbl || personLbl) subParts.push(`${etabLbl}${personLbl}`);
       html += `<div class="sess-inv-item" data-inv="${inv.id}">
         <div class="sess-inv-date">${fmtDate(inv.date)} · ${momentLbl} · ${typeLbl}</div>
         <div class="sess-inv-sub">
-          <span>${inv.lines.length} produit${inv.lines.length > 1 ? 's' : ''}${personLbl}</span>
+          <span>${subParts.join(' · ')}</span>
           <span class="sess-inv-status ${statusClass}">${statusLbl}</span>
         </div>
       </div>`;
@@ -6784,44 +6791,54 @@ function buildDiagReport() {
   lines.push('Catalogue : ' + CATALOGUE.length + ' produits');
   lines.push('Version : ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'inconnue'));
   lines.push('');
-
-  if (!state.inventories || state.inventories.length === 0) {
-    lines.push('Aucun inventaire archivé.');
-    return lines.join('\n');
-  }
-
-  // Diag du dernier inventaire principalement
-  const inv = state.inventories[0];
-  lines.push('--- Dernier inventaire ---');
-  lines.push('id : ' + inv.id);
-  lines.push('date : ' + inv.date);
-  lines.push('lines.length : ' + (inv.lines || []).length);
+  lines.push('Nombre d\'inventaires archivés : ' + ((state.inventories || []).length));
+  lines.push('Inventaire en cours : ' + (state.currentInventory ? 'OUI (id=' + state.currentInventory.id + ', ' + (state.currentInventory.lines||[]).length + ' lignes)' : 'NON'));
   lines.push('');
 
-  // Lister TOUS les noms de produits saisis (pour comparer avec l'export)
-  const products = new Map();  // productId → {name, totalQty, count, zones}
-  (inv.lines || []).forEach(l => {
-    if (l.batchId) return;
-    if (l.productId === null || l.productId === undefined) return;
-    const p = CATALOGUE[l.productId];
-    if (!p) return;
-    const key = l.productId;
-    if (!products.has(key)) {
-      products.set(key, { id: l.productId, y: p.y, name: p.s, totalQty: 0, count: 0, zones: new Set() });
-    }
-    const e = products.get(key);
-    e.totalQty += (l.total || 0);
-    e.count++;
-    if (l.zone) e.zones.add(l.zone);
-  });
+  // Lister TOUS les inventaires, pas juste le premier
+  (state.inventories || []).slice(0, 5).forEach((inv, idx) => {
+    lines.push('--- Inventaire #' + (idx + 1) + ' ---');
+    lines.push('id : ' + inv.id);
+    lines.push('date : ' + inv.date);
+    lines.push('moment : ' + inv.moment);
+    lines.push('type : ' + (inv.type || '(non défini)'));
+    lines.push('personne : ' + (inv.personne || '(aucun)'));
+    lines.push('lines.length : ' + ((inv.lines||[]).length));
+    lines.push('exported : ' + inv.exported);
+    lines.push('');
 
-  lines.push('=== TOUS LES PRODUITS DISTINCTS (' + products.size + ') ===');
-  lines.push('Format : [id] qty_total | nom_yokitup');
-  lines.push('');
-  // Trier alphabétique par y
-  const sorted = Array.from(products.values()).sort((a, b) => a.y.localeCompare(b.y, 'fr'));
-  sorted.forEach(e => {
-    lines.push('[' + String(e.id).padStart(4) + '] ' + String(e.totalQty).padEnd(6) + ' | ' + e.y);
+    // Liste de TOUS les produits saisis dans CET inventaire
+    const products = new Map();
+    (inv.lines || []).forEach(l => {
+      if (l.batchId) return;
+      if (l.productId === null || l.productId === undefined) return;
+      const p = CATALOGUE[l.productId];
+      if (!p) return;
+      const key = l.productId;
+      if (!products.has(key)) {
+        products.set(key, { id: l.productId, y: p.y, name: p.s, totalQty: 0, count: 0, zones: new Set() });
+      }
+      const e = products.get(key);
+      e.totalQty += (l.total || 0);
+      e.count++;
+      if (l.zone) e.zones.add(l.zone);
+    });
+
+    lines.push('  Produits distincts : ' + products.size);
+    // Cherche spécifiquement les "produits suspects"
+    const suspect = ['CARDENXE','GIVRY','MARSANNAY','VOLNAY','SANTENAY','PHILIBERT','BOZAL','BRANDY','CASA DRAGONES','CASAMIGOS','BOURGOGNE'];
+    let matched = [];
+    products.forEach(p => {
+      const upper = (p.y || '').toUpperCase();
+      for (const k of suspect) {
+        if (upper.includes(k)) { matched.push(p); break; }
+      }
+    });
+    lines.push('  Suspects trouvés : ' + matched.length);
+    matched.slice(0, 20).forEach(p => {
+      lines.push('    [' + p.id + '] qty=' + p.totalQty + ' | ' + p.y);
+    });
+    lines.push('');
   });
 
   return lines.join('\n');
@@ -6968,7 +6985,7 @@ function openInventoryDetail(invId) {
   } else {
     countLbl = distinctProducts + ' produit' + (distinctProducts > 1 ? 's' : '') + ' · ' + totalLines + ' saisie' + (totalLines > 1 ? 's' : '');
   }
-  const sub = momentLbl + ' · ' + typeLbl + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + countLbl;
+  const sub = momentLbl + ' · ' + typeLbl + (inv.etab ? ' · ' + inv.etab : '') + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + countLbl;
   document.getElementById('invDetailSub').textContent = sub;
 
   // Reset le champ de recherche
