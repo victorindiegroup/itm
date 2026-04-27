@@ -1560,7 +1560,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v79';
+const APP_VERSION = 'v80';
 
 /* === ITM APP === */
 (function(){
@@ -4200,6 +4200,10 @@ function saveLine(){
     draft.updatedAt = Date.now();
     lines.push(draft);
     toast('Ajouté');
+    // Reset de la barre de recherche du catalogue après ajout (gain de temps en saisie en chaîne)
+    searchTerm = '';
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
   }
 
   saveState();
@@ -7528,6 +7532,10 @@ function saveBatchLine() {
   } else {
     lines.push(newLine);
     toast('Ajouté');
+    // Reset de la barre de recherche du catalogue après ajout
+    searchTerm = '';
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
   }
 
   saveState();
