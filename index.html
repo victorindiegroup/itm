@@ -1281,6 +1281,7 @@
     <div class="sess-header">
       <div id="sessAuthInfo" class="sess-auth-info">—</div>
       <button id="btnShowPins" type="button" class="sess-logout-btn admin-only" style="display:none; margin-right:8px;">🔑 PINs</button>
+      <button id="btnDiagInv" type="button" class="sess-logout-btn admin-only" style="display:none; margin-right:8px;">🐛 Diag</button>
       <button id="btnLogout" type="button" class="sess-logout-btn">Se déconnecter</button>
     </div>
 
@@ -1448,6 +1449,19 @@
   </div>
 </div>
 <div class="overlay" id="ovPins"></div>
+<div class="sheet" id="shDiag">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title">🐛 Diagnostic inventaires</div>
+    <div class="sheet-sub">Rapport pour debug</div>
+  </div>
+  <div class="sheet-body" id="diagBody"></div>
+  <div class="sheet-foot">
+    <button type="button" class="btn-cancel" id="diagClose" style="flex:1;">Fermer</button>
+    <button type="button" class="btn-valid" id="diagCopy" style="flex:2;">Copier le rapport</button>
+  </div>
+</div>
+<div class="overlay" id="ovDiag"></div>
 <div class="sheet" id="shInvDetail">
   <div class="sheet-handle"></div>
   <div class="sheet-head">
@@ -1560,7 +1574,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v80';
+const APP_VERSION = 'v81';
 
 /* === ITM APP === */
 (function(){
@@ -6709,6 +6723,111 @@ let currentDetailFilter = '';
 // ============================================================
 // Pense-bête admin : liste des PINs par établissement
 // ============================================================
+// ============================================================
+// Diagnostic admin : analyse les inventaires pour détecter les
+// problèmes (productId orphelins, batchs cassés, etc.)
+// ============================================================
+function openDiagSheet() {
+  if (!currentAuth || currentAuth.role !== 'admin') return;
+  const body = document.getElementById('diagBody');
+  if (!body) return;
+
+  const report = buildDiagReport();
+  // Stocker le rapport sur l'élément pour le bouton Copier
+  body.dataset.report = report;
+
+  // Afficher en pre pour la lisibilité
+  body.innerHTML = '<pre style="font-family:ui-monospace,Menlo,monospace; font-size:11px; white-space:pre-wrap; word-wrap:break-word; padding:12px 16px; line-height:1.5; background:var(--surface); margin:0; max-height:65vh; overflow:auto;">' + escape(report) + '</pre>';
+
+  openSheet('shDiag', 'ovDiag');
+}
+
+function buildDiagReport() {
+  const lines = [];
+  lines.push('=== ITM DIAGNOSTIC ===');
+  lines.push('Date rapport : ' + new Date().toISOString());
+  lines.push('Étab actif : ' + state.estab);
+  lines.push('Catalogue : ' + CATALOGUE.length + ' produits');
+  lines.push('Version : ' + (typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'inconnue'));
+  lines.push('');
+
+  if (!state.inventories || state.inventories.length === 0) {
+    lines.push('Aucun inventaire archivé.');
+    return lines.join('\n');
+  }
+
+  state.inventories.slice(0, 5).forEach((inv, idx) => {
+    lines.push('--- Inventaire #' + (idx + 1) + ' ---');
+    lines.push('id : ' + inv.id);
+    lines.push('date : ' + inv.date);
+    lines.push('moment : ' + inv.moment);
+    lines.push('type : ' + (inv.type || '(aucun)'));
+    lines.push('personne : ' + (inv.personne || '(aucun)'));
+    lines.push('lines.length : ' + (inv.lines || []).length);
+    lines.push('exported : ' + inv.exported);
+
+    let withProduct = 0, batches = 0, missingPid = 0, orphanPid = 0;
+    const orphanSamples = [];
+    const productIds = new Set();
+    const allProductIds = [];
+
+    (inv.lines || []).forEach(l => {
+      if (l.batchId) {
+        batches++;
+        return;
+      }
+      if (l.productId === null || l.productId === undefined) {
+        missingPid++;
+        if (orphanSamples.length < 3) {
+          orphanSamples.push('  ↳ id=' + l.id + ' total=' + l.total + ' zone=' + l.zone);
+        }
+        return;
+      }
+      allProductIds.push(l.productId);
+      const p = CATALOGUE[l.productId];
+      if (!p) {
+        orphanPid++;
+        if (orphanSamples.length < 5) {
+          orphanSamples.push('  ↳ productId=' + l.productId + ' (introuvable) total=' + l.total + ' zone=' + l.zone);
+        }
+      } else {
+        withProduct++;
+        productIds.add(l.productId);
+      }
+    });
+
+    lines.push('  → résolus catalogue : ' + withProduct);
+    lines.push('  → batchs : ' + batches);
+    lines.push('  → productId manquant : ' + missingPid);
+    lines.push('  → productId orphelin (pas dans catalogue) : ' + orphanPid);
+    lines.push('  → productId uniques : ' + productIds.size);
+
+    // Range des productIds (pour voir si on est en dehors des bornes du catalogue)
+    if (allProductIds.length > 0) {
+      const sorted = [...allProductIds].sort((a, b) => a - b);
+      lines.push('  → productId min/max : ' + sorted[0] + ' / ' + sorted[sorted.length - 1]);
+      lines.push('  → CATALOGUE max index : ' + (CATALOGUE.length - 1));
+    }
+
+    if (orphanSamples.length > 0) {
+      lines.push('  Exemples de lignes problématiques :');
+      orphanSamples.forEach(s => lines.push(s));
+    }
+
+    // Détection de doublons éventuels
+    const productIdCounts = {};
+    allProductIds.forEach(pid => { productIdCounts[pid] = (productIdCounts[pid] || 0) + 1; });
+    const dupes = Object.entries(productIdCounts).filter(([pid, n]) => n > 1);
+    if (dupes.length > 0) {
+      lines.push('  → productIds dupliqués (saisis plusieurs fois en différentes zones) : ' + dupes.length);
+    }
+
+    lines.push('');
+  });
+
+  return lines.join('\n');
+}
+
 function openPinsSheet() {
   if (!currentAuth || currentAuth.role !== 'admin') return;
 
@@ -8055,6 +8174,45 @@ function init(){
   const btnShowPins = document.getElementById('btnShowPins');
   if (btnShowPins) {
     btnShowPins.addEventListener('click', openPinsSheet);
+  }
+  // Bouton Diag (admin) : génère un rapport de diagnostic
+  const btnDiagInv = document.getElementById('btnDiagInv');
+  if (btnDiagInv) {
+    btnDiagInv.addEventListener('click', openDiagSheet);
+  }
+  const diagClose = document.getElementById('diagClose');
+  if (diagClose) {
+    diagClose.addEventListener('click', () => closeSheet('shDiag', 'ovDiag'));
+  }
+  const ovDiag = document.getElementById('ovDiag');
+  if (ovDiag) {
+    ovDiag.addEventListener('click', () => closeSheet('shDiag', 'ovDiag'));
+  }
+  const diagCopy = document.getElementById('diagCopy');
+  if (diagCopy) {
+    diagCopy.addEventListener('click', async () => {
+      const body = document.getElementById('diagBody');
+      const report = body ? body.dataset.report : '';
+      if (!report) { toast('Rien à copier'); return; }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(report);
+        } else {
+          const tmp = document.createElement('textarea');
+          tmp.value = report;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand('copy');
+          document.body.removeChild(tmp);
+        }
+        toast('Rapport copié — colle-le dans le chat avec Claude');
+        const orig = diagCopy.textContent;
+        diagCopy.textContent = '✓ copié';
+        setTimeout(() => { diagCopy.textContent = orig; }, 1800);
+      } catch (e) {
+        toast('Erreur copie : ' + e.message);
+      }
+    });
   }
   // Fermer le sheet PINs
   const pinsClose = document.getElementById('pinsClose');
