@@ -35,6 +35,16 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.4; height: 100vh; overscroll-behavior: none; display: flex; flex-direction: column; overflow: hidden; }
   body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; overflow: hidden; }
+
+  /* iOS Safari zoome automatiquement sur tout input de moins de 16px de police.
+     Ce zoom reste persistant (l'utilisateur reste coincé en zoomé jusqu'à un pinch manuel).
+     Solution : forcer 16px sur tous les inputs/textareas/selects côté iOS uniquement.
+     Le sélecteur @supports (-webkit-touch-callout) cible Safari iOS sans toucher au desktop ni à Android. */
+  @supports (-webkit-touch-callout: none) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+  }
   .mono { font-family: 'DM Mono', ui-monospace, monospace; }
   button { font-family: inherit; font-size: inherit; cursor: pointer; border: none; background: none; color: inherit; }
   input, select { font-family: inherit; font-size: inherit; color: inherit; }
@@ -1550,7 +1560,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v78';
+const APP_VERSION = 'v79';
 
 /* === ITM APP === */
 (function(){
