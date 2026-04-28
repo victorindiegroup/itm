@@ -1574,7 +1574,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v86';
+const APP_VERSION = 'v87';
 
 /* === ITM APP === */
 (function(){
@@ -2841,6 +2841,28 @@ async function renderInventaires() {
     });
   });
 
+  root.querySelectorAll('.inv-view-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      btn.disabled = true;
+      const origText = btn.textContent;
+      btn.textContent = 'Chargement...';
+      try {
+        const full = await fetchInventoryById(id, loadAdminToken());
+        if (full) {
+          openInventoryDetailObject(full, { source: 'backend' });
+        }
+        btn.textContent = origText;
+        btn.disabled = false;
+      } catch (err) {
+        toast('Erreur : ' + err.message);
+        btn.textContent = origText;
+        btn.disabled = false;
+      }
+    });
+  });
+
   root.querySelectorAll('.inv-delete-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -2886,7 +2908,8 @@ function renderInventaireCard(inv) {
   html += '    <span style="margin-left:8px;">' + cigBadge + '</span>';
   html += '  </div>';
   html += '  <div style="display:flex; gap:6px; flex-wrap:wrap;">';
-  html += '    <button type="button" class="inv-download-btn" data-id="' + escape(inv.id) + '" style="flex:1; min-width:160px; padding:8px 12px; background:var(--accent); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">📥 Télécharger Excel</button>';
+  html += '    <button type="button" class="inv-view-btn" data-id="' + escape(inv.id) + '" style="flex:1; min-width:130px; padding:8px 12px; background:var(--surface); color:var(--accent-dark); border:1px solid var(--accent); border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">👁️ Visualiser</button>';
+  html += '    <button type="button" class="inv-download-btn" data-id="' + escape(inv.id) + '" style="flex:1; min-width:130px; padding:8px 12px; background:var(--accent); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">📥 Télécharger Excel</button>';
   html += '    <button type="button" class="inv-delete-btn" data-id="' + escape(inv.id) + '" style="padding:8px 12px; background:transparent; color:var(--danger); border:1px solid var(--danger); border-radius:8px; font-size:12px; cursor:pointer;">Supprimer</button>';
   html += '  </div>';
   html += '</div>';
@@ -6759,6 +6782,7 @@ async function exportAndMailInventory(inv) {
 
 /* ---------- Détail inventaire depuis historique ---------- */
 let currentDetailInvId = null;
+let currentDetailInv = null;  // Objet inventaire courant (peut être local OU backend)
 let currentDetailFilter = '';
 
 // ============================================================
@@ -6969,7 +6993,15 @@ function openPinsSheet() {
 function openInventoryDetail(invId) {
   const inv = state.inventories.find(i => i.id === invId);
   if (!inv) return;
-  currentDetailInvId = invId;
+  openInventoryDetailObject(inv, { source: 'local' });
+}
+
+// Ouvrir le détail d'un inventaire à partir de l'objet inventaire (utilisé par admin pour inventaires backend)
+function openInventoryDetailObject(inv, opts) {
+  if (!inv || !inv.lines) return;
+  opts = opts || {};
+  currentDetailInv = inv;
+  currentDetailInvId = inv.id;
   currentDetailFilter = '';
 
   document.getElementById('invDetailTitle').textContent = fmtDate(inv.date);
@@ -7000,6 +7032,13 @@ function openInventoryDetail(invId) {
     });
     searchInput._handlerAttached = true;
   }
+
+  // Adapter les boutons foot selon source : pour backend admin, masquer "Renvoyer par mail"
+  // (inutile, l'admin a déjà accès direct au xlsx via le bouton Télécharger)
+  const resendBtn = document.getElementById('invDetailResend');
+  const deleteBtn = document.getElementById('invDetailDelete');
+  if (resendBtn) resendBtn.style.display = (opts.source === 'backend') ? 'none' : '';
+  if (deleteBtn) deleteBtn.style.display = (opts.source === 'backend') ? 'none' : '';
 
   renderInventoryDetailBody();
   openSheet('shInvDetail', 'ovInvDetail');
@@ -7045,7 +7084,8 @@ function aggregateInventoryForDisplay(inv) {
 function renderInventoryDetailBody() {
   const body = document.getElementById('invDetailBody');
   if (!body) return;
-  const inv = state.inventories.find(i => i.id === currentDetailInvId);
+  // Priorité à l'objet stocké (peut être local ou backend), fallback sur recherche par id local
+  const inv = currentDetailInv || (state.inventories || []).find(i => i.id === currentDetailInvId);
   if (!inv) return;
 
   const items = aggregateInventoryForDisplay(inv);
