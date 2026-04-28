@@ -1574,7 +1574,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v88';
+const APP_VERSION = 'v89';
 
 /* === ITM APP === */
 (function(){
@@ -1738,9 +1738,7 @@ function resolveProduct(obj) {
   if (y && CATALOGUE_BY_Y[y]) return CATALOGUE_BY_Y[y];
   // Ancien format : on n'a que l'index. ATTENTION : peut être faussé si le catalogue a changé d'ordre.
   if (obj.productId !== undefined && obj.productId !== null) {
-    const p = resolveProduct(obj);
-    // Si le produit existe ET que son y matche celui qu'on attendait (s'il était stocké) → OK
-    // Sinon → on retourne quand même mais c'est l'ancien comportement (fragile)
+    const p = CATALOGUE[obj.productId];
     return p || null;
   }
   return null;
