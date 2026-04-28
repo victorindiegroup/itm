@@ -1574,7 +1574,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v89';
+const APP_VERSION = 'v90';
 
 /* === ITM APP === */
 (function(){
@@ -1798,7 +1798,7 @@ function hasActiveInventory() {
 function startInventory(meta) {
   state.currentInventory = {
     id: 'inv_' + Date.now(),
-    date: meta.date || new Date().toISOString().slice(0,10),
+    date: meta.date || todayLocal(),
     moment: meta.moment || 'avant',  // 'avant' | 'apres'
     type: meta.type || 'total',       // 'alcool_soft' | 'vin' | 'total'
     personne: meta.personne || '',
@@ -2481,7 +2481,7 @@ function loadState(){
           // Créer un nouvel inventaire actif avec ces lignes
           s.currentInventory = {
             id: 'inv_migrated_' + Date.now(),
-            date: s.date || new Date().toISOString().slice(0,10),
+            date: s.date || todayLocal(),
             moment: 'avant',
             personne: '',
             startedAt: new Date().toISOString(),
@@ -2528,6 +2528,17 @@ function fmtQty(v){
 function fmtDate(iso){
   const d = new Date(iso);
   return d.toLocaleDateString('fr-FR', {day: '2-digit', month: 'long', year: 'numeric'});
+}
+
+// Retourne la date du jour au format YYYY-MM-DD dans le fuseau horaire LOCAL du téléphone
+// (et non UTC comme le ferait toISOString()). Cela évite les bugs de date à minuit-passé
+// dans les Caraïbes (SBH UTC-4) ou autres décalages.
+function todayLocal() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
 }
 
 // Retourne un label lisible pour un type d'inventaire
@@ -2592,7 +2603,7 @@ function closeAllSheets(){
 /* ---------- Header ---------- */
 function renderHeader(){
   const sub = document.getElementById('hSubDate');
-  const dateLbl = state.currentInventory ? fmtDate(state.currentInventory.date) : fmtDate(new Date().toISOString().slice(0,10));
+  const dateLbl = state.currentInventory ? fmtDate(state.currentInventory.date) : fmtDate(todayLocal());
   sub.textContent = state.estab + ' · ' + dateLbl;
   // Admin : cliquable. User : non cliquable.
   if (currentAuth && currentAuth.role === 'admin') {
@@ -4609,7 +4620,7 @@ function askResetSession(){
     `Vas-tu vraiment réinitialiser la session ? Tes ${state.lines.length} saisies seront effacées. Exporte d'abord le CSV si besoin.`,
     () => {
       state.lines = [];
-      state.date = new Date().toISOString().slice(0,10);
+      state.date = todayLocal();
       saveState();
       renderHeader();
       updateBadge();
@@ -6545,7 +6556,7 @@ function selectEstab(nom){
     confirmCb = () => {
       // Reset lines pour nouvel inventaire
       state.lines = [];
-      state.date = new Date().toISOString().slice(0,10);
+      state.date = todayLocal();
       go();
     };
     document.getElementById('confirmTitle').textContent = 'Changer d\'établissement ?';
@@ -6560,7 +6571,7 @@ function selectEstab(nom){
 /* ---------- Démarrer un inventaire ---------- */
 function openStartInventoryDialog(){
   // Pré-remplir date avec aujourd'hui
-  document.getElementById('startInvDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('startInvDate').value = todayLocal();
   // Reset moment à 'avant'
   document.querySelector('input[name="startInvMoment"][value="avant"]').checked = true;
   // Pré-remplir le nom avec ce qu'on avait la fois précédente
