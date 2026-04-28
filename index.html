@@ -1574,7 +1574,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v87';
+const APP_VERSION = 'v88';
 
 /* === ITM APP === */
 (function(){
@@ -1719,6 +1719,31 @@ function buildCatalogue(data) {
     t: p.t || [],   // tags établissements
     _search: (p.s + ' ' + p.y + ' ' + p.c).toLowerCase()
   }));
+  // Index de résolution par y (référence Yokitup, stable même si l'ordre change)
+  CATALOGUE_BY_Y = {};
+  CATALOGUE.forEach(p => { if (p.y) CATALOGUE_BY_Y[p.y] = p; });
+}
+
+// Index pour résolution rapide par y
+let CATALOGUE_BY_Y = {};
+
+// Helper central : retrouver le produit catalogue à partir d'une ligne (saisie, ingrédient batch, suggestion chat...)
+// PRIORITÉ : champ 'productY' (référence Yokitup, stable) > champ 'productId' (index, fragile, ancien format)
+// Pour les ingrédients de batch, le champ s'appelle 'y' au lieu de 'productY'.
+// Retourne le produit catalogue ou null si introuvable.
+function resolveProduct(obj) {
+  if (!obj) return null;
+  // Nouveau format : on a stocké le y directement
+  const y = obj.productY || obj.y;
+  if (y && CATALOGUE_BY_Y[y]) return CATALOGUE_BY_Y[y];
+  // Ancien format : on n'a que l'index. ATTENTION : peut être faussé si le catalogue a changé d'ordre.
+  if (obj.productId !== undefined && obj.productId !== null) {
+    const p = resolveProduct(obj);
+    // Si le produit existe ET que son y matche celui qu'on attendait (s'il était stocké) → OK
+    // Sinon → on retourne quand même mais c'est l'ancien comportement (fragile)
+    return p || null;
+  }
+  return null;
 }
 
 // Fallback : data inline (peut être vide)
@@ -2183,7 +2208,7 @@ function inventoryHasCigarettes(inv) {
   if (!inv || !inv.lines) return false;
   for (const l of inv.lines) {
     if (!l.productId && l.productId !== 0) continue;
-    const p = CATALOGUE[l.productId];
+    const p = resolveProduct(l);
     if (p && (p.c || '').toUpperCase().includes('CIGARETTE')) return true;
   }
   return false;
@@ -2726,7 +2751,7 @@ function renderBatches() {
       if (batch.compo && batch.compo.length) {
         html += '  <div class="batch-item-compo">';
         batch.compo.forEach(c => {
-          const prod = CATALOGUE[c.productId];
+          const prod = resolveProduct(c);
           const pname = prod ? prod.s : '(produit inconnu)';
           html += '<span class="batch-compo-chip">' + escape(fmtQty(c.qty)) + ' ' + escape(c.unit || '') + ' ' + escape(pname) + '</span>';
         });
@@ -3893,7 +3918,7 @@ const FORMATS_LITRE = [
 ];
 
 function openProductSheet(productId, lineId){
-  currentProduct = CATALOGUE[productId];
+  currentProduct = resolveProduct({productId: productId});
   editingLineId = lineId || null;
 
   // Init draft
@@ -3904,6 +3929,7 @@ function openProductSheet(productId, lineId){
     draft = {
       id: null,
       productId: productId,
+      productY: currentProduct ? currentProduct.y : null,  // référence stable (recommandée par rapport à productId)
       zone: state.currentZone,
       unit: currentProduct.e,
       qty: 0,
@@ -4442,7 +4468,7 @@ function renderExport(){
       if (l.batchId) {
         searchText = l.batchName || '';
       } else {
-        const p = CATALOGUE[l.productId];
+        const p = resolveProduct(l);
         if (p) searchText = p._search || (p.s + ' ' + p.y);
       }
       if (l.zone) searchText += ' ' + l.zone;
@@ -4500,7 +4526,7 @@ function renderExport(){
     }
 
     // CAS PRODUIT NORMAL
-    const p = CATALOGUE[line.productId];
+    const p = resolveProduct(line);
     if (!p) return;
     const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
     const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
@@ -4791,7 +4817,7 @@ function checkRequiredCategories(inventory) {
   const covered = new Set();
   inventory.lines.forEach(l => {
     if (l.batchId) return;  // batchs maison, pas catégorisés
-    const p = CATALOGUE[l.productId];
+    const p = resolveProduct(l);
     if (!p) return;
     REQUIRED.forEach(req => {
       if (req.test(p.c)) covered.add(req.key);
@@ -6337,7 +6363,7 @@ function buildSuggestionButton(s) {
   let pillHtml = '';
   let dotHtml = '';
   if (s.productId !== null && s.productId !== undefined) {
-    const prod = CATALOGUE[s.productId];
+    const prod = resolveProduct(s);
     if (prod && prod.p) {
       const pillCls = 'pill-' + (prod.p === '½' ? 'DEMI' : prod.p);
       pillHtml = '<span class="chat-suggestion-pill ' + pillCls + '">' + escape(prod.p) + '</span> ';
@@ -6666,7 +6692,7 @@ function aggregateInventoryLines(inv) {
     if (l.batchId) {
       const count = l.batchCount || 0;
       (l.batchCompo || []).forEach(c => {
-        const p = CATALOGUE[c.productId];
+        const p = resolveProduct(c);
         if (!p) return;
         const totalQty = (c.qty || 0) * count;
         let qty = totalQty;
@@ -6675,7 +6701,7 @@ function aggregateInventoryLines(inv) {
         addToAgg(p.y, p, qty);
       });
     } else {
-      const p = CATALOGUE[l.productId];
+      const p = resolveProduct(l);
       if (!p) return;
       addToAgg(p.y, p, l.total);
     }
@@ -6836,7 +6862,7 @@ function buildDiagReport() {
     (inv.lines || []).forEach(l => {
       if (l.batchId) return;
       if (l.productId === null || l.productId === undefined) return;
-      const p = CATALOGUE[l.productId];
+      const p = resolveProduct(l);
       if (!p) return;
       const key = l.productId;
       if (!products.has(key)) {
@@ -7072,7 +7098,7 @@ function aggregateInventoryForDisplay(inv) {
       const label = (l.batchName || 'Batch') + ' (batch)';
       addEntry(key, label, zone, l.batchCount || 0);
     } else {
-      const p = CATALOGUE[l.productId];
+      const p = resolveProduct(l);
       if (!p) return;
       addEntry('p:' + p.y, p.s, zone, l.total || 0);
     }
@@ -7275,7 +7301,7 @@ function renderBatchEditor() {
     html += '    <div style="color:var(--ink-2); font-size:13px; padding:12px 0;">Aucun ingrédient pour le moment.</div>';
   } else {
     currentBatch.compo.forEach((c, idx) => {
-      const prod = CATALOGUE[c.productId];
+      const prod = resolveProduct(c);
       const pname = prod ? prod.s : '(produit inconnu)';
       html += '<div class="batch-ingr-row" data-idx="' + idx + '">';
       html += '  <div class="batch-ingr-main">';
@@ -7502,7 +7528,7 @@ function renderBatchPicker() {
   body.querySelectorAll('.prod').forEach(el => {
     el.addEventListener('click', () => {
       const pid = parseInt(el.dataset.pid);
-      const p = CATALOGUE[pid];
+      const p = resolveProduct({productId: pid});
       if (!p) return;
       if (pickerModeForLiaison && currentLiaison) {
         // Mode liaison : renseigner le produit cible
@@ -7514,7 +7540,8 @@ function renderBatchPicker() {
         // Mode batch : ajouter l'ingrédient
         const defaultUnit = (p.e === 'litre') ? 'cL' : 'pc';
         currentBatch.compo.push({
-          productId: pid,
+          productId: pid,        // ancien format (index, fragile)
+          y: p.y,                // nouveau format (référence Yokitup, stable) — résolution prioritaire
           qty: 0,
           unit: defaultUnit
         });
@@ -7588,7 +7615,7 @@ function renderBatchSheet(batch) {
   html += '  <div class="field-lbl" style="margin-bottom: 6px;">Composition (par bouteille)</div>';
   html += '  <div style="font-size: 12px; color: var(--ink-2); margin-bottom: 16px;">';
   batch.compo.forEach(c => {
-    const p = CATALOGUE[c.productId];
+    const p = resolveProduct(c);
     const pname = p ? p.s : '(?)';
     html += '<div>• ' + fmtQty(c.qty) + ' ' + escape(c.unit) + ' — ' + escape(pname) + '</div>';
   });
@@ -7673,7 +7700,7 @@ function updateBatchBreakdown() {
   let html = '<div class="field-lbl" style="margin-bottom: 6px; margin-top: 12px;">Décomposition (total)</div>';
   html += '<div class="batch-breakdown-list">';
   currentBatchDraft.batchCompo.forEach(c => {
-    const p = CATALOGUE[c.productId];
+    const p = resolveProduct(c);
     const pname = p ? p.s : '(?)';
     const totalQty = (c.qty || 0) * count;
     html += '<div class="batch-breakdown-row">';
@@ -8000,7 +8027,7 @@ function renderLiaisonProductResults() {
   div.querySelectorAll('.liaison-prod-result').forEach(el => {
     el.addEventListener('click', () => {
       const pid = parseInt(el.dataset.pid);
-      const p = CATALOGUE[pid];
+      const p = resolveProduct({productId: pid});
       if (!p) return;
       currentLiaison.productYokitup = p.y;
       liaisonInlineSearch = '';
