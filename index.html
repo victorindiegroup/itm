@@ -1591,7 +1591,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v96';
+const APP_VERSION = 'v97';
 
 /* === ITM APP === */
 (function(){
@@ -7379,9 +7379,9 @@ function openInventoryDetailObject(inv, opts) {
 function aggregateInventoryForDisplay(inv) {
   const byProduct = new Map();
 
-  function addEntry(key, productLabel, zone, qty) {
+  function addEntry(key, productLabel, zone, qty, productObj, isBatch) {
     if (!byProduct.has(key)) {
-      byProduct.set(key, { key, label: productLabel, zones: [], total: 0 });
+      byProduct.set(key, { key, label: productLabel, zones: [], total: 0, product: productObj || null, isBatch: !!isBatch });
     }
     const entry = byProduct.get(key);
     // Essayer de fusionner si la même zone existe déjà
@@ -7400,11 +7400,11 @@ function aggregateInventoryForDisplay(inv) {
       // Batch : affichage spécial, on garde la ligne batch telle quelle
       const key = 'batch:' + l.batchId + ':' + zone;
       const label = (l.batchName || 'Batch') + ' (batch)';
-      addEntry(key, label, zone, l.batchCount || 0);
+      addEntry(key, label, zone, l.batchCount || 0, null, true);
     } else {
       const p = resolveProduct(l);
       if (!p) return;
-      addEntry('p:' + p.y, p.s, zone, l.total || 0);
+      addEntry('p:' + p.y, p.s, zone, l.total || 0, p, false);
     }
   });
 
@@ -7520,9 +7520,23 @@ function renderInventoryDetailBody() {
     html += '<div style="padding: 0 16px 16px;">';
     filtered.forEach(it => {
       const hasMultipleZones = it.zones.length > 1;
+      // Pastille format + dot couleur (si on a le produit)
+      let tagHtml = '';
+      let dotHtml = '';
+      if (it.product) {
+        const p = it.product;
+        const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
+        const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
+        tagHtml = '<span class="prod-tag ' + pillClass + '" style="margin-right: 8px; vertical-align: middle;">' + escape(pillLabel) + '</span>';
+        dotHtml = wineDotHtml(p.c);
+      } else if (it.isBatch) {
+        // Pour les batchs : pastille spéciale BATCH (style dédié si elle existe, sinon style neutre)
+        tagHtml = '<span class="prod-tag" style="margin-right: 8px; vertical-align: middle; background: var(--accent-soft); color: var(--accent-dark); border-color: var(--accent);">BATCH</span>';
+      }
+
       html += '<div style="padding: 10px 0; border-bottom: 1px solid var(--border);">';
       html += '  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px;">';
-      html += '    <span style="font-size: 14px; font-weight: 500;">' + escape(it.label) + '</span>';
+      html += '    <span style="font-size: 14px; font-weight: 500; flex: 1; min-width: 0;">' + tagHtml + dotHtml + escape(it.label) + '</span>';
       html += '    <span class="mono" style="font-size: 14px; font-weight: 600; color: var(--ink); white-space: nowrap;">' + fmtQty(it.total) + '</span>';
       html += '  </div>';
       if (hasMultipleZones) {
