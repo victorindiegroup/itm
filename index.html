@@ -652,6 +652,22 @@
   }
   .sess-btn-cancel:active { background: rgba(192, 67, 67, 0.1); }
 
+  /* Bouton imprimer trame papier : neutre, secondaire au CTA principal */
+  .sess-btn-printable {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 12px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sess-btn-printable:active { background: var(--bg); }
+
   /* Suggestions produits dans le chat */
   .chat-suggestions {
     margin: 8px 12px 8px 48px;
@@ -1474,6 +1490,7 @@
   <div class="sheet-body" id="invDetailBody"></div>
   <div class="sheet-foot">
     <button type="button" class="btn-cancel" id="invDetailClose">Fermer</button>
+    <button type="button" class="btn-sec" id="invDetailDownload">📥 Excel</button>
     <button type="button" class="btn-sec admin-only" id="invDetailDelete" style="color: var(--danger); border-color: var(--danger);">Supprimer</button>
     <button type="button" class="btn-valid" id="invDetailResend">Renvoyer par mail</button>
   </div>
@@ -1574,7 +1591,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v92';
+const APP_VERSION = 'v96';
 
 /* === ITM APP === */
 (function(){
@@ -3834,7 +3851,13 @@ function renderCatalogue(){
 
   orderedCats.forEach(cat => {
     html += '<div class="prod-cat-title">' + escape(cat) + '</div>';
-    byCat[cat].forEach(p => {
+    // Tri intra-catégorie : produits de la carte (à la carte) en premier, hors-carte ensuite
+    const sortedProducts = byCat[cat].slice().sort((a, b) => {
+      const aIn = isInCurrentEtab(a) ? 0 : 1;
+      const bIn = isInCurrentEtab(b) ? 0 : 1;
+      return aIn - bIn;  // 0 avant 1
+    });
+    sortedProducts.forEach(p => {
       const saisi = isProductSaisi(p.id) ? ' prod-saisi' : '';
       const offmenu = isInCurrentEtab(p) ? '' : ' prod-offmenu';
       const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
@@ -4358,9 +4381,13 @@ function renderSession(){
       </div>
       <button type="button" class="sess-btn-cancel" id="btnCancelInv">Annuler l'inventaire</button>
     </div>`;
+    // Bouton "Imprimer une trame" aussi disponible pendant l'inventaire (cas rare mais pas absurde)
+    html += `<button type="button" class="sess-btn-printable" id="btnPrintTemplate">📄 Imprimer une trame papier</button>`;
   } else {
     // Gros bouton de démarrage
     html += `<button type="button" class="sess-cta" id="btnStartInv">+ Lancer un inventaire</button>`;
+    // Et en dessous, bouton "Imprimer une trame" disponible même sans inventaire
+    html += `<button type="button" class="sess-btn-printable" id="btnPrintTemplate">📄 Imprimer une trame papier</button>`;
   }
 
   // ===== Historique =====
@@ -4403,6 +4430,9 @@ function renderSession(){
 
   const btnCancel = document.getElementById('btnCancelInv');
   if (btnCancel) btnCancel.addEventListener('click', confirmCancelInventory);
+
+  const btnPrintTemplate = document.getElementById('btnPrintTemplate');
+  if (btnPrintTemplate) btnPrintTemplate.addEventListener('click', openPrintTemplate);
 
   // Clic sur un inventaire de l'historique → détail
   root.querySelectorAll('.sess-inv-item').forEach(el => {
@@ -6578,6 +6608,261 @@ function selectEstab(nom){
 }
 
 
+/* ---------- Trame papier imprimable ---------- */
+// Génère une page imprimable A4 avec tous les produits à la carte de l'étab actif,
+// groupés par catégorie, avec des cases à cocher/remplir adaptées au format de chaque produit.
+function openPrintTemplate() {
+  // Filtrer les produits à la carte de l'étab actif uniquement
+  const products = CATALOGUE.filter(p => isInCurrentEtab(p));
+  if (products.length === 0) {
+    toast('Aucun produit à la carte de cet établissement');
+    return;
+  }
+
+  // Grouper par catégorie
+  const byCat = {};
+  products.forEach(p => {
+    const cat = p.c || 'AUTRE';
+    if (!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(p);
+  });
+
+  // Ordre des catégories : même que dans le catalogue (alphabétique sur la chaîne de hiérarchie)
+  const orderedCats = Object.keys(byCat).sort();
+
+  // Construction du HTML imprimable
+  let bodyHtml = '';
+
+  // En-tête
+  bodyHtml += '<div class="hdr">';
+  bodyHtml += '  <div class="hdr-row1">';
+  bodyHtml += '    <div class="hdr-title">Inventaire</div>';
+  bodyHtml += '    <div class="hdr-etab">' + escape(state.estab) + '</div>';
+  bodyHtml += '  </div>';
+  bodyHtml += '  <div class="hdr-row2">';
+  bodyHtml += '    <div class="hdr-field"><span class="hdr-label">Date :</span> <span class="hdr-blank"></span></div>';
+  bodyHtml += '    <div class="hdr-field"><span class="hdr-label">Avant / Après service :</span> <span class="hdr-blank"></span></div>';
+  bodyHtml += '    <div class="hdr-field"><span class="hdr-label">Nom :</span> <span class="hdr-blank"></span></div>';
+  bodyHtml += '  </div>';
+  bodyHtml += '</div>';
+
+  // Contenu : groupes par catégorie
+  orderedCats.forEach(cat => {
+    bodyHtml += '<div class="cat">';
+    bodyHtml += '  <div class="cat-title">' + escape(cat) + '</div>';
+    bodyHtml += '  <table class="cat-table">';
+    // Pour ne pas alourdir, header uniquement si la catégorie a des litres (donc colonnes formats)
+    const hasLitre = byCat[cat].some(p => p.e === 'litre');
+    if (hasLitre) {
+      bodyHtml += '<thead><tr>';
+      bodyHtml += '<th class="col-name">Produit</th>';
+      bodyHtml += '<th class="col-fmt">75cL</th>';
+      bodyHtml += '<th class="col-fmt">150cL</th>';
+      bodyHtml += '<th class="col-fmt">Niv.1</th>';
+      bodyHtml += '<th class="col-fmt">Niv.2</th>';
+      bodyHtml += '<th class="col-fmt">Niv.3</th>';
+      bodyHtml += '</tr></thead>';
+    } else {
+      bodyHtml += '<thead><tr>';
+      bodyHtml += '<th class="col-name">Produit</th>';
+      bodyHtml += '<th class="col-fmt">Pastille</th>';
+      bodyHtml += '<th class="col-nb">Nombre</th>';
+      bodyHtml += '</tr></thead>';
+    }
+    bodyHtml += '<tbody>';
+    byCat[cat].forEach(p => {
+      bodyHtml += '<tr>';
+      bodyHtml += '<td class="col-name">' + escape(p.s || p.y) + '</td>';
+      if (hasLitre) {
+        // Pour litre : 5 cases (75cL, 150cL, niveau 1/3, 2/3, restant)
+        // Pour btl/unit dans la même catégorie : on met juste un gros "Nb"
+        if (p.e === 'litre') {
+          bodyHtml += '<td class="col-fmt">&nbsp;</td>';
+          bodyHtml += '<td class="col-fmt">&nbsp;</td>';
+          bodyHtml += '<td class="col-fmt">&nbsp;</td>';
+          bodyHtml += '<td class="col-fmt">&nbsp;</td>';
+          bodyHtml += '<td class="col-fmt">&nbsp;</td>';
+        } else {
+          // BTL ou UNIT dans une catégorie qui contient aussi des litres
+          bodyHtml += '<td class="col-fmt nb-cell" colspan="5"><span class="pill">' + escape(p.p || '') + '</span> Nb : <span class="blank-line"></span></td>';
+        }
+      } else {
+        bodyHtml += '<td class="col-fmt"><span class="pill">' + escape(p.p || '') + '</span></td>';
+        bodyHtml += '<td class="col-nb">&nbsp;</td>';
+      }
+      bodyHtml += '</tr>';
+    });
+    bodyHtml += '</tbody></table>';
+    bodyHtml += '</div>';
+  });
+
+  // Mini légende en bas
+  bodyHtml += '<div class="legend">';
+  bodyHtml += '  <strong>Légende :</strong> ';
+  bodyHtml += '  <span class="pill">BTL</span> = bouteille (compter en pièces) · ';
+  bodyHtml += '  <span class="pill">UNIT</span> = unité · ';
+  bodyHtml += '  <span class="pill">LITRE</span> = compter par bouteille pleine et niveau (½, ¼…) · ';
+  bodyHtml += '  <span class="pill">½</span> = demi-bouteille (pièces)';
+  bodyHtml += '</div>';
+
+  // Construit la page complète à imprimer
+  const printDoc = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Inventaire - ${escape(state.estab)} - Trame papier</title>
+<style>
+  @page { size: A4 portrait; margin: 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-size: 9.5pt;
+    color: #111;
+    margin: 0;
+  }
+  .hdr {
+    border: 1px solid #333;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+  .hdr-row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .hdr-title { font-size: 16pt; font-weight: bold; }
+  .hdr-etab { font-size: 12pt; }
+  .hdr-row2 {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .hdr-field {
+    flex: 1;
+    min-width: 150px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .hdr-label { font-weight: bold; font-size: 9pt; white-space: nowrap; }
+  .hdr-blank {
+    flex: 1;
+    border-bottom: 1px solid #444;
+    min-height: 16px;
+  }
+
+  .cat {
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+  .cat-title {
+    background: #eee;
+    padding: 4px 8px;
+    font-weight: bold;
+    font-size: 10pt;
+    border: 1px solid #999;
+    border-bottom: none;
+  }
+  .cat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+  }
+  .cat-table th, .cat-table td {
+    border: 1px solid #999;
+    padding: 4px 6px;
+    text-align: left;
+  }
+  .cat-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    font-size: 8pt;
+    text-align: center;
+  }
+  .col-name { width: 56%; }
+  .col-fmt { width: 8%; text-align: center; }
+  .col-nb { width: 16%; min-height: 24px; }
+  .nb-cell { text-align: left; font-size: 8.5pt; }
+  .blank-line {
+    display: inline-block;
+    border-bottom: 1px solid #444;
+    min-width: 60px;
+    margin-left: 6px;
+  }
+  .pill {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: #ddd;
+    font-size: 7.5pt;
+    font-weight: 600;
+  }
+
+  .legend {
+    margin-top: 12px;
+    padding: 6px 10px;
+    border-top: 1px dashed #888;
+    font-size: 8pt;
+    color: #555;
+  }
+  .legend .pill { font-size: 7pt; }
+
+  @media print {
+    .no-print { display: none; }
+  }
+  .toolbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: #2d6a4f;
+    color: white;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+  }
+  .toolbar button {
+    background: white;
+    color: #2d6a4f;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  body {
+    padding-top: 50px;
+  }
+  @media print {
+    body { padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <span>Trame d'inventaire — ${escape(state.estab)}</span>
+    <span>
+      <button onclick="window.print()">🖨️ Imprimer / PDF</button>
+      <button onclick="window.close()" style="margin-left:6px; background:#444; color:white;">Fermer</button>
+    </span>
+  </div>
+  ${bodyHtml}
+</body>
+</html>`;
+
+  // Ouvrir dans un nouvel onglet pour permettre l'impression / sauvegarde PDF
+  const w = window.open('', '_blank');
+  if (!w) {
+    toast('Le navigateur a bloqué l\'ouverture. Autorise les popups.');
+    return;
+  }
+  w.document.open();
+  w.document.write(printDoc);
+  w.document.close();
+}
+
 /* ---------- Démarrer un inventaire ---------- */
 function openStartInventoryDialog(){
   // Pré-remplir date avec aujourd'hui
@@ -7124,6 +7409,82 @@ function aggregateInventoryForDisplay(inv) {
   });
 
   return Array.from(byProduct.values()).sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+}
+
+// ============================================================
+// Construit un xlsx détaillé par zone : 1 ligne par couple (produit, zone)
+// Colonnes : Produit | Zone | Quantité | Total produit (répété sur chaque ligne du même produit pour faciliter le tri)
+// Différent du xlsx Yokitup qui agrège tout par produit en 1 seule ligne.
+// ============================================================
+function buildDetailedXlsx(inv) {
+  if (typeof XLSX === 'undefined') {
+    throw new Error('SheetJS non chargé. Recharge l\'app.');
+  }
+  const items = aggregateInventoryForDisplay(inv);
+
+  // En-tête avec métadonnées de l'inventaire (info pour celui qui ouvre le fichier)
+  const headerRows = [
+    ['Inventaire', inv.etab || ''],
+    ['Date', inv.date || ''],
+    ['Moment', inv.moment === 'apres' ? 'Après service' : 'Avant service'],
+    ['Type', invTypeLabel(inv.type)],
+    ['Personne', inv.personne || ''],
+    [],
+  ];
+
+  const data = [
+    ...headerRows,
+    ['Produit', 'Zone', 'Quantité', 'Total produit'],
+  ];
+
+  items.forEach(it => {
+    if (it.zones.length === 0) return;
+    it.zones.forEach(z => {
+      data.push([it.label, z.zone, z.qty, it.total]);
+    });
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  // Largeurs de colonnes pour la lisibilité
+  ws['!cols'] = [
+    { wch: 50 },  // Produit
+    { wch: 15 },  // Zone
+    { wch: 12 },  // Quantité
+    { wch: 14 },  // Total produit
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Détail par zone');
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+// Déclenche le téléchargement du xlsx détaillé pour l'inventaire courant (sheet de détail)
+function downloadCurrentDetailXlsx() {
+  const inv = currentDetailInv || (state.inventories || []).find(i => i.id === currentDetailInvId);
+  if (!inv) {
+    toast('Aucun inventaire à télécharger');
+    return;
+  }
+  try {
+    const blob = buildDetailedXlsx(inv);
+    // Nom de fichier : étab_date_moment_personne_detail.xlsx
+    const cleanEtab = (inv.etab || 'inventaire').replace(/[^a-zA-Z0-9]+/g, '_');
+    const cleanPersonne = (inv.personne || '').replace(/[^a-zA-Z0-9]+/g, '_');
+    const moment = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
+    const fname = [cleanEtab, inv.date, moment, cleanPersonne, 'detail'].filter(Boolean).join('_') + '.xlsx';
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fname;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Fichier téléchargé');
+  } catch (e) {
+    toast('Erreur : ' + e.message);
+  }
 }
 
 function renderInventoryDetailBody() {
@@ -8379,6 +8740,7 @@ function init(){
   document.getElementById('ovInvDetail').addEventListener('click', () => closeSheet('shInvDetail','ovInvDetail'));
   document.getElementById('invDetailDelete').addEventListener('click', deleteInventoryDetail);
   document.getElementById('invDetailResend').addEventListener('click', resendInventoryDetail);
+  document.getElementById('invDetailDownload').addEventListener('click', downloadCurrentDetailXlsx);
 
   // Éditeur batch
   document.getElementById('batchEditorClose').addEventListener('click', () => {
