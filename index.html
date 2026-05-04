@@ -1422,24 +1422,44 @@
   </div>
   <div class="sheet-body">
     <div class="field">
-      <label class="field-lbl">Date</label>
-      <input type="date" id="startInvDate" class="field-input" value="">
-    </div>
-    <div class="field">
-      <label class="field-lbl">Moment</label>
-      <div style="display:flex;gap:8px;">
-        <label class="seg-opt"><input type="radio" name="startInvMoment" value="avant" checked> <span>Avant service</span></label>
-        <label class="seg-opt"><input type="radio" name="startInvMoment" value="apres"> <span>Après service</span></label>
-      </div>
-    </div>
-    <div class="field">
-      <label class="field-lbl">Type d'inventaire</label>
+      <label class="field-lbl">Type de saisie</label>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvType" value="alcool_soft" checked> <span>🍸 Alcool / Soft (bar)</span></label>
-        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvType" value="vin"> <span>🍷 Vin (cave)</span></label>
-        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvType" value="total"> <span>📦 Total (tout)</span></label>
+        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvKind" value="new" checked> <span>📋 Nouvel inventaire</span></label>
+        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvKind" value="complement"> <span>➕ Compléter un inventaire existant</span></label>
       </div>
     </div>
+
+    <!-- Bloc "nouvel inventaire" : champs date, moment, type -->
+    <div id="startInvNewFields">
+      <div class="field">
+        <label class="field-lbl">Date</label>
+        <input type="date" id="startInvDate" class="field-input" value="">
+      </div>
+      <div class="field">
+        <label class="field-lbl">Moment</label>
+        <div style="display:flex;gap:8px;">
+          <label class="seg-opt"><input type="radio" name="startInvMoment" value="avant" checked> <span>Avant service</span></label>
+          <label class="seg-opt"><input type="radio" name="startInvMoment" value="apres"> <span>Après service</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-lbl">Type d'inventaire</label>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvType" value="alcool_soft" checked> <span>🍸 Alcool / Soft (bar)</span></label>
+          <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvType" value="vin"> <span>🍷 Vin (cave)</span></label>
+          <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvType" value="total"> <span>📦 Total (tout)</span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bloc "complément" : sélecteur de l'inventaire parent -->
+    <div id="startInvComplementFields" style="display:none;">
+      <div class="field">
+        <label class="field-lbl">Inventaire à compléter</label>
+        <div id="startInvParentList" style="display:flex; flex-direction:column; gap:6px; max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:6px; background:var(--bg);"></div>
+      </div>
+    </div>
+
     <div class="field">
       <label class="field-lbl">Nom de la personne</label>
       <input type="text" id="startInvPersonne" class="field-input" placeholder="Ex: Paul, Sarah, Marc..." autocomplete="name">
@@ -1591,7 +1611,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v97';
+const APP_VERSION = 'v98';
 
 /* === ITM APP === */
 (function(){
@@ -1820,6 +1840,8 @@ function startInventory(meta) {
     type: meta.type || 'total',       // 'alcool_soft' | 'vin' | 'total'
     personne: meta.personne || '',
     etab: state.estab,                // figer l'étab au démarrage de l'inventaire
+    parentId: meta.parentId || null,        // si non null, c'est un complément d'un inventaire archivé
+    parentLabel: meta.parentLabel || null,  // libellé du parent (cache pour affichage)
     startedAt: new Date().toISOString(),
     lines: []
   };
@@ -1840,7 +1862,9 @@ function finishInventory() {
     moment: state.currentInventory.moment,
     type: state.currentInventory.type || 'total',
     personne: state.currentInventory.personne,
-    etab: state.currentInventory.etab || state.estab,  // étab à la clôture (fallback sur étab actif si non renseigné au démarrage)
+    etab: state.currentInventory.etab || state.estab,
+    parentId: state.currentInventory.parentId || null,
+    parentLabel: state.currentInventory.parentLabel || null,
     startedAt: state.currentInventory.startedAt,
     lines: [...state.currentInventory.lines],
     finishedAt: new Date().toISOString(),
@@ -2999,7 +3023,8 @@ function downloadInventoryCSV(inv) {
   const momentSlug = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
   const personneSlug = (inv.personne || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
   const etabSlug = (inv.etab || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-  const fname = etabSlug + '_' + (inv.date || '') + '_' + momentSlug + '_' + personneSlug + '.xlsx';
+  const complementSlug = inv.parentId ? '_complement' : '';
+  const fname = etabSlug + '_' + (inv.date || '') + '_' + momentSlug + '_' + personneSlug + complementSlug + '.xlsx';
 
   let blob;
   try {
@@ -4371,8 +4396,9 @@ function renderSession(){
       ? totalNb + ' produit' + (totalNb > 1 ? 's' : '') + ' saisi' + (totalNb > 1 ? 's' : '')
       : distinctNb + ' produit' + (distinctNb > 1 ? 's' : '') + ' · ' + totalNb + ' saisie' + (totalNb > 1 ? 's' : '');
     html += `<div class="sess-current">
-      <div class="sess-current-title">⚠ Inventaire en cours</div>
+      <div class="sess-current-title">⚠ Inventaire en cours${inv.parentId ? ' · Complément' : ''}</div>
       <div class="sess-current-meta"><b>${fmtDate(inv.date)}</b> · ${momentLbl} · ${typeLbl}</div>
+      ${inv.parentId && inv.parentLabel ? `<div class="sess-current-meta" style="color:var(--accent-dark);">➕ Complément de <b>${escape(inv.parentLabel)}</b></div>` : ''}
       ${inv.personne ? `<div class="sess-current-meta">Par : <b>${escape(inv.personne)}</b></div>` : ''}
       <div class="sess-current-count">${countText}</div>
       <div class="sess-current-actions">
@@ -4404,8 +4430,12 @@ function renderSession(){
       const subParts = [];
       subParts.push(`${inv.lines.length} produit${inv.lines.length > 1 ? 's' : ''}`);
       if (etabLbl || personLbl) subParts.push(`${etabLbl}${personLbl}`);
+      // Badge "complément" si applicable
+      const complementBadge = inv.parentId
+        ? `<span style="display:inline-block; font-size:10px; padding:2px 6px; border-radius:4px; background:var(--accent-soft); color:var(--accent-dark); margin-left:6px; vertical-align:middle;">+ Complément${inv.parentLabel ? ' de ' + escape(inv.parentLabel) : ''}</span>`
+        : '';
       html += `<div class="sess-inv-item" data-inv="${inv.id}">
-        <div class="sess-inv-date">${fmtDate(inv.date)} · ${momentLbl} · ${typeLbl}</div>
+        <div class="sess-inv-date">${fmtDate(inv.date)} · ${momentLbl} · ${typeLbl}${complementBadge}</div>
         <div class="sess-inv-sub">
           <span>${subParts.join(' · ')}</span>
           <span class="sess-inv-status ${statusClass}">${statusLbl}</span>
@@ -6869,11 +6899,67 @@ function openStartInventoryDialog(){
   document.getElementById('startInvDate').value = todayLocal();
   // Reset moment à 'avant'
   document.querySelector('input[name="startInvMoment"][value="avant"]').checked = true;
+  // Reset type à alcool_soft
+  document.querySelector('input[name="startInvType"][value="alcool_soft"]').checked = true;
+  // Reset kind à 'new'
+  document.querySelector('input[name="startInvKind"][value="new"]').checked = true;
+  // Afficher les bons blocs et masquer les autres
+  toggleStartInvKindFields('new');
   // Pré-remplir le nom avec ce qu'on avait la fois précédente
   const lastName = localStorage.getItem('itm_last_personne') || '';
   document.getElementById('startInvPersonne').value = lastName;
+  // Pré-générer la liste des inventaires des 30 derniers jours (pour le mode complément)
+  buildStartInvParentList();
   openSheet('shStartInv', 'ovStartInv');
   setTimeout(() => document.getElementById('startInvPersonne').focus(), 200);
+}
+
+// Bascule l'affichage entre mode "nouvel inventaire" et mode "complément"
+function toggleStartInvKindFields(kind) {
+  const newFields = document.getElementById('startInvNewFields');
+  const compFields = document.getElementById('startInvComplementFields');
+  if (kind === 'complement') {
+    if (newFields) newFields.style.display = 'none';
+    if (compFields) compFields.style.display = '';
+  } else {
+    if (newFields) newFields.style.display = '';
+    if (compFields) compFields.style.display = 'none';
+  }
+}
+
+// Construit la liste des inventaires des 30 derniers jours de l'étab actif (pour le mode "compléter")
+function buildStartInvParentList() {
+  const list = document.getElementById('startInvParentList');
+  if (!list) return;
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const all = (state.inventories || []).filter(inv => {
+    // Étab match (utilise inv.etab si présent, sinon état actif comme fallback pour anciens)
+    const invEtab = inv.etab || state.estab;
+    if (invEtab !== state.estab) return false;
+    // Date dans les 30 derniers jours
+    const finishedTs = inv.finishedAt ? new Date(inv.finishedAt).getTime() : 0;
+    return finishedTs >= cutoff;
+  });
+  if (all.length === 0) {
+    list.innerHTML = '<div style="padding:12px; text-align:center; color:var(--ink-3); font-size:13px;">Aucun inventaire récent à compléter dans cet établissement.</div>';
+    return;
+  }
+  let html = '';
+  all.forEach(inv => {
+    const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
+    const typeLbl = invTypeLabel(inv.type);
+    const personLbl = inv.personne ? ' · ' + escape(inv.personne) : '';
+    const isComplement = !!inv.parentId;
+    const complementBadge = isComplement ? ' <span style="font-size:10px; padding:1px 5px; border-radius:4px; background:var(--accent-soft); color:var(--accent-dark); margin-left:4px;">complément</span>' : '';
+    html += '<label class="start-inv-parent-opt" style="display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-radius:6px; cursor:pointer; background:var(--surface);">';
+    html += '<input type="radio" name="startInvParentId" value="' + escape(inv.id) + '" style="margin-top:2px;">';
+    html += '<div style="flex:1; min-width:0;">';
+    html += '  <div style="font-size:13px; font-weight:600;">' + fmtDate(inv.date) + ' · ' + momentLbl + complementBadge + '</div>';
+    html += '  <div style="font-size:11px; color:var(--ink-3);">' + typeLbl + personLbl + ' · ' + (inv.lines||[]).length + ' lignes</div>';
+    html += '</div>';
+    html += '</label>';
+  });
+  list.innerHTML = html;
 }
 
 /* ---------- Clôturer l'inventaire ---------- */
@@ -6901,8 +6987,11 @@ function confirmFinishInventory(){
   };
 
   // Check catégories obligatoires pour les types alcool_soft et total
+  // SAUF si c'est un complément : par définition il ne couvre que des oublis ponctuels,
+  // donc l'absence de catégories obligatoires (cigarettes, bitters, etc.) est attendue.
   const invType = state.currentInventory.type || 'total';
-  if (invType === 'alcool_soft' || invType === 'total') {
+  const isComplement = !!state.currentInventory.parentId;
+  if (!isComplement && (invType === 'alcool_soft' || invType === 'total')) {
     const missing = checkRequiredCategories(state.currentInventory);
     if (missing.length > 0) {
       // Afficher le check du V avec les boutons "Oui j'en ai plus" / "Je complète"
@@ -7048,10 +7137,12 @@ async function exportAndMailInventory(inv) {
   const momentLblSlug = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
   const momentLblFr = inv.moment === 'apres' ? 'Après service' : 'Avant service';
   const personneSlug = (inv.personne || 'inconnu').replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-  const estabSlug = state.estab.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-  const fname = estabSlug + '_' + inv.date + '_' + momentLblSlug + '_' + personneSlug + '.xlsx';
+  const estabSlug = (inv.etab || state.estab).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+  const complementSlug = inv.parentId ? '_complement' : '';
+  const fname = estabSlug + '_' + inv.date + '_' + momentLblSlug + '_' + personneSlug + complementSlug + '.xlsx';
 
-  const subject = 'Inventaire ' + state.estab + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr;
+  const subjectComplement = inv.parentId ? ' (complément)' : '';
+  const subject = 'Inventaire ' + (inv.etab || state.estab) + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr + subjectComplement;
   const body = 'Inventaire terminé :\n'
     + '- Établissement : ' + state.estab + '\n'
     + '- Date : ' + fmtDate(inv.date) + '\n'
@@ -7347,7 +7438,7 @@ function openInventoryDetailObject(inv, opts) {
   } else {
     countLbl = distinctProducts + ' produit' + (distinctProducts > 1 ? 's' : '') + ' · ' + totalLines + ' saisie' + (totalLines > 1 ? 's' : '');
   }
-  const sub = momentLbl + ' · ' + typeLbl + (inv.etab ? ' · ' + inv.etab : '') + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + countLbl;
+  const sub = momentLbl + ' · ' + typeLbl + (inv.etab ? ' · ' + inv.etab : '') + (inv.personne ? ' · ' + inv.personne : '') + ' · ' + countLbl + (inv.parentId ? ' · ➕ Complément' + (inv.parentLabel ? ' de ' + inv.parentLabel : '') : '');
   document.getElementById('invDetailSub').textContent = sub;
 
   // Reset le champ de recherche
@@ -7467,11 +7558,14 @@ function downloadCurrentDetailXlsx() {
   }
   try {
     const blob = buildDetailedXlsx(inv);
-    // Nom de fichier : étab_date_moment_personne_detail.xlsx
+    // Nom de fichier : étab_date_moment_personne_[complement_]detail.xlsx
     const cleanEtab = (inv.etab || 'inventaire').replace(/[^a-zA-Z0-9]+/g, '_');
     const cleanPersonne = (inv.personne || '').replace(/[^a-zA-Z0-9]+/g, '_');
     const moment = inv.moment === 'apres' ? 'apres-service' : 'avant-service';
-    const fname = [cleanEtab, inv.date, moment, cleanPersonne, 'detail'].filter(Boolean).join('_') + '.xlsx';
+    const parts = [cleanEtab, inv.date, moment, cleanPersonne];
+    if (inv.parentId) parts.push('complement');
+    parts.push('detail');
+    const fname = parts.filter(Boolean).join('_') + '.xlsx';
 
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -8720,14 +8814,48 @@ function init(){
   // Start Inventory sheet
   document.getElementById('startInvCancel').addEventListener('click', () => closeSheet('shStartInv','ovStartInv'));
   document.getElementById('ovStartInv').addEventListener('click', () => closeSheet('shStartInv','ovStartInv'));
+
+  // Switch entre modes "nouvel inventaire" et "compléter"
+  document.querySelectorAll('input[name="startInvKind"]').forEach(r => {
+    r.addEventListener('change', (e) => toggleStartInvKindFields(e.target.value));
+  });
+
   document.getElementById('startInvOk').addEventListener('click', () => {
+    const personne = document.getElementById('startInvPersonne').value.trim();
+    if (!personne) { toast('Nom requis'); return; }
+    const kindInput = document.querySelector('input[name="startInvKind"]:checked');
+    const kind = kindInput ? kindInput.value : 'new';
+
+    if (kind === 'complement') {
+      // Mode complément : on doit avoir sélectionné un inventaire parent
+      const parentInput = document.querySelector('input[name="startInvParentId"]:checked');
+      if (!parentInput) {
+        toast('Sélectionne l\'inventaire à compléter');
+        return;
+      }
+      const parentId = parentInput.value;
+      const parent = (state.inventories || []).find(i => i.id === parentId);
+      if (!parent) { toast('Inventaire parent introuvable'); return; }
+      // On hérite des paramètres du parent (date, moment, type) et on ajoute parentId/parentLabel
+      localStorage.setItem('itm_last_personne', personne);
+      startInventory({
+        date: parent.date,
+        moment: parent.moment,
+        type: parent.type,
+        personne,
+        parentId: parent.id,
+        parentLabel: fmtDate(parent.date) + ' · ' + (parent.moment === 'apres' ? 'Après service' : 'Avant service')
+      });
+      closeSheet('shStartInv','ovStartInv');
+      return;
+    }
+
+    // Mode nouvel inventaire : comportement existant
     const date = document.getElementById('startInvDate').value;
     const moment = document.querySelector('input[name="startInvMoment"]:checked').value;
     const typeInput = document.querySelector('input[name="startInvType"]:checked');
     const type = typeInput ? typeInput.value : 'total';
-    const personne = document.getElementById('startInvPersonne').value.trim();
     if (!date) { toast('Date requise'); return; }
-    if (!personne) { toast('Nom requis'); return; }
     // Mémoriser le nom pour la prochaine fois
     localStorage.setItem('itm_last_personne', personne);
     startInventory({ date, moment, personne, type });
