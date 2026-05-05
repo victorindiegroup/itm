@@ -668,6 +668,41 @@
   }
   .sess-btn-printable:active { background: var(--bg); }
 
+  /* Sheet de choix entre nouvel inventaire / complément (popup d'entrée) */
+  .kind-choice-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 18px 16px;
+    margin-bottom: 10px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .kind-choice-btn:active {
+    background: var(--bg);
+    border-color: var(--accent);
+  }
+  .kind-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    border-radius: 12px;
+  }
+  .kind-text { flex: 1; min-width: 0; }
+  .kind-title { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .kind-desc { font-size: 12px; color: var(--ink-3); line-height: 1.35; }
+
   /* Suggestions produits dans le chat */
   .chat-suggestions {
     margin: 8px 12px 8px 48px;
@@ -1412,6 +1447,35 @@
 
 
 
+<!-- Sheet 1 : choix entre nouvel inventaire / complément (popup d'entrée rapide) -->
+<div class="overlay" id="ovStartChoice"></div>
+<div class="sheet" id="shStartChoice">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="sheet-title">Que veux-tu faire ?</div>
+    <div class="sheet-sub">Choisis le type de saisie.</div>
+  </div>
+  <div class="sheet-body">
+    <button type="button" class="kind-choice-btn" id="kindChoiceNew">
+      <div class="kind-icon">📋</div>
+      <div class="kind-text">
+        <div class="kind-title">Nouvel inventaire</div>
+        <div class="kind-desc">Saisie complète : avant ou après service</div>
+      </div>
+    </button>
+    <button type="button" class="kind-choice-btn" id="kindChoiceComplement">
+      <div class="kind-icon">➕</div>
+      <div class="kind-text">
+        <div class="kind-title">Compléter un inventaire</div>
+        <div class="kind-desc">Ajouter des produits oubliés à un inventaire récent</div>
+      </div>
+    </button>
+  </div>
+  <div class="sheet-foot">
+    <button type="button" class="btn-cancel" id="kindChoiceCancel" style="flex:1;">Annuler</button>
+  </div>
+</div>
+
 <!-- Sheet démarrer inventaire -->
 <div class="overlay" id="ovStartInv"></div>
 <div class="sheet" id="shStartInv">
@@ -1421,14 +1485,6 @@
     <div class="sheet-sub">Complète les informations ci-dessous.</div>
   </div>
   <div class="sheet-body">
-    <div class="field">
-      <label class="field-lbl">Type de saisie</label>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvKind" value="new" checked> <span>📋 Nouvel inventaire</span></label>
-        <label class="seg-opt" style="justify-content:flex-start; gap:10px;"><input type="radio" name="startInvKind" value="complement"> <span>➕ Compléter un inventaire existant</span></label>
-      </div>
-    </div>
-
     <!-- Bloc "nouvel inventaire" : champs date, moment, type -->
     <div id="startInvNewFields">
       <div class="field">
@@ -1611,7 +1667,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v98';
+const APP_VERSION = 'v99';
 
 /* === ITM APP === */
 (function(){
@@ -6894,25 +6950,51 @@ function openPrintTemplate() {
 }
 
 /* ---------- Démarrer un inventaire ---------- */
+// Étape 1 : ouvrir le popup de choix nouvel/complément
 function openStartInventoryDialog(){
+  openSheet('shStartChoice', 'ovStartChoice');
+}
+
+// Étape 2 : ouvrir le sheet de configuration une fois le mode choisi
+function openStartInvConfig(kind) {
   // Pré-remplir date avec aujourd'hui
   document.getElementById('startInvDate').value = todayLocal();
   // Reset moment à 'avant'
   document.querySelector('input[name="startInvMoment"][value="avant"]').checked = true;
   // Reset type à alcool_soft
   document.querySelector('input[name="startInvType"][value="alcool_soft"]').checked = true;
-  // Reset kind à 'new'
-  document.querySelector('input[name="startInvKind"][value="new"]').checked = true;
-  // Afficher les bons blocs et masquer les autres
-  toggleStartInvKindFields('new');
+
+  // Stocker le mode courant pour que le handler "Démarrer" sache quoi faire
+  currentStartKind = kind;
+
+  // Adapter le titre + sous-titre selon le mode
+  const title = document.querySelector('#shStartInv .sheet-title');
+  const sub = document.querySelector('#shStartInv .sheet-sub');
+  if (kind === 'complement') {
+    if (title) title.textContent = '➕ Compléter un inventaire';
+    if (sub) sub.textContent = 'Choisis l\'inventaire à compléter et ton nom.';
+  } else {
+    if (title) title.textContent = '📋 Nouvel inventaire';
+    if (sub) sub.textContent = 'Complète les informations ci-dessous.';
+  }
+
+  // Afficher les bons blocs
+  toggleStartInvKindFields(kind);
+  // Construire la liste parent si mode complément
+  if (kind === 'complement') {
+    buildStartInvParentList();
+  }
+
   // Pré-remplir le nom avec ce qu'on avait la fois précédente
   const lastName = localStorage.getItem('itm_last_personne') || '';
   document.getElementById('startInvPersonne').value = lastName;
-  // Pré-générer la liste des inventaires des 30 derniers jours (pour le mode complément)
-  buildStartInvParentList();
+
   openSheet('shStartInv', 'ovStartInv');
   setTimeout(() => document.getElementById('startInvPersonne').focus(), 200);
 }
+
+// Variable globale pour suivre le mode choisi (set par openStartInvConfig)
+let currentStartKind = 'new';
 
 // Bascule l'affichage entre mode "nouvel inventaire" et mode "complément"
 function toggleStartInvKindFields(kind) {
@@ -7141,14 +7223,33 @@ async function exportAndMailInventory(inv) {
   const complementSlug = inv.parentId ? '_complement' : '';
   const fname = estabSlug + '_' + inv.date + '_' + momentLblSlug + '_' + personneSlug + complementSlug + '.xlsx';
 
-  const subjectComplement = inv.parentId ? ' (complément)' : '';
-  const subject = 'Inventaire ' + (inv.etab || state.estab) + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr + subjectComplement;
-  const body = 'Inventaire terminé :\n'
-    + '- Établissement : ' + state.estab + '\n'
-    + '- Date : ' + fmtDate(inv.date) + '\n'
-    + '- Moment : ' + momentLblFr + '\n'
-    + (inv.personne ? '- Par : ' + inv.personne + '\n' : '')
-    + '- Nombre de produits : ' + inv.lines.length + '\n';
+  // Sujet et corps adaptés au type d'envoi (inventaire complet vs complément)
+  const isComplement = !!inv.parentId;
+  const subjectPrefix = isComplement ? 'Complément d\'inventaire ' : 'Inventaire ';
+  const subject = subjectPrefix + (inv.etab || state.estab) + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr;
+
+  let body;
+  if (isComplement) {
+    body = 'Bonjour,\n\n'
+      + 'Voici un complément à un inventaire déjà envoyé. '
+      + 'Il contient uniquement les produits oubliés lors de la première saisie.\n\n'
+      + '⚠ Ce fichier ne remplace pas l\'inventaire initial : '
+      + 'les quantités s\'ajoutent à celles déjà transmises.\n\n'
+      + 'Détails :\n'
+      + '- Établissement : ' + (inv.etab || state.estab) + '\n'
+      + '- Date : ' + fmtDate(inv.date) + '\n'
+      + '- Moment : ' + momentLblFr + '\n'
+      + (inv.parentLabel ? '- Complément de : ' + inv.parentLabel + '\n' : '')
+      + (inv.personne ? '- Par : ' + inv.personne + '\n' : '')
+      + '- Nombre de produits ajoutés : ' + inv.lines.length + '\n';
+  } else {
+    body = 'Inventaire terminé :\n'
+      + '- Établissement : ' + (inv.etab || state.estab) + '\n'
+      + '- Date : ' + fmtDate(inv.date) + '\n'
+      + '- Moment : ' + momentLblFr + '\n'
+      + (inv.personne ? '- Par : ' + inv.personne + '\n' : '')
+      + '- Nombre de produits : ' + inv.lines.length + '\n';
+  }
 
   // ==== 3. Partage natif avec pièce jointe (iOS 15+, Android récent) ====
   let xlsxBlob;
@@ -8811,20 +8912,38 @@ function init(){
   }
 
 
-  // Start Inventory sheet
+  // Sheet 1 : choix nouvel inventaire / complément
+  document.getElementById('kindChoiceCancel').addEventListener('click', () => closeSheet('shStartChoice', 'ovStartChoice'));
+  document.getElementById('ovStartChoice').addEventListener('click', () => closeSheet('shStartChoice', 'ovStartChoice'));
+  document.getElementById('kindChoiceNew').addEventListener('click', () => {
+    closeSheet('shStartChoice', 'ovStartChoice');
+    setTimeout(() => openStartInvConfig('new'), 200);  // léger delay pour la transition
+  });
+  document.getElementById('kindChoiceComplement').addEventListener('click', () => {
+    // Vérifier qu'il y a au moins un inventaire récent à compléter
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const eligible = (state.inventories || []).filter(inv => {
+      const invEtab = inv.etab || state.estab;
+      if (invEtab !== state.estab) return false;
+      const ts = inv.finishedAt ? new Date(inv.finishedAt).getTime() : 0;
+      return ts >= cutoff;
+    });
+    if (eligible.length === 0) {
+      toast('Aucun inventaire récent à compléter dans cet établissement');
+      return;
+    }
+    closeSheet('shStartChoice', 'ovStartChoice');
+    setTimeout(() => openStartInvConfig('complement'), 200);
+  });
+
+  // Sheet 2 : configuration de l'inventaire
   document.getElementById('startInvCancel').addEventListener('click', () => closeSheet('shStartInv','ovStartInv'));
   document.getElementById('ovStartInv').addEventListener('click', () => closeSheet('shStartInv','ovStartInv'));
-
-  // Switch entre modes "nouvel inventaire" et "compléter"
-  document.querySelectorAll('input[name="startInvKind"]').forEach(r => {
-    r.addEventListener('change', (e) => toggleStartInvKindFields(e.target.value));
-  });
 
   document.getElementById('startInvOk').addEventListener('click', () => {
     const personne = document.getElementById('startInvPersonne').value.trim();
     if (!personne) { toast('Nom requis'); return; }
-    const kindInput = document.querySelector('input[name="startInvKind"]:checked');
-    const kind = kindInput ? kindInput.value : 'new';
+    const kind = currentStartKind || 'new';
 
     if (kind === 'complement') {
       // Mode complément : on doit avoir sélectionné un inventaire parent
