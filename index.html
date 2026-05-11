@@ -140,18 +140,6 @@
   .overlay { position: fixed; inset: 0; background: rgba(27,27,24,.45); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s; }
   .overlay.open { opacity: 1; pointer-events: auto; }
   .sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: var(--radius-l) var(--radius-l) 0 0; z-index: 51; transform: translateY(100%); transition: transform .25s cubic-bezier(.3,0,.2,1); max-height: 92vh; max-height: 92dvh; display: flex; flex-direction: column; }
-
-  /* iOS PWA bug : quand le clavier numérique est ouvert, le sheet en `position: fixed; bottom: 0;`
-     se retrouve VISUELLEMENT positionné en bas du viewport visuel (au-dessus du clavier),
-     mais sa zone de TAP reste à la position d'origine (sous le clavier). Le bouton "Ajouter"
-     est donc visible mais non-cliquable.
-     
-     Fix : on remonte le sheet via une CSS variable --kb-h (hauteur du clavier mesurée par JS).
-     `bottom: var(--kb-h, 0)` repositionne le sheet au-dessus du clavier, et iOS recalcule
-     correctement la zone de tap dans ce cas. */
-  body.keyboard-open .sheet.open {
-    bottom: var(--kb-h, 0);
-  }
   .sheet.open { transform: translateY(0); }
   .sheet-handle { width: 44px; height: 4px; background: var(--border-strong); border-radius: 2px; margin: 10px auto 6px; flex-shrink: 0; }
   .sheet-head { padding: 4px 20px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -854,11 +842,10 @@
   }
 
   /* Espace bas dynamique : grandit quand le clavier mobile est ouvert pour permettre le scroll
-     jusqu'au dernier élément même si la liste est courte.
-     ⚠ Pas de transition CSS sur la hauteur : si le clavier oscille rapidement (iOS clavier numérique),
-     l'animation transition rend le repaint visible et peut faire freezer l'app. Switch direct = stable. */
+     jusqu'au dernier élément même si la liste est courte */
   .kb-spacer {
     height: 0;
+    transition: height 0.2s ease;
   }
   body.keyboard-open .kb-spacer {
     height: 320px;
@@ -1680,7 +1667,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v101';
+const APP_VERSION = 'v99';
 
 /* === ITM APP === */
 (function(){
@@ -8746,39 +8733,16 @@ function init(){
   // Détecter l'ouverture du clavier mobile via visualViewport
   // Quand le clavier est ouvert, le viewport visuel devient plus petit que la fenêtre
   // → on ajoute la classe body.keyboard-open qui active le kb-spacer pour permettre le scroll
-  //
-  // Implémentation robuste pour iOS :
-  // - Debounce : iOS peut envoyer des dizaines d'événements resize par seconde quand le clavier
-  //   numérique s'ouvre/ferme rapidement, ce qui peut faire freezer l'app si on toggle la classe à chaque fois.
-  // - Hystérésis : seuils différents pour activer (150px) vs désactiver (80px), pour éviter
-  //   les oscillations rapides autour d'une valeur frontière.
   if (window.visualViewport) {
     const vv = window.visualViewport;
-    let kbDebounceTimer = null;
-    let kbIsOpen = false;
-    const applyKeyboardState = () => {
+    const checkKeyboard = () => {
       const heightDiff = window.innerHeight - vv.height;
-      // Hystérésis : on ouvre à 150px, on ferme à 80px
-      if (!kbIsOpen && heightDiff > 150) {
-        kbIsOpen = true;
+      // Au-delà de 150px de différence, on considère que le clavier est ouvert
+      if (heightDiff > 150) {
         document.body.classList.add('keyboard-open');
-      } else if (kbIsOpen && heightDiff < 80) {
-        kbIsOpen = false;
+      } else {
         document.body.classList.remove('keyboard-open');
       }
-      // Stocker la hauteur du clavier dans une CSS variable pour que les sheets puissent
-      // se repositionner au-dessus (fix iOS PWA : sans ça le bouton du footer est non-cliquable
-      // car physiquement caché sous le clavier même si visible à l'écran).
-      if (kbIsOpen) {
-        document.documentElement.style.setProperty('--kb-h', heightDiff + 'px');
-      } else {
-        document.documentElement.style.setProperty('--kb-h', '0px');
-      }
-    };
-    const checkKeyboard = () => {
-      // Debounce : on regroupe les events resize/scroll dans une seule mise à jour
-      if (kbDebounceTimer) clearTimeout(kbDebounceTimer);
-      kbDebounceTimer = setTimeout(applyKeyboardState, 120);
     };
     vv.addEventListener('resize', checkKeyboard);
     vv.addEventListener('scroll', checkKeyboard);
