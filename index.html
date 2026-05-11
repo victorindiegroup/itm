@@ -1668,7 +1668,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v100';
+const APP_VERSION = 'v101';
 
 /* === ITM APP === */
 (function(){
@@ -8273,33 +8273,52 @@ function renderBatchSheet(batch) {
 }
 
 function updateBatchBreakdown() {
-  const input = document.getElementById('batchCount');
-  const count = parseFloat(input.value) || 0;
-  currentBatchDraft.batchCount = count;
+  try {
+    const input = document.getElementById('batchCount');
+    if (!input) return;
+    const count = parseFloat(input.value) || 0;
+    if (currentBatchDraft) currentBatchDraft.batchCount = count;
 
-  // Bouton OK visible si count > 0
-  const okBtn = document.querySelector('#shBatchBody .qty-ok-btn');
-  if (okBtn) okBtn.classList.toggle('visible', count > 0);
+    // Bouton OK visible si count > 0
+    const okBtn = document.querySelector('#shBatchBody .qty-ok-btn');
+    if (okBtn) okBtn.classList.toggle('visible', count > 0);
 
-  const div = document.getElementById('batchBreakdown');
-  if (!div) return;
-  if (!count || count <= 0) {
-    div.innerHTML = '';
-    return;
+    const div = document.getElementById('batchBreakdown');
+    if (!div) return;
+    if (!count || count <= 0) {
+      // Ne reconstruit pas le DOM si pas nécessaire
+      if (div.children.length > 0 || div.textContent.length > 0) {
+        div.innerHTML = '';
+      }
+      return;
+    }
+    if (!currentBatchDraft || !currentBatchDraft.batchCompo) {
+      div.innerHTML = '';
+      return;
+    }
+
+    // Construction du HTML en chaîne (rapide) plutôt qu'en accumulant par ligne
+    const parts = ['<div class="field-lbl" style="margin-bottom: 6px; margin-top: 12px;">Décomposition (total)</div>',
+                   '<div class="batch-breakdown-list">'];
+    for (let i = 0; i < currentBatchDraft.batchCompo.length; i++) {
+      const c = currentBatchDraft.batchCompo[i];
+      if (!c) continue;
+      const p = resolveProduct(c);
+      const pname = p ? p.s : '(?)';
+      const totalQty = (c.qty || 0) * count;
+      parts.push('<div class="batch-breakdown-row">',
+                 '<span class="batch-breakdown-name">', escape(pname), '</span>',
+                 '<span class="batch-breakdown-qty mono">', fmtQty(totalQty), ' ', escape(c.unit || ''), '</span>',
+                 '</div>');
+    }
+    parts.push('</div>');
+    div.innerHTML = parts.join('');
+  } catch (err) {
+    // Si une erreur survient (ingrédient orphelin, batch corrompu, etc.), on l'affiche
+    // au lieu de laisser l'app freezer silencieusement.
+    console.error('updateBatchBreakdown ERROR:', err);
+    toast('Erreur batch : ' + (err.message || err));
   }
-  let html = '<div class="field-lbl" style="margin-bottom: 6px; margin-top: 12px;">Décomposition (total)</div>';
-  html += '<div class="batch-breakdown-list">';
-  currentBatchDraft.batchCompo.forEach(c => {
-    const p = resolveProduct(c);
-    const pname = p ? p.s : '(?)';
-    const totalQty = (c.qty || 0) * count;
-    html += '<div class="batch-breakdown-row">';
-    html += '  <span class="batch-breakdown-name">' + escape(pname) + '</span>';
-    html += '  <span class="batch-breakdown-qty mono">' + fmtQty(totalQty) + ' ' + escape(c.unit || '') + '</span>';
-    html += '</div>';
-  });
-  html += '</div>';
-  div.innerHTML = html;
 }
 
 function saveBatchLine() {
