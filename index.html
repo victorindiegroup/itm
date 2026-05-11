@@ -140,6 +140,18 @@
   .overlay { position: fixed; inset: 0; background: rgba(27,27,24,.45); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .2s; }
   .overlay.open { opacity: 1; pointer-events: auto; }
   .sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: var(--radius-l) var(--radius-l) 0 0; z-index: 51; transform: translateY(100%); transition: transform .25s cubic-bezier(.3,0,.2,1); max-height: 92vh; max-height: 92dvh; display: flex; flex-direction: column; }
+
+  /* iOS PWA bug : quand le clavier numérique est ouvert, le sheet en `position: fixed; bottom: 0;`
+     se retrouve VISUELLEMENT positionné en bas du viewport visuel (au-dessus du clavier),
+     mais sa zone de TAP reste à la position d'origine (sous le clavier). Le bouton "Ajouter"
+     est donc visible mais non-cliquable.
+     
+     Fix : on remonte le sheet via une CSS variable --kb-h (hauteur du clavier mesurée par JS).
+     `bottom: var(--kb-h, 0)` repositionne le sheet au-dessus du clavier, et iOS recalcule
+     correctement la zone de tap dans ce cas. */
+  body.keyboard-open .sheet.open {
+    bottom: var(--kb-h, 0);
+  }
   .sheet.open { transform: translateY(0); }
   .sheet-handle { width: 44px; height: 4px; background: var(--border-strong); border-radius: 2px; margin: 10px auto 6px; flex-shrink: 0; }
   .sheet-head { padding: 4px 20px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -1668,7 +1680,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v100';
+const APP_VERSION = 'v101';
 
 /* === ITM APP === */
 (function(){
@@ -8753,6 +8765,14 @@ function init(){
       } else if (kbIsOpen && heightDiff < 80) {
         kbIsOpen = false;
         document.body.classList.remove('keyboard-open');
+      }
+      // Stocker la hauteur du clavier dans une CSS variable pour que les sheets puissent
+      // se repositionner au-dessus (fix iOS PWA : sans ça le bouton du footer est non-cliquable
+      // car physiquement caché sous le clavier même si visible à l'écran).
+      if (kbIsOpen) {
+        document.documentElement.style.setProperty('--kb-h', heightDiff + 'px');
+      } else {
+        document.documentElement.style.setProperty('--kb-h', '0px');
       }
     };
     const checkKeyboard = () => {
