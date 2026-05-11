@@ -1671,7 +1671,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v102';
+const APP_VERSION = 'v103';
 
 /* === ITM APP === */
 (function(){
@@ -8236,8 +8236,21 @@ function renderBatchSheet(batch) {
   const input = document.getElementById('batchCount');
   input.addEventListener('input', updateBatchBreakdown);
 
+  // Throttle des boutons +/- du batch : sur iPhone, des taps trop rapides provoquent un bug
+  // où les zones tactiles se décalent et l'app devient non-réactive. On limite à un tap toutes les 1.5s
+  // pour donner au moteur de rendu iOS le temps de tout recalculer proprement.
+  let lastBatchStepTap = 0;
+  const BATCH_STEP_THROTTLE_MS = 1500;
   body.querySelectorAll('.qty-step-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      const now = Date.now();
+      const elapsed = now - lastBatchStepTap;
+      if (elapsed < BATCH_STEP_THROTTLE_MS) {
+        const wait = Math.ceil((BATCH_STEP_THROTTLE_MS - elapsed) / 1000);
+        toast('Attends ' + wait + 's avant de re-cliquer');
+        return;
+      }
+      lastBatchStepTap = now;
       const step = parseFloat(btn.dataset.step) || 1;
       const v = parseFloat(input.value) || 0;
       const nv = Math.max(0, v + step);
