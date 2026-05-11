@@ -1671,7 +1671,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v103';
+const APP_VERSION = 'v104';
 
 /* === ITM APP === */
 (function(){
@@ -8214,57 +8214,35 @@ function renderBatchSheet(batch) {
   });
   html += '  </div>';
 
-  // Saisie du nombre
+  // Saisie du nombre — VERSION SIMPLIFIÉE pour iPhone :
+  // Pas de boutons +/-, pas de breakdown en temps réel.
+  // L'utilisateur tape la quantité, le breakdown apparaît à la validation.
   html += '  <div class="field">';
   html += '    <label class="field-lbl">Nombre de bouteilles</label>';
   html += '    <div class="field-row">';
-  html += '      <button type="button" class="qty-step-btn" data-step="-1" data-target="batchCount" aria-label="Diminuer">−</button>';
-  html += '      <input id="batchCount" type="number" step="1" min="0" inputmode="numeric" value="' + (currentBatchDraft.batchCount || '') + '">';
-  html += '      <button type="button" class="qty-step-btn" data-step="1" data-target="batchCount" aria-label="Augmenter">+</button>';
-  html += '      <button type="button" class="qty-ok-btn" data-ok="batchCount" aria-label="Valider">OK</button>';
+  html += '      <input id="batchCount" type="number" step="1" min="0" inputmode="numeric" value="' + (currentBatchDraft.batchCount || '') + '" style="font-size:16px; padding:14px; flex:1; min-width:0; border:1px solid var(--border); border-radius:10px;">';
   html += '      <span class="field-label-inline">btl</span>';
   html += '    </div>';
   html += '  </div>';
 
-  // Aperçu décomposition
-  html += '  <div id="batchBreakdown" class="batch-breakdown"></div>';
+  // Zone breakdown (vide au départ, remplie uniquement quand on tape "Calculer" ou à la validation)
+  html += '  <div style="margin-top: 16px;">';
+  html += '    <button type="button" id="batchCalcPreview" style="width:100%; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; font-size:13px; color:var(--ink-2); cursor:pointer;">👁️ Aperçu de la décomposition</button>';
+  html += '  </div>';
+  html += '  <div id="batchBreakdown" class="batch-breakdown" style="margin-top: 12px;"></div>';
+
   html += '</div>';
 
   body.innerHTML = html;
 
   // Events
   const input = document.getElementById('batchCount');
-  input.addEventListener('input', updateBatchBreakdown);
 
-  // Throttle des boutons +/- du batch : sur iPhone, des taps trop rapides provoquent un bug
-  // où les zones tactiles se décalent et l'app devient non-réactive. On limite à un tap toutes les 1.5s
-  // pour donner au moteur de rendu iOS le temps de tout recalculer proprement.
-  let lastBatchStepTap = 0;
-  const BATCH_STEP_THROTTLE_MS = 1500;
-  body.querySelectorAll('.qty-step-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const now = Date.now();
-      const elapsed = now - lastBatchStepTap;
-      if (elapsed < BATCH_STEP_THROTTLE_MS) {
-        const wait = Math.ceil((BATCH_STEP_THROTTLE_MS - elapsed) / 1000);
-        toast('Attends ' + wait + 's avant de re-cliquer');
-        return;
-      }
-      lastBatchStepTap = now;
-      const step = parseFloat(btn.dataset.step) || 1;
-      const v = parseFloat(input.value) || 0;
-      const nv = Math.max(0, v + step);
-      input.value = nv || '';
-      updateBatchBreakdown();
-    });
-  });
-
-  body.querySelectorAll('.qty-ok-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      input.blur();
-      updateBatchBreakdown();
-      saveBatchLine();
-    });
+  // Bouton "Aperçu" : calcule et affiche la décomposition uniquement à la demande
+  // (au lieu de la mettre à jour à chaque keystroke, ce qui cause un bug iOS)
+  document.getElementById('batchCalcPreview').addEventListener('click', () => {
+    currentBatchDraft.batchCount = parseFloat(input.value) || 0;
+    updateBatchBreakdown();
   });
 
   // Foot buttons
@@ -8340,6 +8318,14 @@ function updateBatchBreakdown() {
 function saveBatchLine() {
   if (!currentBatchDraft) return;
   if (!state.currentInventory) return;
+
+  // Lire la valeur courante de l'input (puisqu'on n'a plus d'event input qui met à jour le draft)
+  const input = document.getElementById('batchCount');
+  if (input) {
+    const val = parseFloat(input.value) || 0;
+    currentBatchDraft.batchCount = val;
+  }
+
   if (!currentBatchDraft.batchCount || currentBatchDraft.batchCount <= 0) {
     toast('Indique le nombre de bouteilles');
     return;
