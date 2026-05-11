@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1D9E75">
+<meta name="theme-color" content="#F7F6F2">
 <title>ITM — Indie Group</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,6 +33,7 @@
     --shadow-2: 0 4px 16px rgba(27,27,24,.08), 0 12px 40px rgba(27,27,24,.08);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { background: var(--bg); }
   html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.4; height: 100vh; overscroll-behavior: none; display: flex; flex-direction: column; overflow: hidden; }
   body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; overflow: hidden; }
 
@@ -1667,7 +1668,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v99';
+const APP_VERSION = 'v100';
 
 /* === ITM APP === */
 (function(){
