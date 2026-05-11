@@ -842,10 +842,11 @@
   }
 
   /* Espace bas dynamique : grandit quand le clavier mobile est ouvert pour permettre le scroll
-     jusqu'au dernier élément même si la liste est courte */
+     jusqu'au dernier élément même si la liste est courte.
+     ⚠ Pas de transition CSS sur la hauteur : si le clavier oscille rapidement (iOS clavier numérique),
+     l'animation transition rend le repaint visible et peut faire freezer l'app. Switch direct = stable. */
   .kb-spacer {
     height: 0;
-    transition: height 0.2s ease;
   }
   body.keyboard-open .kb-spacer {
     height: 320px;
@@ -1667,7 +1668,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v99';
+const APP_VERSION = 'v100';
 
 /* === ITM APP === */
 (function(){
@@ -8733,16 +8734,31 @@ function init(){
   // Détecter l'ouverture du clavier mobile via visualViewport
   // Quand le clavier est ouvert, le viewport visuel devient plus petit que la fenêtre
   // → on ajoute la classe body.keyboard-open qui active le kb-spacer pour permettre le scroll
+  //
+  // Implémentation robuste pour iOS :
+  // - Debounce : iOS peut envoyer des dizaines d'événements resize par seconde quand le clavier
+  //   numérique s'ouvre/ferme rapidement, ce qui peut faire freezer l'app si on toggle la classe à chaque fois.
+  // - Hystérésis : seuils différents pour activer (150px) vs désactiver (80px), pour éviter
+  //   les oscillations rapides autour d'une valeur frontière.
   if (window.visualViewport) {
     const vv = window.visualViewport;
-    const checkKeyboard = () => {
+    let kbDebounceTimer = null;
+    let kbIsOpen = false;
+    const applyKeyboardState = () => {
       const heightDiff = window.innerHeight - vv.height;
-      // Au-delà de 150px de différence, on considère que le clavier est ouvert
-      if (heightDiff > 150) {
+      // Hystérésis : on ouvre à 150px, on ferme à 80px
+      if (!kbIsOpen && heightDiff > 150) {
+        kbIsOpen = true;
         document.body.classList.add('keyboard-open');
-      } else {
+      } else if (kbIsOpen && heightDiff < 80) {
+        kbIsOpen = false;
         document.body.classList.remove('keyboard-open');
       }
+    };
+    const checkKeyboard = () => {
+      // Debounce : on regroupe les events resize/scroll dans une seule mise à jour
+      if (kbDebounceTimer) clearTimeout(kbDebounceTimer);
+      kbDebounceTimer = setTimeout(applyKeyboardState, 120);
     };
     vv.addEventListener('resize', checkKeyboard);
     vv.addEventListener('scroll', checkKeyboard);
