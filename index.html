@@ -1671,7 +1671,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v105';
+const APP_VERSION = 'v106';
 
 /* === ITM APP === */
 (function(){
@@ -2781,7 +2781,10 @@ const ETAB_TO_TAG = {
   "Cat Club (Courchevel)": "CAT CLUB",
   "La Sauvageonne (Megève)": "IMOUNTAIN",
   "Cherry (Paris)": "PARIS CHERRY",
-  "Pablo (Saint-Barthélemy)": "PABLO SBH"
+  "Pablo (Saint-Barthélemy)": "PABLO SBH",
+  // Établissement utilitaire admin uniquement (garage/centrale Fourmi).
+  // Tag null = pas de filtre carte (tous les produits considérés à la carte).
+  "Fourmi": null
 };
 
 // Map globale pour passer l'info "produit trouvé via liaison" au rendu catalogue
@@ -6643,7 +6646,8 @@ function openEstabSheet(){
   let html = '';
   allEtabs.forEach(nom => {
     const tag = ETAB_TO_TAG[nom];
-    const count = CATALOGUE.filter(p => p.t && p.t.indexOf(tag) >= 0).length;
+    // Si tag null (cas Fourmi) → tous les produits sont considérés "à la carte"
+    const count = (tag === null) ? CATALOGUE.length : CATALOGUE.filter(p => p.t && p.t.indexOf(tag) >= 0).length;
     const isActive = state.estab === nom;
     html += `<div class="estab-item${isActive ? ' on' : ''}" data-estab="${escape(nom)}">
       <span class="estab-name">${escape(nom)}</span>
