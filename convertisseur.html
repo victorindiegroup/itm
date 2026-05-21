@@ -316,7 +316,32 @@ function convertCSV(text) {
     products.push(product);
   }
 
-  return { products, archives, typeCount, etabCount, overridesUsed, totalRows: rows.length - 1 };
+  return { products, archives, typeCount, etabCount, overridesUsed, totalRows: rows.length - 1, categoryStats: computeCategoryStats(products) };
+}
+
+// Pour chaque grande catégorie (VIN, BIÈRE, ALCOOL, SOFT, AUTRE),
+// compter combien de produits sont taggés au moins par un établissement vs non taggés.
+function computeCategoryStats(products) {
+  // Ordre testé : on prend la première catégorie qui matche le contenu de p.c
+  const buckets = [
+    { key: 'VIN',    label: 'Vin',         match: c => /\bVIN\b/i.test(c) },
+    { key: 'BIERE',  label: 'Bière',       match: c => /\bBI[EÈ]RE\b/i.test(c) },
+    { key: 'ALCOOL', label: 'Alcool',      match: c => /\bALCOOL\b/i.test(c) },
+    { key: 'SOFT',   label: 'Soft / Eau',  match: c => /\bSOFT\b/i.test(c) || /\bEAU\b/i.test(c) },
+    { key: 'AUTRE',  label: 'Autre',       match: () => true },  // fallback
+  ];
+  const stats = {};
+  buckets.forEach(b => { stats[b.key] = { label: b.label, tagged: 0, untagged: 0, total: 0 }; });
+
+  products.forEach(p => {
+    const cat = (p.c || '').toUpperCase();
+    const bucket = buckets.find(b => b.match(cat));
+    const k = bucket.key;
+    stats[k].total++;
+    if (p.t && p.t.length > 0) stats[k].tagged++;
+    else stats[k].untagged++;
+  });
+  return stats;
 }
 
 let convertedData = null;
@@ -363,6 +388,27 @@ function displayAnalysis(r) {
     html += '<div class="stat"><div class="stat-lbl">' + etab + '</div><div class="stat-val">' + count + '</div></div>';
   });
   html += '</div>';
+
+  // Couverture par grande catégorie (VIN, BIÈRE, ALCOOL, SOFT, AUTRE)
+  // Pour chaque cat, combien tagués au moins une fois / total
+  if (r.categoryStats) {
+    html += '<h3 style="font-size:14px;margin:16px 0 8px">Couverture des tags par catégorie</h3>';
+    html += '<div class="stat-grid">';
+    Object.entries(r.categoryStats).forEach(([key, s]) => {
+      if (s.total === 0) return;  // ne pas afficher les catégories vides
+      const pct = s.total > 0 ? Math.round(100 * s.tagged / s.total) : 0;
+      html += '<div class="stat">';
+      html += '  <div class="stat-lbl">' + s.label + '</div>';
+      html += '  <div class="stat-val" style="font-size:18px;">' + s.tagged + ' / ' + s.total + '</div>';
+      html += '  <div style="font-size:11px; color:#666; margin-top:4px;">' + pct + '% tagués';
+      if (s.untagged > 0) {
+        html += ' · ' + s.untagged + ' sans tag';
+      }
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
 
   if (r.archives.length > 0) {
     html += '<div class="status warn" style="margin-top:12px">⚠ ' + r.archives.length + ' produits sans tag établissement (conservés mais masqués dans l\'app)</div>';

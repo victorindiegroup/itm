@@ -1671,7 +1671,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v106';
+const APP_VERSION = 'v107';
 
 /* === ITM APP === */
 (function(){
@@ -3969,12 +3969,12 @@ function renderCatalogue(){
 
   root.innerHTML = html;
 
-  // Clicks
+  // Clicks — utilisation de attachTap pour résoudre le bug mobile du "1er tap ferme le clavier"
   root.querySelectorAll('.prod[data-pid]').forEach(el => {
-    el.addEventListener('click', () => openProductSheet(parseInt(el.dataset.pid)));
+    attachTap(el, () => openProductSheet(parseInt(el.dataset.pid)));
   });
   root.querySelectorAll('.prod[data-bid]').forEach(el => {
-    el.addEventListener('click', () => openBatchSheet(el.dataset.bid));
+    attachTap(el, () => openBatchSheet(el.dataset.bid));
   });
 }
 
@@ -4029,6 +4029,42 @@ function cleanCat(c){
   const last = p[p.length - 1];
   // Convertir "ROUGE BOURGOGNE" en "Rouge Bourgogne"
   return last.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+}
+
+// Helper : attache un handler de tap qui fonctionne en "1 tap" sur mobile,
+// même quand un input a le focus (clavier ouvert).
+//
+// Problème mobile : si on touche un élément alors qu'un input a le focus,
+// le premier tap ferme le clavier (blur), et le click n'est PAS déclenché.
+// Il faut un deuxième tap pour ouvrir l'élément.
+//
+// Solution : on écoute 'pointerdown' qui se déclenche AVANT le blur de l'input.
+// On y déclenche manuellement le blur + l'action. preventDefault évite le double-déclenchement
+// par le click natif.
+//
+// Sur desktop (souris), pointerdown fonctionne pareil que click → comportement inchangé.
+function attachTap(el, handler) {
+  el.addEventListener('pointerdown', (e) => {
+    // Ignore le clic droit ou le bouton du milieu
+    if (e.button !== undefined && e.button !== 0) return;
+    // Si un input a le focus dans la page, on le blur d'abord
+    if (document.activeElement && document.activeElement.tagName && 
+        (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+      document.activeElement.blur();
+    }
+    // On ne preventDefault pas tout de suite : on veut quand même que le tap fonctionne sur l'élément lui-même
+    // Mais pour éviter un double-déclenchement (pointerdown + click natif), on retient l'event :
+    el._tapHandled = true;
+    handler(e);
+  });
+  // Filet de sécurité : si pointerdown n'a pas marché (navigateur ancien), on garde click
+  el.addEventListener('click', (e) => {
+    if (el._tapHandled) {
+      el._tapHandled = false;
+      return;  // pointerdown a déjà géré
+    }
+    handler(e);
+  });
 }
 
 function escape(s){
@@ -4713,7 +4749,7 @@ function renderExport(){
 
   // Clic sur une saisie : éditer
   root.querySelectorAll('.saisie-item').forEach(el => {
-    el.addEventListener('click', () => {
+    attachTap(el, () => {
       const lid = el.dataset.lid;
       const line = state.currentInventory.lines.find(l => l.id === lid);
       if (!line) return;
@@ -8122,7 +8158,7 @@ function renderBatchPicker() {
   body.innerHTML = html;
 
   body.querySelectorAll('.prod').forEach(el => {
-    el.addEventListener('click', () => {
+    attachTap(el, () => {
       const pid = parseInt(el.dataset.pid);
       const p = resolveProduct({productId: pid});
       if (!p) return;
@@ -8639,7 +8675,7 @@ function renderLiaisonProductResults() {
   div.innerHTML = html;
 
   div.querySelectorAll('.liaison-prod-result').forEach(el => {
-    el.addEventListener('click', () => {
+    attachTap(el, () => {
       const pid = parseInt(el.dataset.pid);
       const p = resolveProduct({productId: pid});
       if (!p) return;
