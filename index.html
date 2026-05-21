@@ -1671,7 +1671,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v110';
+const APP_VERSION = 'v111';
 
 /* === ITM APP === */
 (function(){
@@ -4596,6 +4596,21 @@ function renderExport(){
     return;
   }
 
+  // ÉTAPE 1 : créer la structure UNE SEULE FOIS (barre de recherche + container liste)
+  // Si elle existe déjà (re-render), on ne touche PAS à l'input pour ne pas perdre son focus
+  // (sinon iOS Safari ferme le clavier mobile).
+  let listContainer = document.getElementById('saisiesListContainer');
+  if (!listContainer) {
+    let shell = '<div style="position:sticky; top:0; background:var(--bg); padding:10px 14px 6px; z-index:5;">';
+    shell += '  <input type="search" id="saisiesSearch" placeholder="Rechercher dans les saisies..." value="' + escape(saisiesFilter) + '" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:14px; background:var(--surface);">';
+    shell += '</div>';
+    shell += '<div id="saisiesListContainer"></div>';
+    root.innerHTML = shell;
+    listContainer = document.getElementById('saisiesListContainer');
+    wireSaisiesSearch();
+  }
+
+  // ÉTAPE 2 : calculer le contenu de la liste (filtre + rendu)
   // Tri : plus récent en haut. Priorité à updatedAt si présent, sinon timestamp décodé depuis l'id (uid = Date.now().toString(36) + ...)
   function lineTs(l) {
     if (l.updatedAt) return l.updatedAt;
@@ -4627,11 +4642,8 @@ function renderExport(){
     });
   }
 
-  // Barre de recherche en haut + compteur
-  let html = '<div style="position:sticky; top:0; background:var(--bg); padding:10px 14px 6px; z-index:5;">';
-  html += '  <input type="search" id="saisiesSearch" placeholder="Rechercher dans les saisies..." value="' + escape(saisiesFilter) + '" style="width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:14px; background:var(--surface);">';
-  html += '</div>';
-  html += '<div class="saisies-header">';
+  // Compteur (header)
+  let html = '<div class="saisies-header">';
   if (saisiesFilter.trim()) {
     html += lines.length + ' / ' + allLines.length + ' produit' + (allLines.length > 1 ? 's' : '');
   } else {
@@ -4642,8 +4654,7 @@ function renderExport(){
   if (!lines.length) {
     html += '<div class="prod-empty" style="padding:40px 20px;">Aucune saisie ne correspond à « ' + escape(saisiesFilter) + ' ».</div>';
     html += '<div class="kb-spacer"></div>';
-    root.innerHTML = html;
-    wireSaisiesSearch();
+    listContainer.innerHTML = html;
     return;
   }
 
@@ -4716,11 +4727,11 @@ function renderExport(){
   // Spacer en bas pour permettre le scroll quand le clavier mobile est ouvert
   html += '<div class="kb-spacer"></div>';
 
-  root.innerHTML = html;
-  wireSaisiesSearch();
+  // On met à jour UNIQUEMENT le container de la liste, pas l'input de recherche au-dessus
+  listContainer.innerHTML = html;
 
   // Clic sur une saisie : éditer
-  root.querySelectorAll('.saisie-item').forEach(el => {
+  listContainer.querySelectorAll('.saisie-item').forEach(el => {
     attachTap(el, () => {
       const lid = el.dataset.lid;
       const line = state.currentInventory.lines.find(l => l.id === lid);
@@ -4734,27 +4745,19 @@ function renderExport(){
   });
 }
 
-// Attache le handler de la barre de recherche Saisies (avec préservation du focus pendant le re-render)
+// Attache le handler de la barre de recherche Saisies.
+// Appelé UNE SEULE FOIS lors de la création initiale de la structure de l'onglet Saisies.
+// L'input n'est plus détruit à chaque keystroke (seul le container de la liste est re-rendu),
+// donc plus besoin de restaurer le focus.
 function wireSaisiesSearch() {
   const input = document.getElementById('saisiesSearch');
   if (!input) return;
-  // Si l'input avait le focus avant le re-render, le restaurer
-  if (saisiesSearchHadFocus) {
-    setTimeout(() => {
-      input.focus();
-      // Replacer le curseur en fin
-      const v = input.value;
-      input.setSelectionRange(v.length, v.length);
-    }, 0);
-  }
-  input.addEventListener('focus', () => { saisiesSearchHadFocus = true; });
-  input.addEventListener('blur', () => { saisiesSearchHadFocus = false; });
   input.addEventListener('input', (e) => {
     saisiesFilter = e.target.value;
     renderExport();
   });
 }
-let saisiesSearchHadFocus = false;
+let saisiesSearchHadFocus = false;  // ⚠ inutilisé maintenant, conservé pour compat
 
 function askResetSession(){
   openConfirm('Terminer la session ?',
