@@ -1671,7 +1671,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v109';
+const APP_VERSION = 'v110';
 
 /* === ITM APP === */
 (function(){
@@ -8818,8 +8818,17 @@ function init(){
   // Blur au scroll : ferme le clavier mobile dès que l'utilisateur scrolle dans une liste.
   // Comme ça quand il tap sur un produit visible, le clavier est déjà fermé et le tap
   // s'enregistre du premier coup (pas besoin de double-tap).
-  // On écoute en capture phase (true) pour attraper tous les scrolls internes des conteneurs.
+  //
+  // ⚠ On ne réagit qu'aux scrolls causés par un VRAI geste utilisateur (touchmove / wheel).
+  // Les scrolls programmatiques (re-render qui change la position d'un élément, scrollIntoView, etc.)
+  // sont ignorés — sinon dans l'onglet Saisies, chaque keystroke re-rend la liste et provoque
+  // un scroll synthétique qui ferme le clavier de manière intempestive.
+  let userIsScrolling = false;
+  document.addEventListener('touchmove', () => { userIsScrolling = true; }, true);
+  document.addEventListener('wheel', () => { userIsScrolling = true; }, true);
   document.addEventListener('scroll', (e) => {
+    if (!userIsScrolling) return;  // scroll programmatique, on ignore
+    userIsScrolling = false;       // consommé
     const a = document.activeElement;
     if (!a || !a.tagName) return;
     if (a.tagName !== 'INPUT' && a.tagName !== 'TEXTAREA') return;
