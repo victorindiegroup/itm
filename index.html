@@ -1671,7 +1671,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v108';
+const APP_VERSION = 'v109';
 
 /* === ITM APP === */
 (function(){
@@ -4031,45 +4031,12 @@ function cleanCat(c){
   return last.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
 }
 
-// Helper : attache un handler de tap qui fonctionne en "1 tap" sur mobile,
-// même quand un input a le focus (clavier ouvert).
-//
-// Problème mobile : si on touche un élément alors qu'un input a le focus,
-// le premier tap ferme le clavier (blur), et le click n'est PAS déclenché.
-// Il faut un deuxième tap pour ouvrir l'élément.
-//
-// Solution : on écoute pointerdown / pointerup, et on distingue un VRAI tap
-// (touch puis release sans bouger) d'un SCROLL (touch puis glissement).
-// Sur un vrai tap, on blur l'input avant que le click natif ne se produise.
-// Sur un scroll, on ne fait rien.
-const TAP_MAX_MOVE_PX = 10;
+// Helper : attache un handler de tap sur un élément.
+// Implémentation simple basée sur click natif (le plus fiable cross-platform).
+// Le souci "il faut tap 2 fois quand un input a le focus" est résolu globalement
+// par un listener qui blur les inputs dès qu'on scroll dans une liste (voir init()).
 function attachTap(el, handler) {
-  let startX = 0, startY = 0, isTap = false;
-  el.addEventListener('pointerdown', (e) => {
-    if (e.button !== undefined && e.button !== 0) return;
-    startX = e.clientX;
-    startY = e.clientY;
-    isTap = true;
-  });
-  el.addEventListener('pointermove', (e) => {
-    if (!isTap) return;
-    const dx = Math.abs(e.clientX - startX);
-    const dy = Math.abs(e.clientY - startY);
-    if (dx > TAP_MAX_MOVE_PX || dy > TAP_MAX_MOVE_PX) {
-      isTap = false;  // c'est un scroll, plus un tap
-    }
-  });
-  el.addEventListener('pointerup', (e) => {
-    if (!isTap) return;
-    isTap = false;
-    // Si un input a le focus, on le blur (ferme le clavier mobile)
-    if (document.activeElement && document.activeElement.tagName && 
-        (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
-      document.activeElement.blur();
-    }
-    handler(e);
-  });
-  el.addEventListener('pointercancel', () => { isTap = false; });
+  el.addEventListener('click', handler);
 }
 
 function escape(s){
@@ -8847,6 +8814,19 @@ function init(){
     renderCatalogue();
     updateBadge();
   };
+
+  // Blur au scroll : ferme le clavier mobile dès que l'utilisateur scrolle dans une liste.
+  // Comme ça quand il tap sur un produit visible, le clavier est déjà fermé et le tap
+  // s'enregistre du premier coup (pas besoin de double-tap).
+  // On écoute en capture phase (true) pour attraper tous les scrolls internes des conteneurs.
+  document.addEventListener('scroll', (e) => {
+    const a = document.activeElement;
+    if (!a || !a.tagName) return;
+    if (a.tagName !== 'INPUT' && a.tagName !== 'TEXTAREA') return;
+    // Ne blur que pour les inputs de recherche (pas les champs numériques qu'on est en train de remplir)
+    if (a.type !== 'search' && a.type !== 'text') return;
+    a.blur();
+  }, true);
 
   // Tabs
   document.querySelectorAll('.tab').forEach(t => {
