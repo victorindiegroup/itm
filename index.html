@@ -1671,7 +1671,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v107';
+const APP_VERSION = 'v108';
 
 /* === ITM APP === */
 (function(){
@@ -4038,33 +4038,38 @@ function cleanCat(c){
 // le premier tap ferme le clavier (blur), et le click n'est PAS déclenché.
 // Il faut un deuxième tap pour ouvrir l'élément.
 //
-// Solution : on écoute 'pointerdown' qui se déclenche AVANT le blur de l'input.
-// On y déclenche manuellement le blur + l'action. preventDefault évite le double-déclenchement
-// par le click natif.
-//
-// Sur desktop (souris), pointerdown fonctionne pareil que click → comportement inchangé.
+// Solution : on écoute pointerdown / pointerup, et on distingue un VRAI tap
+// (touch puis release sans bouger) d'un SCROLL (touch puis glissement).
+// Sur un vrai tap, on blur l'input avant que le click natif ne se produise.
+// Sur un scroll, on ne fait rien.
+const TAP_MAX_MOVE_PX = 10;
 function attachTap(el, handler) {
+  let startX = 0, startY = 0, isTap = false;
   el.addEventListener('pointerdown', (e) => {
-    // Ignore le clic droit ou le bouton du milieu
     if (e.button !== undefined && e.button !== 0) return;
-    // Si un input a le focus dans la page, on le blur d'abord
+    startX = e.clientX;
+    startY = e.clientY;
+    isTap = true;
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!isTap) return;
+    const dx = Math.abs(e.clientX - startX);
+    const dy = Math.abs(e.clientY - startY);
+    if (dx > TAP_MAX_MOVE_PX || dy > TAP_MAX_MOVE_PX) {
+      isTap = false;  // c'est un scroll, plus un tap
+    }
+  });
+  el.addEventListener('pointerup', (e) => {
+    if (!isTap) return;
+    isTap = false;
+    // Si un input a le focus, on le blur (ferme le clavier mobile)
     if (document.activeElement && document.activeElement.tagName && 
         (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
       document.activeElement.blur();
     }
-    // On ne preventDefault pas tout de suite : on veut quand même que le tap fonctionne sur l'élément lui-même
-    // Mais pour éviter un double-déclenchement (pointerdown + click natif), on retient l'event :
-    el._tapHandled = true;
     handler(e);
   });
-  // Filet de sécurité : si pointerdown n'a pas marché (navigateur ancien), on garde click
-  el.addEventListener('click', (e) => {
-    if (el._tapHandled) {
-      el._tapHandled = false;
-      return;  // pointerdown a déjà géré
-    }
-    handler(e);
-  });
+  el.addEventListener('pointercancel', () => { isTap = false; });
 }
 
 function escape(s){
