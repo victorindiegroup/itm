@@ -857,7 +857,7 @@
   .saisie-item {
     display: grid;
     grid-template-columns: 1fr auto;
-    grid-template-areas: 'main total' 'detail total';
+    grid-template-areas: 'main total' 'detail total' 'comment comment';
     align-items: center;
     gap: 2px 12px;
     padding: 12px 14px;
@@ -889,6 +889,16 @@
     font-size: 11px;
     color: var(--ink-2);
     padding-left: 48px;
+  }
+  .saisie-comment {
+    grid-area: comment;
+    font-size: 12px;
+    color: var(--accent-dark);
+    font-style: italic;
+    padding-left: 48px;
+    margin-top: 4px;
+    white-space: normal;
+    word-break: break-word;
   }
   .saisie-total {
     grid-area: total;
@@ -1676,7 +1686,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v112';
+const APP_VERSION = 'v113';
 
 /* === ITM APP === */
 (function(){
@@ -4708,6 +4718,9 @@ function renderExport(){
         html += '  <div class="saisie-detail">' + escape(detail) + '</div>';
       }
       html += '  <div class="saisie-total"><span class="mono">' + total + '</span> <span class="saisie-unit">' + unit + '</span></div>';
+      if (line.comment) {
+        html += '  <div class="saisie-comment">💬 ' + escape(line.comment) + '</div>';
+      }
       html += '</div>';
       return;
     }
@@ -4746,7 +4759,7 @@ function renderExport(){
       html += '  <div class="saisie-detail">' + escape(detail) + '</div>';
     }
     if (line.comment) {
-      html += '  <div class="saisie-detail" style="color:var(--accent-dark); font-style:italic;">💬 ' + escape(line.comment) + '</div>';
+      html += '  <div class="saisie-comment">💬 ' + escape(line.comment) + '</div>';
     }
     html += '  <div class="saisie-total"><span class="mono">' + total + '</span> <span class="saisie-unit">' + unit + '</span></div>';
     html += '</div>';
