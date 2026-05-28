@@ -325,8 +325,7 @@
     transition: background 0.1s;
     flex-shrink: 0;
   }
-  /* iOS bug : transform: scale() sur :active fait décaler la zone tactile lors de taps rapides.
-     On garde uniquement le changement de couleur pour le feedback visuel. */
+  /* iOS : pas de transform: scale() sur :active (décale la zone tactile) */
   .qty-step-btn:active { background: var(--accent); color: white; }
   .qty-step-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .qty-format-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
@@ -1686,7 +1685,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v115';
+const APP_VERSION = 'v117';
 
 /* === ITM APP === */
 (function(){
@@ -1901,10 +1900,6 @@ function installLinesProxy() {
 }
 installLinesProxy();
 
-// Helper : y a-t-il un inventaire actif ?
-function hasActiveInventory() {
-  return state.currentInventory !== null;
-}
 
 // Démarrer un nouvel inventaire
 function startInventory(meta) {
@@ -2463,27 +2458,6 @@ async function pushBatchesForEtab(etab, batches) {
   }
 }
 
-// Vider les pending batches (à appeler au démarrage et périodiquement)
-async function flushPendingBatches() {
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('itm_batches_pending_')) {
-      const slug = key.replace('itm_batches_pending_', '');
-      try {
-        const batches = JSON.parse(localStorage.getItem(key));
-        const response = await fetch(BACKEND_URL + '/batches/' + encodeURIComponent(slug), {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ batches }),
-          signal: AbortSignal.timeout(10000)
-        });
-        if (response.ok) {
-          localStorage.removeItem(key);
-        }
-      } catch (e) { /* retry plus tard */ }
-    }
-  }
-}
 
 // -------- LIAISONS ADMIN --------
 
@@ -2720,12 +2694,6 @@ function closeSheet(sheetId, overlayId){
   // Retirer sheet-open uniquement si AUCUN autre sheet n'est ouvert
   const anyOpen = document.querySelector('.sheet.open');
   if (!anyOpen) document.body.classList.remove('sheet-open');
-}
-function closeAllSheets(){
-  ['shProd','shZone','shNewZone','shConfirm'].forEach(id => document.getElementById(id).classList.remove('open'));
-  ['ovProd','ovZone','ovNewZone','ovConfirm'].forEach(id => document.getElementById(id).classList.remove('open'));
-  document.body.style.overflow = '';
-  document.body.classList.remove('sheet-open');
 }
 
 /* ---------- Header ---------- */
@@ -4586,35 +4554,6 @@ function renderSession(){
   });
 }
 
-function describeLine(l, p){
-  let parts = [];
-
-  if (p.e === 'btl' || p.e === 'unit'){
-    const unitLabel = 'pc';
-    const base = l.qty || 0;
-    if (base > 0) parts.push(`<span class="mono">${fmtQty(base)} ${unitLabel}</span>`);
-    if (l.carton && l.carton.active && l.carton.nb && l.carton.pieces){
-      parts.push(`<span class="mono">${fmtQty(l.carton.nb)} ctn × ${fmtQty(l.carton.pieces)}</span>`);
-    }
-  } else {
-    (l.details || []).forEach(d => {
-      if (d.qty > 0){
-        parts.push(`<span class="mono">${fmtQty(d.qty)} × ${d.label}</span>`);
-      }
-    });
-    if (l.carton && l.carton.active && l.carton.nb && l.carton.pieces){
-      parts.push(`<span class="mono">${fmtQty(l.carton.nb)} ctn × ${fmtQty(l.carton.pieces)} (${l.carton.format})</span>`);
-    }
-  }
-
-  let totalLabel;
-  if (p.e === 'btl') totalLabel = 'pc';
-  else if (p.e === 'unit') totalLabel = 'pc';
-  else totalLabel = 'L';
-  const total = `<span class="summary-strong mono">= ${fmtQty(l.total)} ${totalLabel}</span>`;
-
-  return parts.join(' · ') + ' · ' + total;
-}
 
 function updateBadge(){
   const n = state.currentInventory ? state.currentInventory.lines.length : 0;
@@ -4808,22 +4747,7 @@ function wireSaisiesSearch() {
     renderExport();
   });
 }
-let saisiesSearchHadFocus = false;  // ⚠ inutilisé maintenant, conservé pour compat
 
-function askResetSession(){
-  openConfirm('Terminer la session ?',
-    `Vas-tu vraiment réinitialiser la session ? Tes ${state.lines.length} saisies seront effacées. Exporte d'abord le CSV si besoin.`,
-    () => {
-      state.lines = [];
-      state.date = todayLocal();
-      saveState();
-      renderHeader();
-      updateBadge();
-      renderExport();
-      renderCatalogue();
-      toast('Session réinitialisée');
-    });
-}
 
 /* ---------- Zones ---------- */
 function renderZonesList(){
@@ -4903,13 +4827,9 @@ function renderZonesList(){
 }
 
 /* ---------- Confirm ---------- */
+// confirmCb est défini ici car il est utilisé par les handlers de #shConfirm dans le HTML.
+// La fonction openConfirm() n'existe plus : les usagers configurent confirmCb + openSheet manuellement.
 let confirmCb = null;
-function openConfirm(title, msg, cb){
-  document.getElementById('confirmTitle').textContent = title;
-  document.getElementById('confirmMsg').textContent = msg;
-  confirmCb = cb;
-  openSheet('shConfirm','ovConfirm');
-}
 
 /* ---------- Chat ---------- */
 function openChat(){
@@ -5797,24 +5717,6 @@ function parseCategoryPath(c) {
   };
 }
 
-// Grouper les résultats catalogue par catégorie principale
-function groupCatalogResultsByCategory(results) {
-  const groups = new Map();
-  for (const r of results) {
-    const cat = parseCategoryPath(r.product.c);
-    const key = cat.main + (cat.sub ? ' - ' + cat.sub : '');
-    if (!groups.has(key)) {
-      groups.set(key, {
-        label: key,
-        main: cat.main,
-        sub: cat.sub,
-        items: []
-      });
-    }
-    groups.get(key).items.push(r);
-  }
-  return Array.from(groups.values());
-}
 
 // Emoji pour la catégorie principale
 function categoryEmoji(main) {
@@ -6211,35 +6113,6 @@ function buildSuggestionsResponse(msg, liaisonsHits, verseHits, sorted, currentE
   return { text, suggestions };
 }
 
-// Propose de préciser par catégorie quand trop de résultats
-function buildDisambiguationByCategory(msg, sorted) {
-  // Regrouper par catégorie
-  const byCat = {};
-  sorted.slice(0, 20).forEach(m => {
-    const prod = resolveToCatalog(m.product);
-    const cat = categorizeProduct(prod);
-    if (!byCat[cat]) byCat[cat] = [];
-    byCat[cat].push(m);
-  });
-  const cats = Object.keys(byCat).filter(c => byCat[c].length > 0);
-  if (cats.length <= 1) {
-    // Une seule catégorie : inutile de désambiguïser
-    return buildSuggestionsResponse(msg, [], [], sorted, state.estab);
-  }
-
-  victorContext = {
-    awaiting: 'category',
-    originalQuery: msg,
-    matches: sorted,
-    categories: cats
-  };
-
-  const quickReplies = cats.map(c => categoryLabel(c));
-  return {
-    text: "J'ai trouvé " + sorted.length + " résultats pour \"" + msg + "\". C'est plutôt :",
-    quickReplies: quickReplies
-  };
-}
 
 // Démarre un arbre de questions quand zéro résultat
 function startCategoryQuestions(msg) {
@@ -8321,7 +8194,7 @@ function renderBatchSheet(batch) {
   html += '  <div class="field">';
   html += '    <label class="field-lbl">Nombre de bouteilles</label>';
   html += '    <div class="field-row">';
-  html += '      <input id="batchCount" type="number" step="1" min="0" inputmode="numeric" value="' + (currentBatchDraft.batchCount || '') + '" style="font-size:16px; padding:14px; flex:1; min-width:0; border:1px solid var(--border); border-radius:10px;">';
+  html += '      <input id="batchCount" type="text" inputmode="decimal" value="' + (currentBatchDraft.batchCount || '') + '" style="font-size:16px; padding:14px; flex:1; min-width:0; border:1px solid var(--border); border-radius:10px;">';
   html += '      <span class="field-label-inline">btl</span>';
   html += '    </div>';
   html += '  </div>';
@@ -8555,7 +8428,6 @@ async function syncLiaisonsWithCloudflare() {
 // ============================================================
 let currentLiaison = null;
 let liaisonInlineSearch = '';
-let liaisonPickerSearchTerm = '';  // pour le picker produit
 
 function openLiaisonEditor(liaisonId) {
   if (liaisonId) {
