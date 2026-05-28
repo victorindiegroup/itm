@@ -1524,6 +1524,11 @@
       <label class="field-lbl">Nom de la personne</label>
       <input type="text" id="startInvPersonne" class="field-input" placeholder="Ex: Paul, Sarah, Marc..." autocomplete="name">
     </div>
+
+    <div class="field">
+      <label class="field-lbl">Commentaire (optionnel)</label>
+      <textarea id="startInvComment" class="field-input" rows="2" placeholder="Ex: réserve du sous-sol non comptée, accès bloqué..." style="resize:vertical; font-family:inherit;"></textarea>
+    </div>
   </div>
   <div class="sheet-foot">
     <button type="button" class="btn-cancel" id="startInvCancel">Annuler</button>
@@ -1671,7 +1676,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v111';
+const APP_VERSION = 'v112';
 
 /* === ITM APP === */
 (function(){
@@ -1899,6 +1904,7 @@ function startInventory(meta) {
     moment: meta.moment || 'avant',  // 'avant' | 'apres'
     type: meta.type || 'total',       // 'alcool_soft' | 'vin' | 'total'
     personne: meta.personne || '',
+    comment: meta.comment || '',          // commentaire global libre de l'inventaire
     etab: state.estab,                // figer l'étab au démarrage de l'inventaire
     parentId: meta.parentId || null,        // si non null, c'est un complément d'un inventaire archivé
     parentLabel: meta.parentLabel || null,  // libellé du parent (cache pour affichage)
@@ -1922,6 +1928,7 @@ function finishInventory() {
     moment: state.currentInventory.moment,
     type: state.currentInventory.type || 'total',
     personne: state.currentInventory.personne,
+    comment: state.currentInventory.comment || '',
     etab: state.currentInventory.etab || state.estab,
     parentId: state.currentInventory.parentId || null,
     parentLabel: state.currentInventory.parentLabel || null,
@@ -4204,6 +4211,12 @@ function renderProductSheet(){
     </div>
   </div>`;
 
+  // Commentaire optionnel sur cette ligne précise
+  html += `<div style="margin-top: 16px;">
+    <label class="field-lbl" style="display:block; margin-bottom:6px;">Commentaire (optionnel)</label>
+    <textarea id="lineComment" rows="2" placeholder="Ex: bouteille entamée, carton abîmé, DLC dépassée..." style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-family:inherit; font-size:14px; background:var(--surface); resize:vertical;">${escape(draft && draft.comment ? draft.comment : '')}</textarea>
+  </div>`;
+
   // Bouton OK global (ferme le clavier)
   html += `<div style="margin-top: 16px; display: flex; justify-content: flex-end;">
     <button type="button" class="qty-ok-btn" id="btnKeyboardOk">OK — Terminer la saisie</button>
@@ -4217,6 +4230,14 @@ function renderProductSheet(){
       document.activeElement.blur();
     }
   });
+
+  // Commentaire : on stocke dans le draft à chaque modification
+  const lineCommentEl = document.getElementById('lineComment');
+  if (lineCommentEl) {
+    lineCommentEl.addEventListener('input', (e) => {
+      if (draft) draft.comment = e.target.value;
+    });
+  }
 
   // Attachments
   if (p.e === 'btl' || p.e === 'unit'){
@@ -4406,6 +4427,10 @@ function saveLine(){
     return;
   }
 
+  // Capture du commentaire (sécurité : au cas où l'event input ne se serait pas déclenché)
+  const lineCommentEl = document.getElementById('lineComment');
+  if (lineCommentEl) draft.comment = lineCommentEl.value.trim();
+
   // Accès direct à currentInventory.lines (pas via proxy)
   const lines = state.currentInventory.lines;
 
@@ -4471,6 +4496,7 @@ function renderSession(){
       <div class="sess-current-meta"><b>${fmtDate(inv.date)}</b> · ${momentLbl} · ${typeLbl}</div>
       ${inv.parentId && inv.parentLabel ? `<div class="sess-current-meta" style="color:var(--accent-dark);">➕ Complément de <b>${escape(inv.parentLabel)}</b></div>` : ''}
       ${inv.personne ? `<div class="sess-current-meta">Par : <b>${escape(inv.personne)}</b></div>` : ''}
+      ${inv.comment ? `<div class="sess-current-meta" style="font-style:italic;">💬 ${escape(inv.comment)}</div>` : ''}
       <div class="sess-current-count">${countText}</div>
       <div class="sess-current-actions">
         <button type="button" class="sess-btn-continue" id="btnContinueInv">Continuer la saisie</button>
@@ -4718,6 +4744,9 @@ function renderExport(){
     html += '  </div>';
     if (detail) {
       html += '  <div class="saisie-detail">' + escape(detail) + '</div>';
+    }
+    if (line.comment) {
+      html += '  <div class="saisie-detail" style="color:var(--accent-dark); font-style:italic;">💬 ' + escape(line.comment) + '</div>';
     }
     html += '  <div class="saisie-total"><span class="mono">' + total + '</span> <span class="saisie-unit">' + unit + '</span></div>';
     html += '</div>';
@@ -7007,6 +7036,10 @@ function openStartInvConfig(kind) {
   const lastName = localStorage.getItem('itm_last_personne') || '';
   document.getElementById('startInvPersonne').value = lastName;
 
+  // Reset du commentaire global
+  const commentEl = document.getElementById('startInvComment');
+  if (commentEl) commentEl.value = '';
+
   openSheet('shStartInv', 'ovStartInv');
   setTimeout(() => document.getElementById('startInvPersonne').focus(), 200);
 }
@@ -7267,6 +7300,28 @@ async function exportAndMailInventory(inv) {
       + '- Moment : ' + momentLblFr + '\n'
       + (inv.personne ? '- Par : ' + inv.personne + '\n' : '')
       + '- Nombre de produits : ' + inv.lines.length + '\n';
+  }
+
+  // Commentaire global de l'inventaire
+  if (inv.comment) {
+    body += '\nCommentaire général :\n' + inv.comment + '\n';
+  }
+
+  // Commentaires par produit (s'il y en a)
+  const linesWithComment = inv.lines.filter(l => l.comment && l.comment.trim());
+  if (linesWithComment.length > 0) {
+    body += '\nRemarques par produit :\n';
+    linesWithComment.forEach(l => {
+      let label;
+      if (l.batchId) {
+        label = l.batchName || '(batch)';
+      } else {
+        const p = resolveProduct(l);
+        label = p ? p.s : '(produit)';
+      }
+      const zone = l.zone ? ' [' + l.zone + ']' : '';
+      body += '- ' + label + zone + ' : ' + l.comment + '\n';
+    });
   }
 
   // ==== 3. Partage natif avec pièce jointe (iOS 15+, Android récent) ====
@@ -7589,7 +7644,7 @@ function openInventoryDetailObject(inv, opts) {
 function aggregateInventoryForDisplay(inv) {
   const byProduct = new Map();
 
-  function addEntry(key, productLabel, zone, qty, productObj, isBatch) {
+  function addEntry(key, productLabel, zone, qty, productObj, isBatch, comment) {
     if (!byProduct.has(key)) {
       byProduct.set(key, { key, label: productLabel, zones: [], total: 0, product: productObj || null, isBatch: !!isBatch });
     }
@@ -7598,8 +7653,10 @@ function aggregateInventoryForDisplay(inv) {
     const existingZone = entry.zones.find(z => z.zone === zone);
     if (existingZone) {
       existingZone.qty = Math.round((existingZone.qty + qty) * 1000) / 1000;
+      // Concaténer les commentaires si plusieurs lignes sur la même zone
+      if (comment) existingZone.comment = existingZone.comment ? (existingZone.comment + ' · ' + comment) : comment;
     } else {
-      entry.zones.push({ zone, qty: Math.round(qty * 1000) / 1000 });
+      entry.zones.push({ zone, qty: Math.round(qty * 1000) / 1000, comment: comment || '' });
     }
     entry.total = Math.round((entry.total + qty) * 1000) / 1000;
   }
@@ -7610,11 +7667,11 @@ function aggregateInventoryForDisplay(inv) {
       // Batch : affichage spécial, on garde la ligne batch telle quelle
       const key = 'batch:' + l.batchId + ':' + zone;
       const label = (l.batchName || 'Batch') + ' (batch)';
-      addEntry(key, label, zone, l.batchCount || 0, null, true);
+      addEntry(key, label, zone, l.batchCount || 0, null, true, l.comment);
     } else {
       const p = resolveProduct(l);
       if (!p) return;
-      addEntry('p:' + p.y, p.s, zone, l.total || 0, p, false);
+      addEntry('p:' + p.y, p.s, zone, l.total || 0, p, false, l.comment);
     }
   });
 
@@ -7639,18 +7696,21 @@ function buildDetailedXlsx(inv) {
     ['Moment', inv.moment === 'apres' ? 'Après service' : 'Avant service'],
     ['Type', invTypeLabel(inv.type)],
     ['Personne', inv.personne || ''],
-    [],
   ];
+  if (inv.comment) {
+    headerRows.push(['Commentaire général', inv.comment]);
+  }
+  headerRows.push([]);
 
   const data = [
     ...headerRows,
-    ['Produit', 'Zone', 'Quantité', 'Total produit'],
+    ['Produit', 'Zone', 'Quantité', 'Total produit', 'Commentaire'],
   ];
 
   items.forEach(it => {
     if (it.zones.length === 0) return;
     it.zones.forEach(z => {
-      data.push([it.label, z.zone, z.qty, it.total]);
+      data.push([it.label, z.zone, z.qty, it.total, z.comment || '']);
     });
   });
 
@@ -7661,6 +7721,7 @@ function buildDetailedXlsx(inv) {
     { wch: 15 },  // Zone
     { wch: 12 },  // Quantité
     { wch: 14 },  // Total produit
+    { wch: 40 },  // Commentaire
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Détail par zone');
@@ -7721,10 +7782,14 @@ function renderInventoryDetailBody() {
   }
 
   let html = '';
+  // Commentaire global de l'inventaire (s'il y en a un)
+  if (inv.comment) {
+    html += '<div style="margin:12px 16px; padding:10px 12px; background:var(--accent-soft); border-radius:8px; font-size:13px; color:var(--accent-dark); font-style:italic;">💬 ' + escape(inv.comment) + '</div>';
+  }
   if (items.length === 0) {
-    html = '<div class="prod-empty">Aucun produit dans cet inventaire.</div>';
+    html += '<div class="prod-empty">Aucun produit dans cet inventaire.</div>';
   } else if (filtered.length === 0) {
-    html = '<div class="prod-empty" style="padding: 40px 20px;">Aucun produit ne correspond à « ' + escape(currentDetailFilter) + ' ».</div>';
+    html += '<div class="prod-empty" style="padding: 40px 20px;">Aucun produit ne correspond à « ' + escape(currentDetailFilter) + ' ».</div>';
   } else {
     // Compteur si filtre actif
     if (currentDetailFilter.trim()) {
@@ -9001,6 +9066,8 @@ function init(){
   document.getElementById('startInvOk').addEventListener('click', () => {
     const personne = document.getElementById('startInvPersonne').value.trim();
     if (!personne) { toast('Nom requis'); return; }
+    const commentEl = document.getElementById('startInvComment');
+    const comment = commentEl ? commentEl.value.trim() : '';
     const kind = currentStartKind || 'new';
 
     if (kind === 'complement') {
@@ -9020,6 +9087,7 @@ function init(){
         moment: parent.moment,
         type: parent.type,
         personne,
+        comment,
         parentId: parent.id,
         parentLabel: fmtDate(parent.date) + ' · ' + (parent.moment === 'apres' ? 'Après service' : 'Avant service')
       });
@@ -9035,7 +9103,7 @@ function init(){
     if (!date) { toast('Date requise'); return; }
     // Mémoriser le nom pour la prochaine fois
     localStorage.setItem('itm_last_personne', personne);
-    startInventory({ date, moment, personne, type });
+    startInventory({ date, moment, personne, type, comment });
     closeSheet('shStartInv','ovStartInv');
     renderSession();
     renderHeader();
