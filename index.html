@@ -1686,7 +1686,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v113';
+const APP_VERSION = 'v114';
 
 /* === ITM APP === */
 (function(){
@@ -4056,6 +4056,15 @@ function attachTap(el, handler) {
   el.addEventListener('click', handler);
 }
 
+// Parse un nombre saisi par l'utilisateur en acceptant la virgule (locale FR) ET le point.
+// Indispensable sur iPhone qui force la virgule comme séparateur décimal en français.
+// parseFloat("0,8") renvoie 0 alors qu'on veut 0.8 → cette fonction règle le problème.
+function parseNum(s) {
+  if (s === null || s === undefined || s === '') return 0;
+  const v = parseFloat(String(s).replace(',', '.'));
+  return isNaN(v) ? 0 : v;
+}
+
 function escape(s){
   return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
@@ -4286,7 +4295,7 @@ function renderProductSheet(){
         input = body.querySelector(`input[data-format="${btn.dataset.targetFmt}"]`);
       }
       if (!input) return;
-      const currentVal = parseFloat(input.value) || 0;
+      const currentVal = parseNum(input.value);
       let newVal = currentVal + step;
       if (newVal < 0) newVal = 0;
       // Arrondir à 0.1 près pour éviter les soucis de float
@@ -4338,19 +4347,19 @@ function updateDraftFromInputs(){
   const p = currentProduct;
 
   if (p.e === 'btl' || p.e === 'unit'){
-    const v = parseFloat(document.getElementById('fQty').value) || 0;
+    const v = parseNum(document.getElementById('fQty').value);
     draft.qty = v;
   } else {
     draft.details.forEach(d => {
       const el = document.querySelector(`input[data-format="${d.label}"]`);
-      d.qty = el ? (parseFloat(el.value) || 0) : 0;
+      d.qty = el ? (parseNum(el.value)) : 0;
     });
   }
 
   const cnb = document.getElementById('fCartonNb');
   const cpc = document.getElementById('fCartonPieces');
-  if (cnb) draft.carton.nb = parseFloat(cnb.value) || 0;
-  if (cpc) draft.carton.pieces = parseFloat(cpc.value) || 0;
+  if (cnb) draft.carton.nb = parseNum(cnb.value);
+  if (cpc) draft.carton.pieces = parseNum(cpc.value);
 
   computeTotal();
   renderSubs();
@@ -4370,7 +4379,7 @@ function updateOkButtonsVisibility() {
       input = body.querySelector(`input[data-format="${btn.dataset.okFmt}"]`);
     }
     if (!input) return;
-    const val = parseFloat(input.value) || 0;
+    const val = parseNum(input.value);
     btn.classList.toggle('visible', val > 0);
   });
 }
@@ -8027,7 +8036,7 @@ function renderBatchEditor() {
 
   // Capacité
   document.getElementById('batchCapacity').addEventListener('input', (e) => {
-    currentBatch.capacity = parseFloat(e.target.value) || 0;
+    currentBatch.capacity = parseNum(e.target.value);
     updateBatchEditorTotals();
   });
 
@@ -8041,7 +8050,7 @@ function renderBatchEditor() {
   body.querySelectorAll('.batch-ingr-qty-input').forEach(input => {
     input.addEventListener('input', (e) => {
       const idx = parseInt(e.target.dataset.idx);
-      currentBatch.compo[idx].qty = parseFloat(e.target.value) || 0;
+      currentBatch.compo[idx].qty = parseNum(e.target.value);
       updateBatchEditorTotals();
     });
   });
@@ -8333,7 +8342,7 @@ function renderBatchSheet(batch) {
   // Bouton "Aperçu" : calcule et affiche la décomposition uniquement à la demande
   // (au lieu de la mettre à jour à chaque keystroke, ce qui cause un bug iOS)
   document.getElementById('batchCalcPreview').addEventListener('click', () => {
-    currentBatchDraft.batchCount = parseFloat(input.value) || 0;
+    currentBatchDraft.batchCount = parseNum(input.value);
     updateBatchBreakdown();
   });
 
@@ -8362,7 +8371,7 @@ function updateBatchBreakdown() {
   try {
     const input = document.getElementById('batchCount');
     if (!input) return;
-    const count = parseFloat(input.value) || 0;
+    const count = parseNum(input.value);
     if (currentBatchDraft) currentBatchDraft.batchCount = count;
 
     // Bouton OK visible si count > 0
@@ -8414,7 +8423,7 @@ function saveBatchLine() {
   // Lire la valeur courante de l'input (puisqu'on n'a plus d'event input qui met à jour le draft)
   const input = document.getElementById('batchCount');
   if (input) {
-    const val = parseFloat(input.value) || 0;
+    const val = parseNum(input.value);
     currentBatchDraft.batchCount = val;
   }
 
