@@ -1686,7 +1686,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v114';
+const APP_VERSION = 'v115';
 
 /* === ITM APP === */
 (function(){
@@ -4132,7 +4132,7 @@ function renderProductSheet(){
         <label class="field-lbl">Quantité (pièces)</label>
         <div class="field-row">
           <button type="button" class="qty-step-btn" data-step="-1" data-target="fQty" aria-label="Diminuer">−</button>
-          <input id="fQty" type="number" step="0.1" inputmode="decimal" value="${draft.qty || ''}" placeholder="">
+          <input id="fQty" type="text" inputmode="decimal" step="0.1" value="${draft.qty || ''}" placeholder="">
           <button type="button" class="qty-step-btn" data-step="1" data-target="fQty" aria-label="Augmenter">+</button>
           <button type="button" class="qty-ok-btn" data-ok="fQty" aria-label="Valider">OK</button>
           <span class="field-label-inline" id="fQtyUnit">pc</span>
@@ -4163,7 +4163,7 @@ function renderProductSheet(){
         <div class="qty-format-row">
           <div class="qty-format-label">× ${f.label}</div>
           <button type="button" class="qty-step-btn" data-step="-1" data-target-fmt="${f.label}" aria-label="Diminuer">−</button>
-          <input type="number" step="0.1" inputmode="decimal" data-format="${f.label}" value="${detail.qty || ''}" placeholder="">
+          <input type="text" inputmode="decimal" step="0.1" data-format="${f.label}" value="${detail.qty || ''}" placeholder="">
           <button type="button" class="qty-step-btn" data-step="1" data-target-fmt="${f.label}" aria-label="Augmenter">+</button>
           <button type="button" class="qty-ok-btn" data-ok-fmt="${f.label}" aria-label="Valider">OK</button>
           <div class="qty-format-sub" data-sub="${f.label}">—</div>
@@ -7981,7 +7981,7 @@ function renderBatchEditor() {
   html += '<div class="field" style="margin-bottom: 16px;">';
   html += '  <label class="field-lbl">Conditionnement (capacité totale)</label>';
   html += '  <div style="display:flex; gap:8px;">';
-  html += '    <input type="number" step="1" min="1" inputmode="decimal" id="batchCapacity" class="field-input" value="' + (currentBatch.capacity || '') + '" placeholder="100" style="flex:1;">';
+  html += '    <input type="text" inputmode="decimal" step="1" data-min="1" id="batchCapacity" class="field-input" value="' + (currentBatch.capacity || '') + '" placeholder="100" style="flex:1;">';
   html += '    <input type="text" id="batchUnit" class="field-input" value="' + escape(currentBatch.unit || 'cL') + '" placeholder="cL" style="width:80px;">';
   html += '  </div>';
   html += '  <div style="font-size:11px; color:var(--ink-2); margin-top:4px;">Ex: 100 cL pour une bouteille de 1L</div>';
@@ -8001,7 +8001,7 @@ function renderBatchEditor() {
       html += '  <div class="batch-ingr-main">';
       html += '    <div class="batch-ingr-name">' + escape(pname) + '</div>';
       html += '  </div>';
-      html += '  <input type="number" step="0.1" min="0" inputmode="decimal" class="batch-ingr-qty-input" data-idx="' + idx + '" value="' + (c.qty || '') + '">';
+      html += '  <input type="text" inputmode="decimal" step="0.1" data-min="0" class="batch-ingr-qty-input" data-idx="' + idx + '" value="' + (c.qty || '') + '">';
       html += '  <span class="batch-ingr-unit">' + escape(c.unit || '') + '</span>';
       html += '  <button type="button" class="batch-ingr-remove" data-idx="' + idx + '" aria-label="Retirer">×</button>';
       html += '</div>';
