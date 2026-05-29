@@ -103,11 +103,8 @@
   .search-ico { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); color: var(--ink-3); font-size: 16px; pointer-events: none; }
   .search-wrap { position: sticky; }
 
-  /* Filtre catégorie sticky sous la barre de recherche */
+  /* Filtre catégorie sous la barre de recherche : scroll avec le contenu (pas sticky) */
   .cat-filter-wrap {
-    position: sticky;
-    top: 60px;
-    z-index: 9;
     background: var(--bg);
     padding: 0 16px 8px;
     display: flex;
@@ -1737,7 +1734,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v120';
+const APP_VERSION = 'v121';
 
 /* === ITM APP === */
 (function(){
@@ -8795,13 +8792,10 @@ function getAvailableCategories() {
     else if (path.sub === 'EFFERVESCENT' || det.startsWith('EFFERVESCENT')) {
       key = 'EFFERVESCENT';
     }
-    // Pour les vins (hors bulles) : combiner sub + couleur
+    // Pour les vins (hors bulles) : une seule catégorie "VIN" pour simplifier
+    // (les détections par couleur via le champ detail étaient peu fiables selon les catalogues)
     else if (path.sub === 'VIN') {
-      if (det.startsWith('ROUGE')) key = 'VIN ROUGE';
-      else if (det.startsWith('BLANC')) key = 'VIN BLANC';
-      else if (det.startsWith('ROSE') || det.startsWith('ROSÉ')) key = 'VIN ROSÉ';
-      else if (det.startsWith('ORANGE')) key = 'VIN ORANGE';
-      else key = 'VIN';
+      key = 'VIN';
     }
     // Tout le reste : on prend le sub direct (VODKA, WHISKY, GIN, TEQUILA, RHUM, etc.)
     else if (path.sub) key = path.sub;
