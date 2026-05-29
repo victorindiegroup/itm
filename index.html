@@ -103,6 +103,52 @@
   .search-ico { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); color: var(--ink-3); font-size: 16px; pointer-events: none; }
   .search-wrap { position: sticky; }
 
+  /* Filtre catégorie sticky sous la barre de recherche */
+  .cat-filter-wrap {
+    position: sticky;
+    top: 60px;
+    z-index: 9;
+    background: var(--bg);
+    padding: 0 16px 8px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .cat-filter-select {
+    flex: 1;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--ink);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23999' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+  .cat-filter-select.active {
+    border-color: var(--accent);
+    background-color: var(--accent-soft);
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+  .cat-filter-clear {
+    width: 36px; height: 36px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--ink-2);
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cat-filter-clear:active { background: var(--bg); }
+
   /* PRODUIT LIST */
   .prod-list { padding: 4px 16px 16px; }
   .prod-empty { padding: 40px 20px; text-align: center; color: var(--ink-2); font-size: 14px; }
@@ -1338,6 +1384,12 @@
       <span class="search-ico">⌕</span>
       <input class="search" id="searchInput" type="search" placeholder="Rechercher un produit…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
+    <div class="cat-filter-wrap">
+      <select id="categoryFilter" class="cat-filter-select">
+        <option value="">Toutes les catégories</option>
+      </select>
+      <button type="button" id="categoryFilterClear" class="cat-filter-clear" style="display:none;" aria-label="Effacer le filtre">✕</button>
+    </div>
     <div class="prod-list" id="prodList"></div>
   </div>
 
@@ -1685,7 +1737,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v117';
+const APP_VERSION = 'v119';
 
 /* === ITM APP === */
 (function(){
@@ -2738,6 +2790,7 @@ function switchTab(name){
 
 /* ---------- Catalogue list ---------- */
 let searchTerm = '';
+let categoryFilter = '';  // Filtre catégorie sticky : '' = aucun, sinon ex: "VIN ROUGE", "CHAMPAGNE", "VODKA"...
 function normalize(s){
   // Lowercase + suppression des accents
   let n = (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -2781,7 +2834,14 @@ function searchProducts(term){
   const words = t ? t.split(/\s+/).filter(Boolean) : [];
   searchKeywordMatches = {};
 
-  const base = CATALOGUE;
+  // Filtre catégorie sticky : si une catégorie est sélectionnée, on restreint le pool
+  // de recherche aux produits dont la catégorie contient le tag exact (insensible à la casse).
+  let base = CATALOGUE;
+  if (categoryFilter) {
+    const cf = categoryFilter.toUpperCase();
+    base = base.filter(p => (p.c || '').toUpperCase().includes(cf));
+  }
+
   if (!words.length) return base;
 
   // 1. Recherche classique dans le nom/recherche des produits
@@ -2808,6 +2868,11 @@ function searchProducts(term){
     if (!prod) continue;
     if (byNameIds.has(prod.id)) continue;  // déjà trouvé par nom, skip
     if (searchKeywordMatches[prod.id]) continue;  // déjà ajouté via une autre liaison
+    // Respecter le filtre catégorie aussi sur les liaisons
+    if (categoryFilter) {
+      const cf = categoryFilter.toUpperCase();
+      if (!(prod.c || '').toUpperCase().includes(cf)) continue;
+    }
     searchKeywordMatches[prod.id] = l.keyword;
     viaKeyword.push(prod);
   }
@@ -4434,10 +4499,15 @@ function saveLine(){
     draft.updatedAt = Date.now();
     lines.push(draft);
     toast('Ajouté');
-    // Reset de la barre de recherche du catalogue après ajout (gain de temps en saisie en chaîne)
-    searchTerm = '';
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) searchInput.value = '';
+    // Reset de la barre de recherche du catalogue après ajout (gain de temps en saisie en chaîne).
+    // Exception : si on est en mode filtre "Champagne", on garde le texte tapé.
+    // Raison : sur des champagnes, les chefs entrent souvent la marque (ex: "dom perignon") et
+    // veulent enchaîner sur la même marque (rosé, brut, vintage...) sans tout retaper.
+    if (categoryFilter !== 'CHAMPAGNE') {
+      searchTerm = '';
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) searchInput.value = '';
+    }
   }
 
   saveState();
@@ -8329,10 +8399,13 @@ function saveBatchLine() {
   } else {
     lines.push(newLine);
     toast('Ajouté');
-    // Reset de la barre de recherche du catalogue après ajout
-    searchTerm = '';
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) searchInput.value = '';
+    // Reset de la barre de recherche du catalogue après ajout.
+    // Exception : si filtre "Champagne", on garde le texte (saisies en chaîne d'une même marque).
+    if (categoryFilter !== 'CHAMPAGNE') {
+      searchTerm = '';
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) searchInput.value = '';
+    }
   }
 
   saveState();
@@ -8688,6 +8761,86 @@ function updateAdminUIVisibility() {
   if (isAdmin) updateAdminBadge();
 }
 
+// ============================================================
+// FILTRE CATÉGORIE STICKY (catalogue uniquement)
+// ============================================================
+// Construit la liste des catégories disponibles à partir du catalogue actif.
+// On utilise une liste de catégories *fines* (Vin Rouge, Champagne, Vodka, etc.)
+// définies par les tags qu'on trouve dans le champ 'c' des produits.
+//
+// Stratégie : on extrait la 3ème partie (sub) de chaque catégorie, et pour les vins
+// on combine sub + détail (ex: "VIN" + "ROUGE BORDEAUX" → "VIN ROUGE").
+function getAvailableCategories() {
+  if (!CATALOGUE || !CATALOGUE.length) return [];
+  const counts = new Map();
+
+  CATALOGUE.forEach(p => {
+    if (!p.c) return;
+    const path = parseCategoryPath(p.c);
+    let key = '';
+
+    // Pour les vins : combiner sub + couleur (VIN ROUGE / VIN BLANC / VIN ROSE / VIN ORANGE)
+    if (path.sub === 'VIN') {
+      const det = (path.detail || '').toUpperCase();
+      if (det.startsWith('ROUGE')) key = 'VIN ROUGE';
+      else if (det.startsWith('BLANC')) key = 'VIN BLANC';
+      else if (det.startsWith('ROSE') || det.startsWith('ROSÉ')) key = 'VIN ROSÉ';
+      else if (det.startsWith('ORANGE')) key = 'VIN ORANGE';
+      else key = 'VIN';
+    }
+    // Champagne et autres bulles : tag unifié
+    else if (path.sub === 'CHAMPAGNE') key = 'CHAMPAGNE';
+    else if (path.sub === 'EFFERVESCENT' || path.sub === 'PROSECCO' || path.sub === 'CREMANT') {
+      key = path.sub;
+    }
+    // Tout le reste : on prend le sub direct (VODKA, WHISKY, GIN, TEQUILA, RHUM, etc.)
+    else if (path.sub) key = path.sub;
+    // Sinon fallback sur main (BIERE, SOFT, etc.)
+    else key = path.main;
+
+    if (!key) return;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+
+  // Trier par nombre de produits décroissant, puis alphabétique
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([key, count]) => ({ key, count }));
+}
+
+// Peuple le <select> avec les catégories disponibles
+function populateCategoryFilter() {
+  const sel = document.getElementById('categoryFilter');
+  if (!sel) return;
+  const cats = getAvailableCategories();
+  // Conserver la sélection courante
+  const current = categoryFilter;
+  // Reconstruire les options
+  let html = '<option value="">Toutes les catégories</option>';
+  cats.forEach(c => {
+    // Libellé "humanisé" : VIN ROUGE → Vin Rouge
+    const label = c.key.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+    html += '<option value="' + escape(c.key) + '">' + escape(label) + ' (' + c.count + ')</option>';
+  });
+  sel.innerHTML = html;
+  sel.value = current;
+  updateCategoryFilterUI();
+}
+
+// Met à jour le visuel actif/inactif du dropdown + bouton clear
+function updateCategoryFilterUI() {
+  const sel = document.getElementById('categoryFilter');
+  const clear = document.getElementById('categoryFilterClear');
+  if (!sel) return;
+  if (categoryFilter) {
+    sel.classList.add('active');
+    if (clear) clear.style.display = '';
+  } else {
+    sel.classList.remove('active');
+    if (clear) clear.style.display = 'none';
+  }
+}
+
 function init(){
   // Charger les données POS pour l'établissement actif
   loadPosData();
@@ -8772,6 +8925,7 @@ function init(){
     if (root) root.innerHTML = '<div class="prod-empty">Chargement du catalogue...</div>';
   }
   window.onCatalogueLoaded = function() {
+    populateCategoryFilter();
     renderHeader();
     renderCatalogue();
     updateBadge();
@@ -8810,6 +8964,26 @@ function init(){
     searchTerm = si.value;
     renderCatalogue();
   });
+
+  // Filtre catégorie sticky (sous la barre de recherche)
+  populateCategoryFilter();  // peupler au cas où le catalogue est déjà chargé
+  const catSel = document.getElementById('categoryFilter');
+  if (catSel) {
+    catSel.addEventListener('change', () => {
+      categoryFilter = catSel.value;
+      updateCategoryFilterUI();
+      renderCatalogue();
+    });
+  }
+  const catClear = document.getElementById('categoryFilterClear');
+  if (catClear) {
+    catClear.addEventListener('click', () => {
+      categoryFilter = '';
+      if (catSel) catSel.value = '';
+      updateCategoryFilterUI();
+      renderCatalogue();
+    });
+  }
 
   // Zone
   document.getElementById('btnZone').addEventListener('click', () => {
