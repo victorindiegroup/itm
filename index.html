@@ -1734,7 +1734,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v122';
+const APP_VERSION = 'v123';
 
 /* === ITM APP === */
 (function(){
@@ -4094,74 +4094,48 @@ function cleanCat(c){
 }
 
 // Extrait la contenance d'un produit en cL (centilitres) pour le tri par format.
-// Reconnaît :
-//  - les chiffres + unités dans le nom : "37.5cl", "75 CL", "1,5L", "3L", "750ml"
-//  - les abréviations de conditionnement champagne : B.(75) M.(150) J.(300) Mathu.(600) NABU.(1500)
-//  - les noms complets de format : MAGNUM(150), JEROBOAM(300), MATHUSALEM(600), NABUCHODONOSOR(1500)
-//  - pour les produits format litre (p.e === 'litre'), retourne la capacité de référence (100 = 1L)
-//  - sinon : null (sera trié en dernier dans son groupe)
+// Yokitup nomme les produits avec la contenance EXPLICITE en suffixe : "ARMAND DE BRIGNAC BRUT 1200CL".
+// Donc on lit simplement ce nombre. Fallbacks pour les cas sans suffixe.
 function extractSizeCl(p) {
   if (!p) return null;
   const name = (p.s || '').toUpperCase();
 
-  // 1. Noms COMPLETS de format (priorité absolue car explicites)
-  if (/\bNABUCHODONOSOR\b/.test(name)) return 1500;
-  if (/\bSALMANAZAR\b/.test(name)) return 900;
-  if (/\bMATHUSALEM\b/.test(name)) return 600;
-  if (/\bBALTHAZAR\b/.test(name)) return 1200;
-  if (/\bREHOBOAM\b/.test(name)) return 450;
-  if (/\bJ[EÉ]ROBOAM\b/.test(name)) return 300;
-  if (/\bMAGNUM\b/.test(name)) return 150;
-  if (/\bPICCOLO\b/.test(name)) return 20;
-  if (/\bDEMI\b/.test(name)) return 37.5;
-
-  // 2. Abréviations de conditionnement (B._ M._ J._ Mathu._ NABU._)
-  if (/\bNABU\.?_/i.test(name)) return 1500;
-  if (/\bMATHU\.?_/i.test(name)) return 600;
-  if (/\bJ\.?_/i.test(name)) return 300;
-  if (/\bM\.?_/i.test(name)) return 150;
-  if (/\bB\.?_/i.test(name)) return 75;
-
-  // 3. Volumes numériques dans le nom : "37.5cl", "75 CL", "1,5L", "3L", "750ml"
-  // Accepte virgule ou point comme séparateur décimal
+  // 1. Volume numérique explicite dans le nom (cas Yokitup standard : "...1200CL" "...1.5L" "...750ML")
+  // Accepte virgule ou point comme séparateur décimal.
   const reCl = /(\d+(?:[.,]\d+)?)\s*CL\b/i;
   const reMl = /(\d+(?:[.,]\d+)?)\s*ML\b/i;
   const reL = /(\d+(?:[.,]\d+)?)\s*L\b/i;
   let m;
-  if ((m = name.match(reCl))) {
-    return parseFloat(m[1].replace(',', '.'));
-  }
-  if ((m = name.match(reMl))) {
-    return parseFloat(m[1].replace(',', '.')) / 10;  // ml → cl
-  }
-  if ((m = name.match(reL))) {
-    return parseFloat(m[1].replace(',', '.')) * 100;  // L → cl
-  }
+  if ((m = name.match(reCl))) return parseFloat(m[1].replace(',', '.'));
+  if ((m = name.match(reMl))) return parseFloat(m[1].replace(',', '.')) / 10;   // ml → cl
+  if ((m = name.match(reL)))  return parseFloat(m[1].replace(',', '.')) * 100;  // L → cl
 
-  // 4. Format litre sans précision dans le nom : utiliser le format de référence
-  // (Yokitup donne souvent capacity = 100cL = 1L pour les litres)
-  if (p.e === 'litre') return 100;
-
-  // 5. Bouteilles standard sans précision : on suppose 75cL (cas le plus fréquent)
-  if (p.e === 'btl') return 75;
-
-  return null;  // unit / inconnu → trié en dernier
+  // 2. Fallback : format Yokitup sans suffixe explicite
+  if (p.e === 'litre') return 100;  // produit "litre" : capacity = 1L
+  if (p.e === 'btl')   return 75;   // produit "bouteille" : par défaut 75cL
+  return null;
 }
 
+// Préfixes d'abréviation de conditionnement utilisés par Yokitup (toujours en début de nom).
+// On les retire du nom de base pour regrouper toutes les variantes ensemble.
+// Liste exhaustive d'après le catalogue ITM :
+//   B = Bouteille (75cL), DEMI (37.5), MAG = Magnum (150), JERO = Jéroboam (300),
+//   REHO = Rehoboam (450), GAL = Gallon (450), MATHU = Mathusalem (600),
+//   SALMA/SALMANA = Salmanazar (900), BALTHA = Balthazar (1200),
+//   NABU = Nabuchodonosor (1500), MIDAS = Midas/Solomon (3000)
+const SIZE_PREFIXES_RE = /^\s*(BALTHA|MATHU|SALMANA|SALMA|NABU|MIDAS|REHO|JERO|MAG|DEMI|GAL|B|M|J)\b\.?\s*_?\s*/i;
+
 // Clé de tri pour la liste catalogue : alphabétique par nom de base, puis croissant par contenance.
-// "Base" = le nom du produit sans les indicateurs de format (Magnum, B._, 75cL, etc.)
+// "Base" = le nom du produit sans le préfixe d'abréviation ni le suffixe de volume,
 // pour que toutes les variantes du même produit se regroupent ensemble.
 function productSortKey(p) {
   const fullName = (p.s || '').trim();
-  // Nom "de base" : on retire les marqueurs de format pour le tri alphabétique
-  // (sinon "Dom Perignon Magnum" et "Dom Perignon Brut B._75cL" seraient classés différemment)
-  let base = fullName
-    .replace(/\b(B|M|J|MATHU|NABU)\.?_\S*/gi, '')   // initiales de conditionnement (B._75CL, M._150CL, etc.)
-    .replace(/\d+(?:[.,]\d+)?\s*(CL|ML|L)\b/gi, '')  // volumes (75cL, 750ml, 1.5L, etc.)
-    .replace(/\b(MAGNUM|JEROBOAM|JÉROBOAM|MATHUSALEM|NABUCHODONOSOR|REHOBOAM|SALMANAZAR|BALTHAZAR|PICCOLO|DEMI)\b/gi, '')  // noms de formats
+  let base = fullName.toUpperCase()
+    .replace(SIZE_PREFIXES_RE, '')                                              // préfixe d'abréviation (BALTHA, NABU, JERO, B, M, J, MATHU, ...)
+    .replace(/\d+(?:[.,]\d+)?\s*(CL|ML|L)\b/gi, '')                              // suffixe de volume (1200CL, 1.5L, 750ML)
+    .replace(/\b(MAGNUM|JEROBOAM|JÉROBOAM|MATHUSALEM|NABUCHODONOSOR|REHOBOAM|SALMANAZAR|BALTHAZAR|PICCOLO)\b/gi, '')  // noms complets éventuels
     .replace(/\s+/g, ' ')
-    .trim()
-    .toUpperCase();
+    .trim();
   const size = extractSizeCl(p) || 999999;  // sans taille → en fin de groupe
   return { base, size, fullName };
 }
