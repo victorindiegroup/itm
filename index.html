@@ -1737,7 +1737,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v119';
+const APP_VERSION = 'v120';
 
 /* === ITM APP === */
 (function(){
@@ -8778,20 +8778,30 @@ function getAvailableCategories() {
     if (!p.c) return;
     const path = parseCategoryPath(p.c);
     let key = '';
+    const det = (path.detail || '').toUpperCase();
 
-    // Pour les vins : combiner sub + couleur (VIN ROUGE / VIN BLANC / VIN ROSE / VIN ORANGE)
-    if (path.sub === 'VIN') {
-      const det = (path.detail || '').toUpperCase();
+    // Détection des bulles : peuvent être au niveau sub OU detail selon les catalogues
+    // Ex Yokitup : "LIQUIDE - ALCOOL - VIN - CHAMPAGNE" → champagne en detail
+    // Ex alt : "LIQUIDE - ALCOOL - CHAMPAGNE - BRUT" → champagne en sub
+    if (path.sub === 'CHAMPAGNE' || det.startsWith('CHAMPAGNE')) {
+      key = 'CHAMPAGNE';
+    }
+    else if (path.sub === 'PROSECCO' || det.startsWith('PROSECCO')) {
+      key = 'PROSECCO';
+    }
+    else if (path.sub === 'CREMANT' || det.startsWith('CREMANT') || det.startsWith('CRÉMANT')) {
+      key = 'CRÉMANT';
+    }
+    else if (path.sub === 'EFFERVESCENT' || det.startsWith('EFFERVESCENT')) {
+      key = 'EFFERVESCENT';
+    }
+    // Pour les vins (hors bulles) : combiner sub + couleur
+    else if (path.sub === 'VIN') {
       if (det.startsWith('ROUGE')) key = 'VIN ROUGE';
       else if (det.startsWith('BLANC')) key = 'VIN BLANC';
       else if (det.startsWith('ROSE') || det.startsWith('ROSÉ')) key = 'VIN ROSÉ';
       else if (det.startsWith('ORANGE')) key = 'VIN ORANGE';
       else key = 'VIN';
-    }
-    // Champagne et autres bulles : tag unifié
-    else if (path.sub === 'CHAMPAGNE') key = 'CHAMPAGNE';
-    else if (path.sub === 'EFFERVESCENT' || path.sub === 'PROSECCO' || path.sub === 'CREMANT') {
-      key = path.sub;
     }
     // Tout le reste : on prend le sub direct (VODKA, WHISKY, GIN, TEQUILA, RHUM, etc.)
     else if (path.sub) key = path.sub;
