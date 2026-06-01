@@ -1734,7 +1734,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v123';
+const APP_VERSION = 'v124';
 
 /* === ITM APP === */
 (function(){
@@ -2874,8 +2874,10 @@ function searchProducts(term){
     viaKeyword.push(prod);
   }
 
-  // Fusionner : produits trouvés par nom en premier, puis par liaison
-  return byName.concat(viaKeyword);
+  // Fusionner : produits trouvés par LIAISON manuelle en premier (admin a fait l'effort
+  // de créer ce mapping, c'est plus pertinent), puis recherche classique par nom.
+  // La pastille "🔎 via « mot-clé »" reste affichée sur les produits via liaison pour les distinguer.
+  return viaKeyword.concat(byName);
 }
 
 // Helper : un produit est-il dans la carte de l'établissement actuel ?
@@ -3979,16 +3981,21 @@ function renderCatalogue(){
   });
 
   // Trier les produits DANS chaque catégorie :
-  // 1) par nom de base alphabétique (toutes les variantes d'un même produit ensemble)
+  // 0) LIAISONS MANUELLES en premier (admin a fait l'effort de créer ce mapping)
+  // 1) puis par nom de base alphabétique (toutes les variantes d'un même produit ensemble)
   // 2) puis par contenance croissante (75cL avant Magnum 150cL avant Jéroboam 300cL...)
   Object.keys(byCat).forEach(k => {
     byCat[k].sort((a, b) => {
+      // Critère 0 : les liaisons manuelles d'abord
+      const aLiaison = searchKeywordMatches[a.id] ? 0 : 1;
+      const bLiaison = searchKeywordMatches[b.id] ? 0 : 1;
+      if (aLiaison !== bLiaison) return aLiaison - bLiaison;
+      // Critères suivants : tri alphabétique + format (identique entre les 2 groupes)
       const ka = productSortKey(a);
       const kb = productSortKey(b);
       const c = ka.base.localeCompare(kb.base);
       if (c !== 0) return c;
       if (ka.size !== kb.size) return ka.size - kb.size;
-      // En cas d'égalité sur nom de base + taille, on retombe sur le nom complet
       return ka.fullName.localeCompare(kb.fullName);
     });
   });
@@ -8191,7 +8198,7 @@ function renderBatchPicker() {
         viaKeyword.push(prod);
       }
     }
-    matches = byName.concat(viaKeyword);
+    matches = viaKeyword.concat(byName);
   }
 
   // Filtre des produits déjà utilisés : seulement en mode batch
