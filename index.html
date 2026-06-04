@@ -1634,6 +1634,7 @@
   <div class="sheet-foot">
     <button type="button" class="btn-cancel" id="invDetailClose">Fermer</button>
     <button type="button" class="btn-sec" id="invDetailDownload">📥 Excel</button>
+    <button type="button" class="btn-sec" id="invDetailPdf">📄 PDF</button>
     <button type="button" class="btn-sec admin-only" id="invDetailDelete" style="color: var(--danger); border-color: var(--danger);">Supprimer</button>
     <button type="button" class="btn-valid" id="invDetailResend">Renvoyer par mail</button>
   </div>
@@ -1734,7 +1735,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v124';
+const APP_VERSION = 'v125';
 
 /* === ITM APP === */
 (function(){
@@ -7792,6 +7793,216 @@ function downloadCurrentDetailXlsx() {
   }
 }
 
+// ============================================================
+// PDF RÉCAPITULATIF D'UN INVENTAIRE
+// Génère une page HTML imprimable (window.print → Enregistrer en PDF) avec :
+// - En-tête : étab, date, moment, type, personne, commentaire global
+// - Tableau : Produit | Format | Quantité | Zone | Commentaire
+// - Tri par catégorie (Vin, Champagne, etc.) puis par zone puis alpha
+// ============================================================
+
+// Reconstitue le détail de quantités d'une ligne sous forme lisible
+// (identique au format affiché dans l'onglet Saisies)
+// Ex : "2×50cL · 1×75cL", "3 pc + 6 ctn × 12", "—" si rien
+function lineQtyDetail(line, p) {
+  if (line.batchId) {
+    // Pour les batchs : juste le nombre de bouteilles
+    return fmtQty(line.batchCount || 0) + ' btl';
+  }
+  if (!p) return '—';
+  const parts = [];
+  if (p.e === 'btl' || p.e === 'unit') {
+    if (line.qty > 0) parts.push(fmtQty(line.qty) + ' pc');
+  } else {
+    (line.details || []).forEach(d => {
+      if (d.qty > 0) parts.push(fmtQty(d.qty) + '×' + d.label);
+    });
+  }
+  if (line.carton && line.carton.active && line.carton.nb && line.carton.pieces) {
+    const fmtLbl = (p.e !== 'btl' && p.e !== 'unit' && line.carton.format) ? ' (' + line.carton.format + ')' : '';
+    parts.push(fmtQty(line.carton.nb) + ' ctn × ' + fmtQty(line.carton.pieces) + fmtLbl);
+  }
+  return parts.length ? parts.join(' · ') : '—';
+}
+
+// Génère la page HTML imprimable et l'ouvre dans un nouvel onglet
+function openInventoryPdf(inv) {
+  if (!inv) {
+    toast('Aucun inventaire à afficher');
+    return;
+  }
+
+  const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
+  const typeLbl = invTypeLabel(inv.type);
+  const etabLbl = inv.etab || state.estab;
+
+  // Construire la liste des lignes enrichies (sans agrégation : on garde toutes les lignes)
+  const rows = (inv.lines || []).map(l => {
+    if (l.batchId) {
+      return {
+        product: l.batchName || '(Batch)',
+        formatLabel: 'BATCH',
+        qtyDetail: fmtQty(l.batchCount || 0) + ' btl',
+        total: fmtQty(l.batchCount || 0) + ' btl',
+        zone: l.zone || '—',
+        comment: l.comment || '',
+        category: 'Batchs',
+        sortName: (l.batchName || '').toLowerCase(),
+      };
+    }
+    const p = resolveProduct(l);
+    if (!p) return null;
+    const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
+    const unit = (p.e === 'btl' || p.e === 'unit') ? 'pc' : 'L';
+    return {
+      product: p.s || '',
+      formatLabel: pillLabel,
+      qtyDetail: lineQtyDetail(l, p),
+      total: fmtQty(l.total || 0) + ' ' + unit,
+      zone: l.zone || '—',
+      comment: l.comment || '',
+      category: cleanCat(p.c),
+      sortName: (p.s || '').toLowerCase(),
+    };
+  }).filter(Boolean);
+
+  // Grouper par catégorie
+  const byCat = {};
+  rows.forEach(r => {
+    if (!byCat[r.category]) byCat[r.category] = [];
+    byCat[r.category].push(r);
+  });
+
+  // Trier les catégories : "Batchs" et "Autre" en fin, le reste alpha
+  const cats = Object.keys(byCat).sort((a, b) => {
+    if (a === 'Autre') return 1;
+    if (b === 'Autre') return -1;
+    if (a === 'Batchs') return 1;
+    if (b === 'Batchs') return -1;
+    return a.localeCompare(b, 'fr');
+  });
+
+  // Dans chaque catégorie : trier par zone puis par nom de produit
+  cats.forEach(c => {
+    byCat[c].sort((a, b) => {
+      const z = a.zone.localeCompare(b.zone, 'fr');
+      if (z !== 0) return z;
+      return a.sortName.localeCompare(b.sortName, 'fr');
+    });
+  });
+
+  // Construire le HTML
+  const escHtml = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  let body = '';
+  body += '<div class="header">';
+  body += '  <h1>Inventaire — ' + escHtml(etabLbl) + '</h1>';
+  body += '  <table class="meta">';
+  body += '    <tr><td>Date</td><td><b>' + escHtml(fmtDate(inv.date)) + '</b></td>';
+  body += '        <td>Moment</td><td><b>' + escHtml(momentLbl) + '</b></td></tr>';
+  body += '    <tr><td>Type</td><td><b>' + escHtml(typeLbl) + '</b></td>';
+  body += '        <td>Personne</td><td><b>' + escHtml(inv.personne || '—') + '</b></td></tr>';
+  if (inv.parentLabel) {
+    body += '<tr><td>Complément de</td><td colspan="3"><b>' + escHtml(inv.parentLabel) + '</b></td></tr>';
+  }
+  body += '    <tr><td>Lignes</td><td colspan="3"><b>' + rows.length + ' produit' + (rows.length > 1 ? 's' : '') + '</b></td></tr>';
+  body += '  </table>';
+  if (inv.comment) {
+    body += '  <div class="global-comment">💬 ' + escHtml(inv.comment) + '</div>';
+  }
+  body += '</div>';
+
+  cats.forEach(c => {
+    body += '<h2>' + escHtml(c) + ' <span class="count">(' + byCat[c].length + ')</span></h2>';
+    body += '<table class="data"><thead><tr>';
+    body += '<th class="col-prod">Produit</th>';
+    body += '<th class="col-fmt">Format</th>';
+    body += '<th class="col-qty">Quantités saisies</th>';
+    body += '<th class="col-tot">Total</th>';
+    body += '<th class="col-zone">Zone</th>';
+    body += '<th class="col-com">Commentaire</th>';
+    body += '</tr></thead><tbody>';
+    byCat[c].forEach(r => {
+      body += '<tr>';
+      body += '<td class="col-prod">' + escHtml(r.product) + '</td>';
+      body += '<td class="col-fmt">' + escHtml(r.formatLabel) + '</td>';
+      body += '<td class="col-qty">' + escHtml(r.qtyDetail) + '</td>';
+      body += '<td class="col-tot"><b>' + escHtml(r.total) + '</b></td>';
+      body += '<td class="col-zone">' + escHtml(r.zone) + '</td>';
+      body += '<td class="col-com">' + escHtml(r.comment) + '</td>';
+      body += '</tr>';
+    });
+    body += '</tbody></table>';
+  });
+
+  const printDoc = `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Inventaire ${escHtml(etabLbl)} - ${escHtml(fmtDate(inv.date))}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #222; margin: 0; padding: 20px; font-size: 11px; line-height: 1.4; }
+  .toolbar { position: sticky; top: 0; background: #1D9E75; color: white; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin: -20px -20px 16px; border-radius: 0; }
+  .toolbar button { background: white; color: #1D9E75; border: none; border-radius: 6px; padding: 8px 14px; font-weight: 600; cursor: pointer; font-size: 13px; }
+  .toolbar button:hover { background: #f0f0f0; }
+  @media print { .no-print { display: none; } body { padding: 0; } }
+  h1 { font-size: 18px; margin: 0 0 12px; color: #1D9E75; }
+  h2 { font-size: 13px; margin: 18px 0 6px; padding-bottom: 4px; border-bottom: 2px solid #1D9E75; color: #1D9E75; page-break-after: avoid; }
+  h2 .count { color: #888; font-weight: normal; font-size: 11px; }
+  .header { margin-bottom: 12px; }
+  table.meta { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  table.meta td { padding: 4px 8px; border: 1px solid #eee; font-size: 11px; }
+  table.meta td:nth-child(odd) { background: #fafafa; color: #666; width: 14%; }
+  .global-comment { padding: 8px 10px; background: #e8f5ef; border-left: 3px solid #1D9E75; border-radius: 4px; margin: 8px 0; font-style: italic; font-size: 11px; }
+  table.data { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  table.data th { background: #f5f5f5; padding: 6px 8px; text-align: left; font-weight: 600; font-size: 10px; border-bottom: 1px solid #ddd; }
+  table.data td { padding: 5px 8px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  table.data tr:nth-child(even) td { background: #fafafa; }
+  .col-prod { width: 30%; }
+  .col-fmt { width: 8%; }
+  .col-qty { width: 22%; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 10px; }
+  .col-tot { width: 10%; text-align: right; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  .col-zone { width: 12%; }
+  .col-com { width: 18%; font-style: italic; color: #555; }
+  @page { margin: 12mm; size: A4; }
+</style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <span>Inventaire ${escHtml(etabLbl)} — ${escHtml(fmtDate(inv.date))}</span>
+    <span>
+      <button onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
+      <button onclick="window.close()" style="margin-left:6px; background:#444; color:white;">Fermer</button>
+    </span>
+  </div>
+  ${body}
+</body>
+</html>`;
+
+  // Ouvrir dans un nouvel onglet pour permettre l'impression / sauvegarde PDF
+  const w = window.open('', '_blank');
+  if (!w) {
+    toast('Le navigateur a bloqué l\'ouverture. Autorise les popups.');
+    return;
+  }
+  w.document.open();
+  w.document.write(printDoc);
+  w.document.close();
+}
+
+// Déclenche l'ouverture du PDF pour l'inventaire courant
+function openCurrentDetailPdf() {
+  const inv = currentDetailInv || (state.inventories || []).find(i => i.id === currentDetailInvId);
+  if (!inv) {
+    toast('Aucun inventaire à afficher');
+    return;
+  }
+  openInventoryPdf(inv);
+}
+
 function renderInventoryDetailBody() {
   const body = document.getElementById('invDetailBody');
   if (!body) return;
@@ -9269,6 +9480,7 @@ function init(){
   document.getElementById('invDetailDelete').addEventListener('click', deleteInventoryDetail);
   document.getElementById('invDetailResend').addEventListener('click', resendInventoryDetail);
   document.getElementById('invDetailDownload').addEventListener('click', downloadCurrentDetailXlsx);
+  document.getElementById('invDetailPdf').addEventListener('click', openCurrentDetailPdf);
 
   // Éditeur batch
   document.getElementById('batchEditorClose').addEventListener('click', () => {
