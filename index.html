@@ -1735,7 +1735,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v125';
+const APP_VERSION = 'v126';
 
 /* === ITM APP === */
 (function(){
@@ -1867,19 +1867,31 @@ let APP_READY = false;
 
 function buildCatalogue(data) {
   RAW = data || [];
-  CATALOGUE = RAW.map((p, i) => ({
-    id: i,
-    y: p.y,         // nom Yokitup exact (export)
-    s: p.s,         // nom court
-    c: p.c,         // catégorie
-    q: p.q,         // quantité conditionnement
-    u: p.u,         // unité conditionnement
-    n: p.n,         // nom conditionnement
-    e: p.e,         // 'btl' | 'litre' | 'unit'
-    p: p.p || (p.e === 'btl' ? 'BTL' : p.e === 'unit' ? 'UNIT' : 'LITRE'),  // pill
-    t: p.t || [],   // tags établissements
-    _search: (p.s + ' ' + p.y + ' ' + p.c).toLowerCase()
-  }));
+  CATALOGUE = RAW.map((p, i) => {
+    // Forcer les BIB (Bag-In-Box) à être traités comme des pièces (unit), pas des bouteilles ni des litres.
+    // Détection : nom commence par "BIB." ou contient "BIB_". Insensible à la casse.
+    // Filet de sécurité au cas où le catalogue déployé date d'avant la mise à jour du convertisseur.
+    let typeE = p.e;
+    let pill = p.p;
+    const nameY = (p.y || '').toUpperCase();
+    if (/^BIB\.|^BIB_|\bBIB\./.test(nameY)) {
+      typeE = 'unit';
+      pill = 'BIB';
+    }
+    return {
+      id: i,
+      y: p.y,         // nom Yokitup exact (export)
+      s: p.s,         // nom court
+      c: p.c,         // catégorie
+      q: p.q,         // quantité conditionnement
+      u: p.u,         // unité conditionnement
+      n: p.n,         // nom conditionnement
+      e: typeE,       // 'btl' | 'litre' | 'unit'  (forcé à 'unit' pour les BIB)
+      p: pill || (typeE === 'btl' ? 'BTL' : typeE === 'unit' ? 'UNIT' : 'LITRE'),  // pill
+      t: p.t || [],   // tags établissements
+      _search: (p.s + ' ' + p.y + ' ' + p.c).toLowerCase()
+    };
+  });
   // Index de résolution par y (référence Yokitup, stable même si l'ordre change)
   CATALOGUE_BY_Y = {};
   CATALOGUE.forEach(p => { if (p.y) CATALOGUE_BY_Y[p.y] = p; });
