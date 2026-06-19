@@ -1744,7 +1744,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v129';
+const APP_VERSION = 'v130';
 
 /* === ITM APP === */
 (function(){
@@ -4599,7 +4599,9 @@ function computeTotal(){
 
 function renderSubs(){
   const p = currentProduct;
-  if (p.e !== 'litre') return;
+  // Pas de sous-formats pour les fruits KG et pour btl/unit
+  if (p.e !== 'litre' || p.isFruitKg) return;
+  if (!draft.details) return;  // sécurité supplémentaire
   draft.details.forEach(d => {
     const el = document.querySelector(`[data-sub="${d.label}"]`);
     if (!el) return;
