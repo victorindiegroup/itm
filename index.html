@@ -351,6 +351,9 @@
   .pill-BIB    { background: #F1EFE8; color: #444441; }
   .pill-LITRE  { background: #E6F1FB; color: #0C447C; }
   .pill-UNIT   { background: #E1F5EE; color: #0F6E56; }
+  /* Pastilles fruits frais (orange clair pour distinguer du reste) */
+  .pill-KG     { background: #FFEEDB; color: #92400E; }
+  .pill-PC     { background: #FFEEDB; color: #92400E; }
 
   .prod-tag { margin-right: 10px; min-width: 44px; text-align: center; flex-shrink: 0; }
 
@@ -1735,7 +1738,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v126';
+const APP_VERSION = 'v127';
 
 /* === ITM APP === */
 (function(){
@@ -1878,6 +1881,24 @@ function buildCatalogue(data) {
       typeE = 'unit';
       pill = 'BIB';
     }
+
+    // Fruits frais (catégorie "LIQUIDE - FRUIT FRAIS") : on lit le suffixe du nom
+    //   - "...KG"    → produit au kg (type 'litre' pour accepter les décimales) + pastille "KG"
+    //   - "...PIECE" → produit à la pièce (type 'unit') + pastille "PC"
+    //   - sinon (rétrocompat avec les fruits existants sans suffixe) → traité comme pièce
+    // Les deux pastilles utilisent une couleur orange clair distincte pour signaler "fruit frais".
+    // Note : on teste sur p.y (nom Yokitup brut), pas p.s (nom court).
+    if ((p.c || '').toUpperCase() === 'LIQUIDE - FRUIT FRAIS') {
+      if (/\bKG\s*$/.test(nameY)) {
+        typeE = 'litre';
+        pill = 'KG';
+      } else {
+        // PIECE explicite OU rien (fallback)
+        typeE = 'unit';
+        pill = 'PC';
+      }
+    }
+
     return {
       id: i,
       y: p.y,         // nom Yokitup exact (export)
@@ -1886,7 +1907,7 @@ function buildCatalogue(data) {
       q: p.q,         // quantité conditionnement
       u: p.u,         // unité conditionnement
       n: p.n,         // nom conditionnement
-      e: typeE,       // 'btl' | 'litre' | 'unit'  (forcé à 'unit' pour les BIB)
+      e: typeE,       // 'btl' | 'litre' | 'unit'  (forcé selon BIB ou fruit frais)
       p: pill || (typeE === 'btl' ? 'BTL' : typeE === 'unit' ? 'UNIT' : 'LITRE'),  // pill
       t: p.t || [],   // tags établissements
       _search: (p.s + ' ' + p.y + ' ' + p.c).toLowerCase()
@@ -2894,9 +2915,29 @@ function searchProducts(term){
 }
 
 // Helper : un produit est-il dans la carte de l'établissement actuel ?
+// Liste des étabs où les fruits frais sont automatiquement comptés.
+// Indépendant des tags catalogue : si un produit est de catégorie "LIQUIDE - FRUIT FRAIS",
+// il est visible dans ces étabs même sans tag explicite.
+const FRUITS_ETABS = new Set([
+  'Pablo (Saint-Tropez)',
+  'Pablo (Saint-Barthélemy)',
+  'Cherry (Saint-Tropez)',
+  'Cherry (Paris)',
+  'Cat Club (Courchevel)',
+  'La Sauvageonne (Ramatuelle)',
+  'La Sauvageonne (Megève)',
+  'Indie Beach',
+  'Café de l\'Ormeau',
+  'Playamigos',
+]);
+
 function isInCurrentEtab(product) {
   const tag = ETAB_TO_TAG[state.estab];
   if (!tag) return true;  // pas d'étab → tout est "à la carte"
+  // Cas spécial fruits frais : visibles dans tous les bars qui ont "fruits activés"
+  if ((product.c || '').toUpperCase() === 'LIQUIDE - FRUIT FRAIS' && FRUITS_ETABS.has(state.estab)) {
+    return true;
+  }
   return product.t && product.t.indexOf(tag) >= 0;
 }
 

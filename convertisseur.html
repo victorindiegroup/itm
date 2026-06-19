@@ -297,6 +297,19 @@ function convertCSV(text) {
       else typeInfo = { type: 'unit', pill: 'UNIT' };
     }
 
+    // RÈGLE SPÉCIALE FRUITS FRAIS : si catégorie "LIQUIDE - FRUIT FRAIS",
+    // on lit le suffixe du nom pour décider :
+    //   - "...KG"    → type 'litre' (décimales) + pastille "KG"
+    //   - "...PIECE" ou rien → type 'unit' + pastille "PC"
+    if ((categorie || '').toUpperCase() === 'LIQUIDE - FRUIT FRAIS') {
+      const nameUpper = name.toUpperCase();
+      if (/\bKG\s*$/.test(nameUpper)) {
+        typeInfo = { type: 'litre', pill: 'KG' };
+      } else {
+        typeInfo = { type: 'unit', pill: 'PC' };
+      }
+    }
+
     typeCount[typeInfo.type]++;
     etabs.forEach(e => { etabCount[e] = (etabCount[e] || 0) + 1; });
 
