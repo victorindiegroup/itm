@@ -151,27 +151,11 @@
   .prod-empty { padding: 40px 20px; text-align: center; color: var(--ink-2); font-size: 14px; }
   .prod-cat-title { font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase; padding: 12px 4px 6px; }
   .prod { padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
-  /* Fruits frais : corbeille en filigrane à droite de la carte produit.
-     Émoji très transparent en background pour différencier visuellement des autres produits. */
-  .prod-fruit {
-    position: relative;
-    overflow: hidden;
-  }
-  .prod-fruit::after {
-    content: '🧺';
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 56px;
-    opacity: 0.12;
-    pointer-events: none;
-    line-height: 1;
-    z-index: 0;
-  }
-  .prod-fruit > * {
-    position: relative;
-    z-index: 1;
+  /* Fruits frais : petit emoji 🧺 dans le nom du produit pour distinguer visuellement.
+     Approche simple sans position/overflow pour ne pas casser les zones tactiles. */
+  .prod-fruit-emoji {
+    margin-right: 4px;
+    opacity: 0.7;
   }
   .prod:active { background: var(--surface-2); }
   .prod-name { flex: 1; font-size: 14px; font-weight: 500; line-height: 1.3; min-width: 0; word-break: break-word; }
@@ -1760,7 +1744,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v128';
+const APP_VERSION = 'v129';
 
 /* === ITM APP === */
 (function(){
@@ -4098,7 +4082,6 @@ function renderCatalogue(){
     sortedProducts.forEach(p => {
       const saisi = isProductSaisi(p.id) ? ' prod-saisi' : '';
       const offmenu = isInCurrentEtab(p) ? '' : ' prod-offmenu';
-      const fruit = p.isFruit ? ' prod-fruit' : '';
       const pillLabel = p.p || (p.e === 'btl' ? 'BTL' : (p.e === 'unit' ? 'UNIT' : 'LITRE'));
       const pillClass = 'pill-' + (pillLabel === '½' ? 'DEMI' : pillLabel);
       const tag = '<span class="prod-tag ' + pillClass + '">' + escape(pillLabel) + '</span>';
@@ -4106,11 +4089,12 @@ function renderCatalogue(){
       // Badge "via mot-clé" si trouvé via une liaison manuelle
       const viaKw = searchKeywordMatches[p.id];
       const kwBadge = viaKw ? '<span class="prod-kw-badge" title="trouvé via mot-clé">🔎 via « ' + escape(viaKw) + ' »</span>' : '';
-      // Point coloré si c'est un vin
+      // Point coloré si c'est un vin, ou corbeille pour les fruits
       const dot = wineDotHtml(p.c);
-      html += '<div class="prod' + saisi + offmenu + fruit + '" data-pid="' + p.id + '">';
+      const fruitEmoji = p.isFruit ? '<span class="prod-fruit-emoji">🧺</span>' : '';
+      html += '<div class="prod' + saisi + offmenu + '" data-pid="' + p.id + '">';
       html += '  ' + tag;
-      html += '  <div class="prod-name">' + dot + escape(p.s) + offmenuBadge + kwBadge + '</div>';
+      html += '  <div class="prod-name">' + dot + fruitEmoji + escape(p.s) + offmenuBadge + kwBadge + '</div>';
       html += '</div>';
     });
   });
