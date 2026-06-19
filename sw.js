@@ -1,6 +1,6 @@
 // ITM Service Worker — offline-first
 // Change la version à chaque mise à jour du code pour forcer le re-téléchargement
-const CACHE_VERSION = 'itm-v127-fruits';
+const CACHE_VERSION = 'itm-v128-fruit-kg-ui';
 const CACHE_NAME = `itm-cache-${CACHE_VERSION}`;
 
 // Ressources à mettre en cache dès l'installation
