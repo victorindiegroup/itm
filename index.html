@@ -1744,7 +1744,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v130';
+const APP_VERSION = 'v131';
 
 /* === ITM APP === */
 (function(){
@@ -4254,6 +4254,10 @@ function openProductSheet(productId, lineId){
   if (lineId){
     const line = state.lines.find(l => l.id === lineId);
     draft = JSON.parse(JSON.stringify(line));
+    // Pour les fruits frais : pas de cartons. On force à false même sur les anciennes lignes éventuelles.
+    if (currentProduct && currentProduct.isFruit && draft.carton) {
+      draft.carton.active = false;
+    }
   } else {
     draft = {
       id: null,
@@ -4355,52 +4359,54 @@ function renderProductSheet(){
     html += `</div>`;
   }
 
-  // Carton (pour tous les produits)
-  const cartonOn = draft.carton.active ? 'on' : '';
-  html += `
-    <label class="check ${cartonOn}" id="cartonCheck">
-      <input type="checkbox" id="fCarton" ${draft.carton.active ? 'checked' : ''}>
-      <span class="check-lbl">Ajouter des cartons</span>
-    </label>
-    <div id="cartonBox" style="display:${draft.carton.active ? 'block' : 'none'}">
-      <div class="carton-box">
-        <div class="field">
-          <label class="field-lbl">Nombre de cartons</label>
-          <div class="field-row">
-            <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonNb" aria-label="Diminuer">−</button>
-            <input id="fCartonNb" type="number" step="1" inputmode="numeric" value="${draft.carton.nb || ''}" placeholder="">
-            <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonNb" aria-label="Augmenter">+</button>
-            <button type="button" class="qty-ok-btn" data-ok="fCartonNb" aria-label="Valider">OK</button>
-            <span class="field-label-inline">cartons</span>
-          </div>
-        </div>
-        <div class="field">
-          <label class="field-lbl">Pièces par carton</label>
-          <div class="field-row">
-            <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonPieces" aria-label="Diminuer">−</button>
-            <input id="fCartonPieces" type="number" step="1" inputmode="numeric" value="${draft.carton.pieces || ''}" placeholder="">
-            <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonPieces" aria-label="Augmenter">+</button>
-            <button type="button" class="qty-ok-btn" data-ok="fCartonPieces" aria-label="Valider">OK</button>
-            <span class="field-label-inline">pc/carton</span>
-          </div>
-        </div>
-        ${p.e === 'litre' ? `
-        <div class="field" style="margin-bottom:0">
-          <label class="field-lbl">Format des bouteilles dans le carton</label>
-          <div class="field-row" style="padding: 4px 6px">
-            <div style="display: flex; gap: 4px; width: 100%">
-              ${FORMATS_LITRE.map(f => `
-                <label style="flex:1; display:block; text-align:center; padding:8px 0; border-radius:6px; background:${draft.carton.format === f.label ? 'var(--accent)' : 'transparent'}; color:${draft.carton.format === f.label ? '#fff' : 'var(--ink-2)'}; font-weight:500; font-size:13px; cursor:pointer">
-                  <input type="radio" name="cartonFormat" value="${f.label}" ${draft.carton.format === f.label ? 'checked' : ''} style="display:none">
-                  ${f.label}
-                </label>
-              `).join('')}
+  // Carton (pour tous les produits, SAUF les fruits frais — ça n'a pas de sens pour eux)
+  if (!p.isFruit) {
+    const cartonOn = draft.carton.active ? 'on' : '';
+    html += `
+      <label class="check ${cartonOn}" id="cartonCheck">
+        <input type="checkbox" id="fCarton" ${draft.carton.active ? 'checked' : ''}>
+        <span class="check-lbl">Ajouter des cartons</span>
+      </label>
+      <div id="cartonBox" style="display:${draft.carton.active ? 'block' : 'none'}">
+        <div class="carton-box">
+          <div class="field">
+            <label class="field-lbl">Nombre de cartons</label>
+            <div class="field-row">
+              <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonNb" aria-label="Diminuer">−</button>
+              <input id="fCartonNb" type="number" step="1" inputmode="numeric" value="${draft.carton.nb || ''}" placeholder="">
+              <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonNb" aria-label="Augmenter">+</button>
+              <button type="button" class="qty-ok-btn" data-ok="fCartonNb" aria-label="Valider">OK</button>
+              <span class="field-label-inline">cartons</span>
             </div>
           </div>
-        </div>` : ''}
+          <div class="field">
+            <label class="field-lbl">Pièces par carton</label>
+            <div class="field-row">
+              <button type="button" class="qty-step-btn" data-step="-1" data-target="fCartonPieces" aria-label="Diminuer">−</button>
+              <input id="fCartonPieces" type="number" step="1" inputmode="numeric" value="${draft.carton.pieces || ''}" placeholder="">
+              <button type="button" class="qty-step-btn" data-step="1" data-target="fCartonPieces" aria-label="Augmenter">+</button>
+              <button type="button" class="qty-ok-btn" data-ok="fCartonPieces" aria-label="Valider">OK</button>
+              <span class="field-label-inline">pc/carton</span>
+            </div>
+          </div>
+          ${p.e === 'litre' ? `
+          <div class="field" style="margin-bottom:0">
+            <label class="field-lbl">Format des bouteilles dans le carton</label>
+            <div class="field-row" style="padding: 4px 6px">
+              <div style="display: flex; gap: 4px; width: 100%">
+                ${FORMATS_LITRE.map(f => `
+                  <label style="flex:1; display:block; text-align:center; padding:8px 0; border-radius:6px; background:${draft.carton.format === f.label ? 'var(--accent)' : 'transparent'}; color:${draft.carton.format === f.label ? '#fff' : 'var(--ink-2)'}; font-weight:500; font-size:13px; cursor:pointer">
+                    <input type="radio" name="cartonFormat" value="${f.label}" ${draft.carton.format === f.label ? 'checked' : ''} style="display:none">
+                    ${f.label}
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+          </div>` : ''}
+        </div>
       </div>
-    </div>
-  `;
+    `;
+  }
 
   // Total
   html += `<div style="margin-top: 18px;">
@@ -4486,12 +4492,16 @@ function renderProductSheet(){
       updateDraftFromInputs();
     });
   });
-  document.getElementById('fCarton').addEventListener('change', () => {
-    draft.carton.active = document.getElementById('fCarton').checked;
-    document.getElementById('cartonBox').style.display = draft.carton.active ? 'block' : 'none';
-    document.getElementById('cartonCheck').classList.toggle('on', draft.carton.active);
-    updateDraftFromInputs();
-  });
+  // Listeners carton : seulement si l'élément existe (les fruits frais n'ont pas de section carton)
+  const fCarton = document.getElementById('fCarton');
+  if (fCarton) {
+    fCarton.addEventListener('change', () => {
+      draft.carton.active = fCarton.checked;
+      document.getElementById('cartonBox').style.display = draft.carton.active ? 'block' : 'none';
+      document.getElementById('cartonCheck').classList.toggle('on', draft.carton.active);
+      updateDraftFromInputs();
+    });
+  }
   const cnb = document.getElementById('fCartonNb');
   const cpc = document.getElementById('fCartonPieces');
   if (cnb) cnb.addEventListener('input', updateDraftFromInputs);
