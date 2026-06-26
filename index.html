@@ -1744,7 +1744,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v131';
+const APP_VERSION = 'v132';
 
 /* === ITM APP === */
 (function(){
@@ -8320,6 +8320,11 @@ function renderBatchEditor() {
   } else {
     currentBatch.compo.forEach((c, idx) => {
       const prod = resolveProduct(c);
+      // Rétro-compat : si l'ingrédient est un fruit KG mais a une unité héritée 'cL' (avant fix),
+      // on corrige automatiquement. Préserve les unités explicites par utilisateur (ex: "pc" sur un fruit pièce).
+      if (prod && prod.isFruitKg && c.unit !== 'kg') {
+        c.unit = 'kg';
+      }
       const pname = prod ? prod.s : '(produit inconnu)';
       html += '<div class="batch-ingr-row" data-idx="' + idx + '">';
       html += '  <div class="batch-ingr-main">';
@@ -8556,7 +8561,11 @@ function renderBatchPicker() {
         renderLiaisonEditor();
       } else if (currentBatch) {
         // Mode batch : ajouter l'ingrédient
-        const defaultUnit = (p.e === 'litre') ? 'cL' : 'pc';
+        // Détermine l'unité par défaut : kg pour les fruits frais en kg, cL pour les liquides, pc pour le reste
+        let defaultUnit;
+        if (p.isFruitKg) defaultUnit = 'kg';
+        else if (p.e === 'litre') defaultUnit = 'cL';
+        else defaultUnit = 'pc';
         currentBatch.compo.push({
           productId: pid,        // ancien format (index, fragile)
           y: p.y,                // nouveau format (référence Yokitup, stable) — résolution prioritaire
