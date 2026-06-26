@@ -1744,7 +1744,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v133';
+const APP_VERSION = 'v134';
 
 /* === ITM APP === */
 (function(){
@@ -4246,6 +4246,24 @@ const FORMATS_LITRE = [
   {label: '100cl', cl: 100}
 ];
 
+// Liste des étabs où l'option "canette 33cL" est ajoutée pour les soft verse.
+// Pour l'instant : uniquement Saint-Barth. Facile d'étendre à d'autres bars si besoin.
+const SOFT_CANETTE_ETABS = new Set([
+  'Pablo (Saint-Barthélemy)',
+]);
+
+// Retourne la liste des sous-formats litre à utiliser pour ce produit dans le bar courant.
+// Cas spécial : SOFT en "VERSE" + bar SBH → on ajoute le format canette 33cL à la fin.
+function getFormatsForProduct(product) {
+  if (!product) return FORMATS_LITRE;
+  const isSoft = (product.c || '').toUpperCase().includes('SOFT');
+  const isVerse = /\bVERSE\b\s*$/.test((product.y || product.s || '').toUpperCase());
+  if (isSoft && isVerse && SOFT_CANETTE_ETABS.has(state.estab)) {
+    return FORMATS_LITRE.concat([{label: '33cl (canette)', cl: 33}]);
+  }
+  return FORMATS_LITRE;
+}
+
 function openProductSheet(productId, lineId){
   currentProduct = resolveProduct({productId: productId});
   editingLineId = lineId || null;
@@ -4267,8 +4285,8 @@ function openProductSheet(productId, lineId){
       unit: currentProduct.e,
       qty: 0,
       // Pour les fruits KG : pas de sous-formats (saisie directe en kg).
-      // Pour les vrais "litre" (alcools verse, jus litre) : sous-formats 50/70/75/100cL.
-      details: (currentProduct.e === 'litre' && !currentProduct.isFruitKg) ? FORMATS_LITRE.map(f => ({label: f.label, cl: f.cl, qty: 0})) : null,
+      // Pour les vrais "litre" (alcools verse, jus litre) : sous-formats dynamiques selon le produit (peut inclure 33cL canette).
+      details: (currentProduct.e === 'litre' && !currentProduct.isFruitKg) ? getFormatsForProduct(currentProduct).map(f => ({label: f.label, cl: f.cl, qty: 0})) : null,
       carton: {active: false, nb: 0, pieces: 0, format: '75cl'},
       total: 0
     };
@@ -4340,10 +4358,10 @@ function renderProductSheet(){
       </div>
     `;
   } else {
-    // Plusieurs lignes de format
+    // Plusieurs lignes de format (peut inclure 33cL canette pour les soft verse à SBH)
     html += `<div class="field">
       <label class="field-lbl">Quantité par format de bouteille</label>`;
-    FORMATS_LITRE.forEach((f, idx) => {
+    getFormatsForProduct(p).forEach((f, idx) => {
       const detail = draft.details.find(d => d.label === f.label) || {qty: 0};
       html += `
         <div class="qty-format-row">
@@ -4394,7 +4412,7 @@ function renderProductSheet(){
             <label class="field-lbl">Format des bouteilles dans le carton</label>
             <div class="field-row" style="padding: 4px 6px">
               <div style="display: flex; gap: 4px; width: 100%">
-                ${FORMATS_LITRE.map(f => `
+                ${getFormatsForProduct(p).map(f => `
                   <label style="flex:1; display:block; text-align:center; padding:8px 0; border-radius:6px; background:${draft.carton.format === f.label ? 'var(--accent)' : 'transparent'}; color:${draft.carton.format === f.label ? '#fff' : 'var(--ink-2)'}; font-weight:500; font-size:13px; cursor:pointer">
                     <input type="radio" name="cartonFormat" value="${f.label}" ${draft.carton.format === f.label ? 'checked' : ''} style="display:none">
                     ${f.label}
@@ -4598,7 +4616,7 @@ function computeTotal(){
       cl += (d.qty || 0) * d.cl;
     });
     if (draft.carton.active){
-      const fmt = FORMATS_LITRE.find(f => f.label === draft.carton.format);
+      const fmt = getFormatsForProduct(p).find(f => f.label === draft.carton.format);
       if (fmt){
         cl += (draft.carton.nb || 0) * (draft.carton.pieces || 0) * fmt.cl;
       }
