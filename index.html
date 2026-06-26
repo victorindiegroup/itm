@@ -1744,7 +1744,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v132';
+const APP_VERSION = 'v133';
 
 /* === ITM APP === */
 (function(){
@@ -9169,11 +9169,17 @@ function getAvailableCategories() {
     const path = parseCategoryPath(p.c);
     let key = '';
     const det = (path.detail || '').toUpperCase();
+    const cUpper = (p.c || '').toUpperCase();
 
+    // Détection explicite des fruits frais (catégorie "LIQUIDE - FRUIT FRAIS")
+    // Mise en première position via une étiquette dédiée.
+    if (cUpper === 'LIQUIDE - FRUIT FRAIS' || cUpper.includes('FRUIT FRAIS')) {
+      key = 'FRUIT FRAIS';
+    }
     // Détection des bulles : peuvent être au niveau sub OU detail selon les catalogues
     // Ex Yokitup : "LIQUIDE - ALCOOL - VIN - CHAMPAGNE" → champagne en detail
     // Ex alt : "LIQUIDE - ALCOOL - CHAMPAGNE - BRUT" → champagne en sub
-    if (path.sub === 'CHAMPAGNE' || det.startsWith('CHAMPAGNE')) {
+    else if (path.sub === 'CHAMPAGNE' || det.startsWith('CHAMPAGNE')) {
       key = 'CHAMPAGNE';
     }
     else if (path.sub === 'PROSECCO' || det.startsWith('PROSECCO')) {
@@ -9210,13 +9216,22 @@ function populateCategoryFilter() {
   const sel = document.getElementById('categoryFilter');
   if (!sel) return;
   const cats = getAvailableCategories();
+  // Mettre "FRUIT FRAIS" en tête de liste (avant le tri par fréquence)
+  // pour mieux distinguer les fruits dans le sélecteur.
+  cats.sort((a, b) => {
+    if (a.key === 'FRUIT FRAIS') return -1;
+    if (b.key === 'FRUIT FRAIS') return 1;
+    return 0;  // conserve l'ordre déjà appliqué (fréquence)
+  });
   // Conserver la sélection courante
   const current = categoryFilter;
   // Reconstruire les options
   let html = '<option value="">Toutes les catégories</option>';
   cats.forEach(c => {
     // Libellé "humanisé" : VIN ROUGE → Vin Rouge
-    const label = c.key.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+    let label = c.key.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+    // Préfixer les fruits frais d'un emoji corbeille pour visibilité
+    if (c.key === 'FRUIT FRAIS') label = '🧺 ' + label;
     html += '<option value="' + escape(c.key) + '">' + escape(label) + ' (' + c.count + ')</option>';
   });
   sel.innerHTML = html;
