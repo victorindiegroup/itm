@@ -310,6 +310,13 @@ function convertCSV(text) {
       }
     }
 
+    // RÈGLE SPÉCIALE FÛTS DE BIÈRE : catégorie contient "BIERE" + nom contient "FUT"
+    // (ex: "HEINEKEN FUT 30L 5°" dans "LIQUIDE - ALCOOL - BIERE")
+    // → 1 fût = 1 pièce. La contenance reste indiquée dans le nom pour info.
+    if ((categorie || '').toUpperCase().includes('BIERE') && /\bFUT\b/.test(name.toUpperCase())) {
+      typeInfo = { type: 'unit', pill: 'FUT' };
+    }
+
     typeCount[typeInfo.type]++;
     etabs.forEach(e => { etabCount[e] = (etabCount[e] || 0) + 1; });
 

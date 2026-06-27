@@ -355,6 +355,7 @@
   .pill-COFF   { background: #F1EFE8; color: #444441; }
   .pill-GAL    { background: #F1EFE8; color: #444441; }
   .pill-BIB    { background: #F1EFE8; color: #444441; }
+  .pill-FUT    { background: #FBEFE6; color: #7C3A0C; }
   .pill-LITRE  { background: #E6F1FB; color: #0C447C; }
   .pill-UNIT   { background: #E1F5EE; color: #0F6E56; }
   /* Pastilles fruits frais (orange clair pour distinguer du reste) */
@@ -1755,7 +1756,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v136';
+const APP_VERSION = 'v138';
 
 /* === ITM APP === */
 (function(){
@@ -1917,6 +1918,16 @@ function buildCatalogue(data) {
         typeE = 'unit';
         pill = 'PC';
       }
+    }
+
+    // Fûts de bière : nom contient "FUT" ET catégorie contient "BIERE"
+    // (ex: "HEINEKEN FUT 30L 5°" dans "LIQUIDE - ALCOOL - BIERE")
+    // → comptés à la pièce (1 fût = 1 unité), pas en litre.
+    // La restriction à la catégorie BIERE évite les faux positifs comme "CAFE FUTÉ" (\b ne gère pas les accents).
+    const cUpper = (p.c || '').toUpperCase();
+    if (cUpper.includes('BIERE') && /\bFUT\b/.test(nameY)) {
+      typeE = 'unit';
+      pill = 'FUT';
     }
 
     return {
