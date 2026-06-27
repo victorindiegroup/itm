@@ -1755,7 +1755,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v135';
+const APP_VERSION = 'v136';
 
 /* === ITM APP === */
 (function(){
@@ -4276,13 +4276,34 @@ function getFormatsForProduct(product) {
 }
 
 function openProductSheet(productId, lineId){
-  currentProduct = resolveProduct({productId: productId});
+  // Si on ouvre en édition (lineId présent), on résout le produit via la ligne stockée
+  // (qui contient productY, référence stable par nom Yokitup) plutôt que via le productId (index fragile).
+  // C'est crucial : si l'index a changé entre la saisie et l'édition (re-build catalogue, re-déploiement, etc.),
+  // utiliser le productId mènerait à charger un PRODUIT DIFFÉRENT — bug grave.
+  if (lineId) {
+    const line = state.lines.find(l => l.id === lineId);
+    if (line) {
+      // resolveProduct utilise line.productY en priorité, puis fallback sur line.productId
+      currentProduct = resolveProduct(line);
+    } else {
+      currentProduct = resolveProduct({productId: productId});
+    }
+  } else {
+    currentProduct = resolveProduct({productId: productId});
+  }
   editingLineId = lineId || null;
 
   // Init draft
   if (lineId){
     const line = state.lines.find(l => l.id === lineId);
     draft = JSON.parse(JSON.stringify(line));
+    // Réparer la liaison : si currentProduct a été résolu via productY (référence stable),
+    // mettre à jour productId et productY pour qu'ils pointent vers la position actuelle dans le catalogue.
+    // Comme ça la prochaine fois qu'on rouvre cette ligne, la résolution sera correcte aussi par index.
+    if (currentProduct) {
+      draft.productId = currentProduct.id;
+      draft.productY = currentProduct.y;
+    }
     // Pour les fruits frais : pas de cartons. On force à false même sur les anciennes lignes éventuelles.
     if (currentProduct && currentProduct.isFruit && draft.carton) {
       draft.carton.active = false;
