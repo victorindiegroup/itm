@@ -1091,6 +1091,53 @@
   }
   .batch-editor-foot button { flex: 1; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 10px; cursor: pointer; }
 
+  /* Picker bitters cocktail : liste de bitters avec saisie de quantité par marque */
+  .bitters-list {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .bitters-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .bitters-row:last-child { border-bottom: none; }
+  .bitters-row:nth-child(even) { background: var(--bg); }
+  .bitters-info { flex: 1; min-width: 0; }
+  .bitters-name {
+    font-size: 12px;
+    color: var(--ink);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bitters-cl {
+    font-size: 11px;
+    color: var(--ink-2);
+    margin-top: 2px;
+  }
+  .bitters-qty {
+    width: 50px;
+    height: 32px;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 13px;
+    background: white;
+    flex-shrink: 0;
+  }
+  .bitters-row .qty-step-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
   /* Composition : liste d'ingrédients */
   .batch-ingr-row {
     display: flex;
@@ -1756,7 +1803,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v138';
+const APP_VERSION = 'v139';
 
 /* === ITM APP === */
 (function(){
@@ -4268,6 +4315,36 @@ const FORMATS_LITRE = [
   {label: '100cl', cl: 100}
 ];
 
+// Liste des bitters disponibles pour le picker spécial du produit générique "BITTERS COCKTAIL".
+// Triée par marque/famille pour grouper visuellement (Angostura ensemble, Bitter ensemble, etc.).
+// La contenance permet la conversion en L pour l'export Yokitup (somme : nb × cl / 100).
+const BITTERS_LIST = [
+  { name: 'ANGOSTURA AROMATIC BITTERS',                cl: 20 },
+  { name: 'ANGOSTURA AROM. BITTERS ORANGE',            cl: 10 },
+  { name: 'BITTER END MEXICAN MOLE',                   cl: 14.6 },
+  { name: 'BITTER J.M PIMENT',                         cl: 10 },
+  { name: 'BITTER PEYCHAUD',                           cl: 15 },
+  { name: 'BITTERS END MEMPHIS BARBECUE',              cl: 6 },
+  { name: "BOB'S BITTERS CORIANDER",                   cl: 10 },
+  { name: 'BORDIGA BITTER TINTURA PEPE SICHUAN',       cl: 5 },
+  { name: 'ELEMAKULE TIKI BITTER',                     cl: 14.6 },
+  { name: 'LEJAY BITTERS CASSIS',                      cl: 10 },
+  { name: "PEYCHAUD'S AROMATIC BITTERS",               cl: 15 },
+  { name: "SCRAPPY'S BITTER CELERY",                   cl: 14.7 },
+  { name: "SCRAPPY'S BITTERS CHOCOLATE",               cl: 14.7 },
+  { name: 'SUCEBOULE FRAICHEUR BITUME DU MATIN',       cl: 15 },
+  { name: 'THE BITTER TRUTH GRAPEFRUIT BITTERS',       cl: 20 },
+  { name: 'THE JAPANESE BITTERS UNAMI',                cl: 10 },
+];
+
+// Détecte si un produit est le générique "BITTERS COCKTAIL" qui ouvre le picker spécial.
+function isBittersProduct(product) {
+  if (!product) return false;
+  const name = (product.y || product.s || '').toUpperCase();
+  const cat = (product.c || '').toUpperCase();
+  return name.includes('BITTERS COCKTAIL') && cat.includes('BITTER');
+}
+
 // Liste des étabs où l'option "canette 33cL" est ajoutée pour les soft verse.
 // Pour l'instant : uniquement Saint-Barth. Facile d'étendre à d'autres bars si besoin.
 const SOFT_CANETTE_ETABS = new Set([
@@ -4319,6 +4396,15 @@ function openProductSheet(productId, lineId){
     if (currentProduct && currentProduct.isFruit && draft.carton) {
       draft.carton.active = false;
     }
+    // Pour les bitters : merger les bitters sauvegardés avec la liste actuelle.
+    // Ça gère le cas où on aurait ajouté ou retiré un bitter de BITTERS_LIST entre la saisie et l'édition.
+    if (currentProduct && isBittersProduct(currentProduct)) {
+      const saved = draft.bitters || [];
+      draft.bitters = BITTERS_LIST.map(b => {
+        const old = saved.find(s => s.name === b.name);
+        return { name: b.name, cl: b.cl, qty: old ? (old.qty || 0) : 0 };
+      });
+    }
   } else {
     draft = {
       id: null,
@@ -4329,7 +4415,9 @@ function openProductSheet(productId, lineId){
       qty: 0,
       // Pour les fruits KG : pas de sous-formats (saisie directe en kg).
       // Pour les vrais "litre" (alcools verse, jus litre) : sous-formats dynamiques selon le produit (peut inclure 33cL canette).
-      details: (currentProduct.e === 'litre' && !currentProduct.isFruitKg) ? getFormatsForProduct(currentProduct).map(f => ({label: f.label, cl: f.cl, qty: 0})) : null,
+      details: (currentProduct.e === 'litre' && !currentProduct.isFruitKg && !isBittersProduct(currentProduct)) ? getFormatsForProduct(currentProduct).map(f => ({label: f.label, cl: f.cl, qty: 0})) : null,
+      // Pour les bitters : tableau des bitters saisis ({name, cl, qty})
+      bitters: isBittersProduct(currentProduct) ? BITTERS_LIST.map(b => ({name: b.name, cl: b.cl, qty: 0})) : null,
       carton: {active: false, nb: 0, pieces: 0, format: '75cl'},
       total: 0
     };
@@ -4357,7 +4445,30 @@ function renderProductSheet(){
   const body = document.getElementById('shProdBody');
   let html = '';
 
-  if (p.isFruitKg) {
+  if (isBittersProduct(p)) {
+    // Cas spécial BITTERS COCKTAIL : picker avec liste pré-définie de bitters.
+    // Chaque bitter a une contenance fixe ; on saisit "combien de bouteilles" et l'app
+    // convertit en L total (somme : nb × cl / 100).
+    html += `<div class="field">
+      <label class="field-lbl">Bitters saisis (nombre de bouteilles)</label>
+      <div class="bitters-list">`;
+    (draft.bitters || []).forEach((b, idx) => {
+      const clTxt = (b.cl % 1 === 0 ? b.cl.toFixed(0) : String(b.cl).replace('.', ',')) + 'cL';
+      html += `
+        <div class="bitters-row" data-bitter-idx="${idx}">
+          <div class="bitters-info">
+            <div class="bitters-name">${escape(b.name)}</div>
+            <div class="bitters-cl">${clTxt}</div>
+          </div>
+          <button type="button" class="qty-step-btn" data-bitter-step="-1" data-bitter-target="${idx}" aria-label="Diminuer">−</button>
+          <input type="text" inputmode="decimal" step="0.1" data-bitter-input="${idx}" value="${b.qty || ''}" placeholder="" class="bitters-qty">
+          <button type="button" class="qty-step-btn" data-bitter-step="1" data-bitter-target="${idx}" aria-label="Augmenter">+</button>
+        </div>
+      `;
+    });
+    html += `</div>
+    </div>`;
+  } else if (p.isFruitKg) {
     // Cas spécial fruit au kilo : un seul champ "Quantité (kg)" en décimal.
     // Pas de sous-formats (50cL/70cL/...) ni de notion de cartons.
     html += `
@@ -4508,7 +4619,23 @@ function renderProductSheet(){
   }
 
   // Attachments
-  if (p.isFruitKg || p.e === 'btl' || p.e === 'unit'){
+  if (isBittersProduct(p)) {
+    // Bitters : listeners sur chaque input et chaque bouton ±
+    body.querySelectorAll('input[data-bitter-input]').forEach(el => {
+      el.addEventListener('input', updateDraftFromInputs);
+    });
+    body.querySelectorAll('[data-bitter-step]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.bitterTarget);
+        const step = parseFloat(btn.dataset.bitterStep);
+        const input = body.querySelector(`input[data-bitter-input="${idx}"]`);
+        const cur = parseNum(input.value);
+        const next = Math.max(0, cur + step);
+        input.value = next || '';
+        updateDraftFromInputs();
+      });
+    });
+  } else if (p.isFruitKg || p.e === 'btl' || p.e === 'unit'){
     document.getElementById('fQty').addEventListener('input', updateDraftFromInputs);
   } else {
     body.querySelectorAll('input[data-format]').forEach(el => {
@@ -4599,7 +4726,13 @@ function renderProductSheet(){
 function updateDraftFromInputs(){
   const p = currentProduct;
 
-  if (p.isFruitKg || p.e === 'btl' || p.e === 'unit'){
+  if (isBittersProduct(p)) {
+    // Bitters : lire chaque champ par index
+    (draft.bitters || []).forEach((b, idx) => {
+      const el = document.querySelector(`input[data-bitter-input="${idx}"]`);
+      b.qty = el ? parseNum(el.value) : 0;
+    });
+  } else if (p.isFruitKg || p.e === 'btl' || p.e === 'unit'){
     // Cas fruit KG ou bouteille/pièce : un seul champ fQty
     const v = parseNum(document.getElementById('fQty').value);
     draft.qty = v;
@@ -4641,7 +4774,14 @@ function updateOkButtonsVisibility() {
 function computeTotal(){
   const p = currentProduct;
 
-  if (p.isFruitKg) {
+  if (isBittersProduct(p)) {
+    // Bitters : total en L = somme de (nb_bouteilles × contenance_cL) / 100
+    let cl = 0;
+    (draft.bitters || []).forEach(b => {
+      cl += (b.qty || 0) * (b.cl || 0);
+    });
+    draft.total = round(cl / 100, 3);  // L
+  } else if (p.isFruitKg) {
     // Fruit au kilo : le total est directement la quantité en kg saisie (pas de conversion).
     // Pas de cartons pour les fruits.
     draft.total = round(draft.qty || 0, 3);
@@ -4982,7 +5122,17 @@ function renderExport(){
 
     // Détail en texte pur
     const detailParts = [];
-    if (p.isFruitKg) {
+    if (isBittersProduct(p)) {
+      // Bitters : afficher chaque bitter avec sa quantité (ex: "2× Angostura 20cL · 1× Peychaud 15cL")
+      (line.bitters || []).forEach(b => {
+        if (b.qty > 0) {
+          const clTxt = (b.cl % 1 === 0 ? b.cl.toFixed(0) : String(b.cl).replace('.', ',')) + 'cL';
+          // Nom court : premier mot ou deux pour ne pas saturer
+          const shortName = b.name.split(' ').slice(0, 2).join(' ');
+          detailParts.push(fmtQty(b.qty) + '× ' + shortName + ' ' + clTxt);
+        }
+      });
+    } else if (p.isFruitKg) {
       if (line.qty > 0) detailParts.push(fmtQty(line.qty) + ' kg');
     } else if (p.e === 'btl' || p.e === 'unit') {
       if (line.qty > 0) detailParts.push(fmtQty(line.qty) + ' pc');
@@ -7974,7 +8124,15 @@ function lineQtyDetail(line, p) {
   }
   if (!p) return '—';
   const parts = [];
-  if (p.isFruitKg) {
+  if (isBittersProduct(p)) {
+    (line.bitters || []).forEach(b => {
+      if (b.qty > 0) {
+        const clTxt = (b.cl % 1 === 0 ? b.cl.toFixed(0) : String(b.cl).replace('.', ',')) + 'cL';
+        const shortName = b.name.split(' ').slice(0, 2).join(' ');
+        parts.push(fmtQty(b.qty) + '× ' + shortName + ' ' + clTxt);
+      }
+    });
+  } else if (p.isFruitKg) {
     if (line.qty > 0) parts.push(fmtQty(line.qty) + ' kg');
   } else if (p.e === 'btl' || p.e === 'unit') {
     if (line.qty > 0) parts.push(fmtQty(line.qty) + ' pc');
