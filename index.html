@@ -1112,9 +1112,11 @@
     font-size: 12px;
     color: var(--ink);
     font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    /* Retour à la ligne autorisé pour ne tronquer aucun nom (même très long). */
+    /* La hauteur de la ligne s'adapte automatiquement, le layout reste cohérent. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
   }
   .bitters-cl {
     font-size: 11px;
@@ -1803,7 +1805,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v139';
+const APP_VERSION = 'v140';
 
 /* === ITM APP === */
 (function(){
@@ -4332,7 +4334,7 @@ const BITTERS_LIST = [
   { name: "PEYCHAUD'S AROMATIC BITTERS",               cl: 15 },
   { name: "SCRAPPY'S BITTER CELERY",                   cl: 14.7 },
   { name: "SCRAPPY'S BITTERS CHOCOLATE",               cl: 14.7 },
-  { name: 'SUCEBOULE FRAICHEUR BITUME DU MATIN',       cl: 15 },
+  { name: 'JADORE SUCER DES CAiLLOUX',                 cl: 15 },
   { name: 'THE BITTER TRUTH GRAPEFRUIT BITTERS',       cl: 20 },
   { name: 'THE JAPANESE BITTERS UNAMI',                cl: 10 },
 ];
