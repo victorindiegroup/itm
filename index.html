@@ -1805,7 +1805,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v140';
+const APP_VERSION = 'v142';
 
 /* === ITM APP === */
 (function(){
@@ -7624,7 +7624,10 @@ async function exportAndMailInventory(inv) {
   // Sujet et corps adaptés au type d'envoi (inventaire complet vs complément)
   const isComplement = !!inv.parentId;
   const subjectPrefix = isComplement ? 'Complément d\'inventaire ' : 'Inventaire ';
-  const subject = subjectPrefix + (inv.etab || state.estab) + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr;
+  // Détecter s'il y a des commentaires de produit → mention dans le sujet pour attirer l'attention
+  const hasProductComments = (inv.lines || []).some(l => l.comment && l.comment.trim());
+  const notesSuffix = hasProductComments ? ' — 📝 Notes du barman' : '';
+  const subject = subjectPrefix + (inv.etab || state.estab) + ' - ' + fmtDate(inv.date) + ' - ' + momentLblFr + notesSuffix;
 
   let body;
   if (isComplement) {
@@ -7654,10 +7657,13 @@ async function exportAndMailInventory(inv) {
     body += '\nCommentaire général :\n' + inv.comment + '\n';
   }
 
-  // Commentaires par produit (s'il y en a)
+  // Notes du barman (commentaires par produit) — section mise en valeur pour attirer l'attention des directeurs
   const linesWithComment = inv.lines.filter(l => l.comment && l.comment.trim());
   if (linesWithComment.length > 0) {
-    body += '\nRemarques par produit :\n';
+    body += '\n';
+    body += '========================================\n';
+    body += '📝 NOTES DU BARMAN (' + linesWithComment.length + ' produit' + (linesWithComment.length > 1 ? 's' : '') + ')\n';
+    body += '========================================\n';
     linesWithComment.forEach(l => {
       let label;
       if (l.batchId) {
@@ -7667,8 +7673,10 @@ async function exportAndMailInventory(inv) {
         label = p ? p.s : '(produit)';
       }
       const zone = l.zone ? ' [' + l.zone + ']' : '';
-      body += '- ' + label + zone + ' : ' + l.comment + '\n';
+      body += '\n• ' + label + zone + '\n';
+      body += '  → ' + l.comment + '\n';
     });
+    body += '\n';
   }
 
   // ==== 3. Partage natif avec pièce jointe (iOS 15+, Android récent) ====
@@ -8397,6 +8405,14 @@ function renderInventoryDetailBody() {
         // Une seule zone : afficher juste le nom de la zone sans répéter la quantité
         html += '  <div style="margin-top: 4px; font-size: 11px; color: var(--ink-3);">' + escape(it.zones[0].zone) + '</div>';
       }
+      // Commentaires du chef de bar (par zone) : visible en italique avec 💬
+      // Utile aux directeurs qui consultent l'inventaire archivé.
+      it.zones.forEach(z => {
+        if (z.comment) {
+          const zoneLbl = it.zones.length > 1 ? '[' + escape(z.zone) + '] ' : '';
+          html += '  <div style="margin-top: 6px; padding: 6px 10px; background: var(--accent-soft); border-radius: 6px; font-size: 12px; color: var(--accent-dark); font-style: italic;">💬 ' + zoneLbl + escape(z.comment) + '</div>';
+        }
+      });
       html += '</div>';
     });
     html += '</div>';
