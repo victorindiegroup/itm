@@ -145,6 +145,58 @@
     -webkit-tap-highlight-color: transparent;
   }
   .cat-filter-clear:active { background: var(--bg); }
+  /* Filtre multi-catégories : bouton + panneau de cases à cocher */
+  .cat-filter-btn { text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .cat-filter-panel {
+    margin: 0 16px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+  }
+  .cat-filter-panel-actions {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .cat-filter-panel-actions button {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--ink-2);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cat-filter-panel-actions .cat-filter-done {
+    margin-left: auto;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .cat-filter-list { max-height: 45vh; overflow-y: auto; padding: 6px 0; }
+  .cat-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--ink);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cat-filter-item input[type="checkbox"] {
+    width: 18px; height: 18px;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+  }
+  .cat-filter-item .cat-filter-count { color: var(--ink-3); font-size: 12px; margin-left: auto; }
 
   /* PRODUIT LIST */
   .prod-list { padding: 4px 16px 16px; }
@@ -1452,10 +1504,16 @@
       <input class="search" id="searchInput" type="search" placeholder="Rechercher un produit…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     </div>
     <div class="cat-filter-wrap">
-      <select id="categoryFilter" class="cat-filter-select">
-        <option value="">Toutes les catégories</option>
-      </select>
-      <button type="button" id="categoryFilterClear" class="cat-filter-clear" style="display:none;" aria-label="Effacer le filtre">✕</button>
+      <button type="button" id="categoryFilterBtn" class="cat-filter-select cat-filter-btn">Toutes les catégories</button>
+      <button type="button" id="categoryFilterClear" class="cat-filter-clear" style="display:none;" aria-label="Réinitialiser le filtre">✕</button>
+    </div>
+    <div class="cat-filter-panel" id="categoryFilterPanel" style="display:none;">
+      <div class="cat-filter-panel-actions">
+        <button type="button" id="catFilterAll">Tout cocher</button>
+        <button type="button" id="catFilterNone">Tout décocher</button>
+        <button type="button" id="catFilterDone" class="cat-filter-done">OK</button>
+      </div>
+      <div class="cat-filter-list" id="categoryFilterList"></div>
     </div>
     <div class="prod-list" id="prodList"></div>
   </div>
@@ -1805,7 +1863,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v142';
+const APP_VERSION = 'v143';
 
 /* === ITM APP === */
 (function(){
@@ -2903,7 +2961,17 @@ function switchTab(name){
 
 /* ---------- Catalogue list ---------- */
 let searchTerm = '';
-let categoryFilter = '';  // Filtre catégorie sticky : '' = aucun, sinon ex: "VIN ROUGE", "CHAMPAGNE", "VODKA"...
+// Filtre catégories sticky (multi-sélection par cases à cocher) :
+//   null  = aucun filtre (toutes les catégories visibles)
+//   []    = tout décoché (aucun produit visible — état transitoire pendant la sélection)
+//   [...] = liste de clés de catégories cochées, ex ["VODKA", "GIN"] (clés = getCategoryKey)
+let categoryFilters = null;
+
+// Un produit passe-t-il le filtre catégories courant ?
+function catFilterMatches(p) {
+  if (categoryFilters === null) return true;
+  return categoryFilters.includes(getCategoryKey(p));
+}
 function normalize(s){
   // Lowercase + suppression des accents
   let n = (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -2947,12 +3015,11 @@ function searchProducts(term){
   const words = t ? t.split(/\s+/).filter(Boolean) : [];
   searchKeywordMatches = {};
 
-  // Filtre catégorie sticky : si une catégorie est sélectionnée, on restreint le pool
-  // de recherche aux produits dont la catégorie contient le tag exact (insensible à la casse).
+  // Filtre catégories sticky : si des catégories sont cochées, on restreint le pool
+  // de recherche aux produits dont la clé de catégorie (getCategoryKey) est cochée.
   let base = CATALOGUE;
-  if (categoryFilter) {
-    const cf = categoryFilter.toUpperCase();
-    base = base.filter(p => (p.c || '').toUpperCase().includes(cf));
+  if (categoryFilters !== null) {
+    base = base.filter(catFilterMatches);
   }
 
   if (!words.length) return base;
@@ -2981,11 +3048,8 @@ function searchProducts(term){
     if (!prod) continue;
     if (byNameIds.has(prod.id)) continue;  // déjà trouvé par nom, skip
     if (searchKeywordMatches[prod.id]) continue;  // déjà ajouté via une autre liaison
-    // Respecter le filtre catégorie aussi sur les liaisons
-    if (categoryFilter) {
-      const cf = categoryFilter.toUpperCase();
-      if (!(prod.c || '').toUpperCase().includes(cf)) continue;
-    }
+    // Respecter le filtre catégories aussi sur les liaisons
+    if (!catFilterMatches(prod)) continue;
     searchKeywordMatches[prod.id] = l.keyword;
     viaKeyword.push(prod);
   }
@@ -4500,13 +4564,15 @@ function renderProductSheet(){
       </div>
     `;
   } else if (p.e === 'unit'){
-    // Un seul champ quantité (unités/pièces)
+    // Un seul champ quantité (unités/pièces).
+    // Décimales autorisées (ex: 0,5 poche de purée entamée) — même saisie que les bouteilles.
+    // Toute la chaîne aval (parseNum, computeTotal, export XLSX) gère déjà les floats.
     html += `
       <div class="field">
-        <label class="field-lbl">Quantité (unités)</label>
+        <label class="field-lbl">Quantité (unités — décimales OK, ex: 0,5)</label>
         <div class="field-row">
           <button type="button" class="qty-step-btn" data-step="-1" data-target="fQty" aria-label="Diminuer">−</button>
-          <input id="fQty" type="number" step="1" inputmode="numeric" value="${draft.qty || ''}" placeholder="">
+          <input id="fQty" type="text" inputmode="decimal" step="0.1" value="${draft.qty || ''}" placeholder="">
           <button type="button" class="qty-step-btn" data-step="1" data-target="fQty" aria-label="Augmenter">+</button>
           <button type="button" class="qty-ok-btn" data-ok="fQty" aria-label="Valider">OK</button>
           <span class="field-label-inline">unit.</span>
@@ -4870,10 +4936,10 @@ function saveLine(){
     lines.push(draft);
     toast('Ajouté');
     // Reset de la barre de recherche du catalogue après ajout (gain de temps en saisie en chaîne).
-    // Exception : si on est en mode filtre "Champagne", on garde le texte tapé.
+    // Exception : si le filtre "Champagne" est coché, on garde le texte tapé.
     // Raison : sur des champagnes, les chefs entrent souvent la marque (ex: "dom perignon") et
     // veulent enchaîner sur la même marque (rosé, brut, vintage...) sans tout retaper.
-    if (categoryFilter !== 'CHAMPAGNE') {
+    if (!(categoryFilters || []).includes('CHAMPAGNE')) {
       searchTerm = '';
       const searchInput = document.getElementById('searchInput');
       if (searchInput) searchInput.value = '';
@@ -9027,8 +9093,8 @@ function saveBatchLine() {
     lines.push(newLine);
     toast('Ajouté');
     // Reset de la barre de recherche du catalogue après ajout.
-    // Exception : si filtre "Champagne", on garde le texte (saisies en chaîne d'une même marque).
-    if (categoryFilter !== 'CHAMPAGNE') {
+    // Exception : si filtre "Champagne" coché, on garde le texte (saisies en chaîne d'une même marque).
+    if (!(categoryFilters || []).includes('CHAMPAGNE')) {
       searchTerm = '';
       const searchInput = document.getElementById('searchInput');
       if (searchInput) searchInput.value = '';
@@ -9397,47 +9463,51 @@ function updateAdminUIVisibility() {
 //
 // Stratégie : on extrait la 3ème partie (sub) de chaque catégorie, et pour les vins
 // on combine sub + détail (ex: "VIN" + "ROUGE BORDEAUX" → "VIN ROUGE").
+// Clé de catégorie "filtre" d'un produit (partagée entre getAvailableCategories et catFilterMatches
+// pour que les cases cochées et le filtrage utilisent exactement la même logique).
+function getCategoryKey(p) {
+  if (!p || !p.c) return '';
+  const path = parseCategoryPath(p.c);
+  const det = (path.detail || '').toUpperCase();
+  const cUpper = (p.c || '').toUpperCase();
+
+  // Détection explicite des fruits frais (catégorie "LIQUIDE - FRUIT FRAIS")
+  // Mise en première position via une étiquette dédiée.
+  if (cUpper === 'LIQUIDE - FRUIT FRAIS' || cUpper.includes('FRUIT FRAIS')) {
+    return 'FRUIT FRAIS';
+  }
+  // Détection des bulles : peuvent être au niveau sub OU detail selon les catalogues
+  // Ex Yokitup : "LIQUIDE - ALCOOL - VIN - CHAMPAGNE" → champagne en detail
+  // Ex alt : "LIQUIDE - ALCOOL - CHAMPAGNE - BRUT" → champagne en sub
+  if (path.sub === 'CHAMPAGNE' || det.startsWith('CHAMPAGNE')) {
+    return 'CHAMPAGNE';
+  }
+  if (path.sub === 'PROSECCO' || det.startsWith('PROSECCO')) {
+    return 'PROSECCO';
+  }
+  if (path.sub === 'CREMANT' || det.startsWith('CREMANT') || det.startsWith('CRÉMANT')) {
+    return 'CRÉMANT';
+  }
+  if (path.sub === 'EFFERVESCENT' || det.startsWith('EFFERVESCENT')) {
+    return 'EFFERVESCENT';
+  }
+  // Pour les vins (hors bulles) : une seule catégorie "VIN" pour simplifier
+  // (les détections par couleur via le champ detail étaient peu fiables selon les catalogues)
+  if (path.sub === 'VIN') {
+    return 'VIN';
+  }
+  // Tout le reste : on prend le sub direct (VODKA, WHISKY, GIN, TEQUILA, RHUM, etc.)
+  if (path.sub) return path.sub;
+  // Sinon fallback sur main (BIERE, SOFT, etc.)
+  return path.main;
+}
+
 function getAvailableCategories() {
   if (!CATALOGUE || !CATALOGUE.length) return [];
   const counts = new Map();
 
   CATALOGUE.forEach(p => {
-    if (!p.c) return;
-    const path = parseCategoryPath(p.c);
-    let key = '';
-    const det = (path.detail || '').toUpperCase();
-    const cUpper = (p.c || '').toUpperCase();
-
-    // Détection explicite des fruits frais (catégorie "LIQUIDE - FRUIT FRAIS")
-    // Mise en première position via une étiquette dédiée.
-    if (cUpper === 'LIQUIDE - FRUIT FRAIS' || cUpper.includes('FRUIT FRAIS')) {
-      key = 'FRUIT FRAIS';
-    }
-    // Détection des bulles : peuvent être au niveau sub OU detail selon les catalogues
-    // Ex Yokitup : "LIQUIDE - ALCOOL - VIN - CHAMPAGNE" → champagne en detail
-    // Ex alt : "LIQUIDE - ALCOOL - CHAMPAGNE - BRUT" → champagne en sub
-    else if (path.sub === 'CHAMPAGNE' || det.startsWith('CHAMPAGNE')) {
-      key = 'CHAMPAGNE';
-    }
-    else if (path.sub === 'PROSECCO' || det.startsWith('PROSECCO')) {
-      key = 'PROSECCO';
-    }
-    else if (path.sub === 'CREMANT' || det.startsWith('CREMANT') || det.startsWith('CRÉMANT')) {
-      key = 'CRÉMANT';
-    }
-    else if (path.sub === 'EFFERVESCENT' || det.startsWith('EFFERVESCENT')) {
-      key = 'EFFERVESCENT';
-    }
-    // Pour les vins (hors bulles) : une seule catégorie "VIN" pour simplifier
-    // (les détections par couleur via le champ detail étaient peu fiables selon les catalogues)
-    else if (path.sub === 'VIN') {
-      key = 'VIN';
-    }
-    // Tout le reste : on prend le sub direct (VODKA, WHISKY, GIN, TEQUILA, RHUM, etc.)
-    else if (path.sub) key = path.sub;
-    // Sinon fallback sur main (BIERE, SOFT, etc.)
-    else key = path.main;
-
+    const key = getCategoryKey(p);
     if (!key) return;
     counts.set(key, (counts.get(key) || 0) + 1);
   });
@@ -9448,10 +9518,17 @@ function getAvailableCategories() {
     .map(([key, count]) => ({ key, count }));
 }
 
-// Peuple le <select> avec les catégories disponibles
+// Libellé "humanisé" d'une clé de catégorie : VIN ROUGE → Vin Rouge (+ emoji fruits frais)
+function catFilterLabel(key) {
+  let label = key.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+  if (key === 'FRUIT FRAIS') label = '🧺 ' + label;
+  return label;
+}
+
+// Peuple le panneau de cases à cocher avec les catégories disponibles
 function populateCategoryFilter() {
-  const sel = document.getElementById('categoryFilter');
-  if (!sel) return;
+  const listEl = document.getElementById('categoryFilterList');
+  if (!listEl) return;
   const cats = getAvailableCategories();
   // Mettre "FRUIT FRAIS" en tête de liste (avant le tri par fréquence)
   // pour mieux distinguer les fruits dans le sélecteur.
@@ -9460,33 +9537,60 @@ function populateCategoryFilter() {
     if (b.key === 'FRUIT FRAIS') return 1;
     return 0;  // conserve l'ordre déjà appliqué (fréquence)
   });
-  // Conserver la sélection courante
-  const current = categoryFilter;
-  // Reconstruire les options
-  let html = '<option value="">Toutes les catégories</option>';
+  // Purger de la sélection les clés qui n'existent plus (changement de catalogue)
+  if (categoryFilters !== null) {
+    const avail = new Set(cats.map(c => c.key));
+    categoryFilters = categoryFilters.filter(k => avail.has(k));
+    if (categoryFilters.length === cats.length) categoryFilters = null;  // tout coché = pas de filtre
+  }
+  // Reconstruire les cases (cochées selon la sélection courante ; null = tout coché)
+  let html = '';
   cats.forEach(c => {
-    // Libellé "humanisé" : VIN ROUGE → Vin Rouge
-    let label = c.key.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
-    // Préfixer les fruits frais d'un emoji corbeille pour visibilité
-    if (c.key === 'FRUIT FRAIS') label = '🧺 ' + label;
-    html += '<option value="' + escape(c.key) + '">' + escape(label) + ' (' + c.count + ')</option>';
+    const checked = (categoryFilters === null) || categoryFilters.includes(c.key);
+    html += '<label class="cat-filter-item">'
+          + '<input type="checkbox" value="' + escape(c.key) + '"' + (checked ? ' checked' : '') + '>'
+          + '<span>' + escape(catFilterLabel(c.key)) + '</span>'
+          + '<span class="cat-filter-count">' + c.count + '</span>'
+          + '</label>';
   });
-  sel.innerHTML = html;
-  sel.value = current;
+  listEl.innerHTML = html;
+  listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', onCatFilterCheckboxChange);
+  });
   updateCategoryFilterUI();
 }
 
-// Met à jour le visuel actif/inactif du dropdown + bouton clear
+// Relit l'état des cases → met à jour categoryFilters + re-render
+function onCatFilterCheckboxChange() {
+  const listEl = document.getElementById('categoryFilterList');
+  if (!listEl) return;
+  const boxes = Array.from(listEl.querySelectorAll('input[type="checkbox"]'));
+  const checkedKeys = boxes.filter(b => b.checked).map(b => b.value);
+  // Tout coché = pas de filtre (null) ; sinon liste des clés cochées (peut être vide)
+  categoryFilters = (checkedKeys.length === boxes.length) ? null : checkedKeys;
+  updateCategoryFilterUI();
+  renderCatalogue();
+}
+
+// Met à jour le libellé/visuel du bouton filtre + bouton clear
 function updateCategoryFilterUI() {
-  const sel = document.getElementById('categoryFilter');
+  const btn = document.getElementById('categoryFilterBtn');
   const clear = document.getElementById('categoryFilterClear');
-  if (!sel) return;
-  if (categoryFilter) {
-    sel.classList.add('active');
+  if (!btn) return;
+  if (categoryFilters !== null) {
+    btn.classList.add('active');
     if (clear) clear.style.display = '';
+    if (categoryFilters.length === 0) {
+      btn.textContent = 'Aucune catégorie cochée';
+    } else if (categoryFilters.length === 1) {
+      btn.textContent = catFilterLabel(categoryFilters[0]);
+    } else {
+      btn.textContent = categoryFilters.length + ' catégories cochées';
+    }
   } else {
-    sel.classList.remove('active');
+    btn.classList.remove('active');
     if (clear) clear.style.display = 'none';
+    btn.textContent = 'Toutes les catégories';
   }
 }
 
@@ -9614,22 +9718,41 @@ function init(){
     renderCatalogue();
   });
 
-  // Filtre catégorie sticky (sous la barre de recherche)
+  // Filtre catégories sticky (sous la barre de recherche) : bouton → panneau de cases à cocher
   populateCategoryFilter();  // peupler au cas où le catalogue est déjà chargé
-  const catSel = document.getElementById('categoryFilter');
-  if (catSel) {
-    catSel.addEventListener('change', () => {
-      categoryFilter = catSel.value;
-      updateCategoryFilterUI();
+  const catBtn = document.getElementById('categoryFilterBtn');
+  const catPanel = document.getElementById('categoryFilterPanel');
+  if (catBtn && catPanel) {
+    catBtn.addEventListener('click', () => {
+      catPanel.style.display = (catPanel.style.display === 'none') ? '' : 'none';
+    });
+  }
+  const catDone = document.getElementById('catFilterDone');
+  if (catDone && catPanel) {
+    catDone.addEventListener('click', () => { catPanel.style.display = 'none'; });
+  }
+  const catAll = document.getElementById('catFilterAll');
+  if (catAll) {
+    catAll.addEventListener('click', () => {
+      categoryFilters = null;
+      populateCategoryFilter();  // recoche tout
+      renderCatalogue();
+    });
+  }
+  const catNone = document.getElementById('catFilterNone');
+  if (catNone) {
+    catNone.addEventListener('click', () => {
+      categoryFilters = [];
+      populateCategoryFilter();  // décoche tout
       renderCatalogue();
     });
   }
   const catClear = document.getElementById('categoryFilterClear');
   if (catClear) {
     catClear.addEventListener('click', () => {
-      categoryFilter = '';
-      if (catSel) catSel.value = '';
-      updateCategoryFilterUI();
+      categoryFilters = null;
+      if (catPanel) catPanel.style.display = 'none';
+      populateCategoryFilter();
       renderCatalogue();
     });
   }
