@@ -218,6 +218,27 @@
   .prod-saisi { position: relative; }
   .prod-saisi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); border-radius: 3px 0 0 3px; }
 
+  /* Cartes vin colorées selon la robe (v144) : fond teinté + bord gauche épais de la couleur
+     de la pastille, pour que la robe se voie d'un coup d'œil sans chercher le petit point.
+     Le texte reste en encre foncée → tints clairs, lisibles en plein soleil. */
+  .prod-wine-rouge  { background: #F6E3E6; border-color: #D9A8B0; border-left: 6px solid #7B1826; }
+  .prod-wine-blanc  { background: #F8F3DC; border-color: #D8CD9C; border-left: 6px solid #C9B45E; }
+  .prod-wine-rose   { background: #FCE8E8; border-color: #EDB9B9; border-left: 6px solid #E8888D; }
+  .prod-wine-orange { background: #FAE8D9; border-color: #E4B98F; border-left: 6px solid #D97A3C; }
+  .prod-wine-bulles { background: #FBF3CE; border-color: #E2CE84; border-left: 6px solid #D4AF37; }
+  .prod-wine-porto  { background: #EDDDE1; border-color: #C4A2AB; border-left: 6px solid #4A1220; }
+  .prod-wine-sake   { background: #F7F3EA; border-color: #D8CFBB; border-left: 6px solid #B8AC8C; }
+  /* :active conserve un feedback tactile sur les cartes teintées */
+  .prod-wine-rouge:active  { background: #EFD3D8; }
+  .prod-wine-blanc:active  { background: #F1EACB; }
+  .prod-wine-rose:active   { background: #F8D9D9; }
+  .prod-wine-orange:active { background: #F4DBC5; }
+  .prod-wine-bulles:active { background: #F6EBBB; }
+  .prod-wine-porto:active  { background: #E3CDD3; }
+  .prod-wine-sake:active   { background: #F0EADC; }
+  /* Note : la barre verte "déjà saisi" (::before, left:0) se positionne dans le padding-box,
+     donc juste À CÔTÉ du bord gauche coloré — les deux restent visibles. */
+
   /* SESSION LIST */
   .sess-list { padding: 12px 16px 16px; }
   .sess-zone { font-size: 11px; font-weight: 700; color: var(--ink-3); letter-spacing: 1px; text-transform: uppercase; padding: 16px 4px 8px; display: flex; align-items: center; gap: 8px; }
@@ -1863,7 +1884,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v143';
+const APP_VERSION = 'v144';
 
 /* === ITM APP === */
 (function(){
@@ -4227,7 +4248,11 @@ function renderCatalogue(){
       // Point coloré si c'est un vin, ou corbeille pour les fruits
       const dot = wineDotHtml(p.c);
       const fruitEmoji = p.isFruit ? '<span class="prod-fruit-emoji">🧺</span>' : '';
-      html += '<div class="prod' + saisi + offmenu + '" data-pid="' + p.id + '">';
+      // v144 : carte entière teintée selon la robe du vin (le petit point ne suffisait pas,
+      // erreurs fréquentes de robe en saisie rapide)
+      const wcol = wineColor(p.c);
+      const wineCls = wcol ? ' prod-wine-' + wcol : '';
+      html += '<div class="prod' + saisi + offmenu + wineCls + '" data-pid="' + p.id + '">';
       html += '  ' + tag;
       html += '  <div class="prod-name">' + dot + fruitEmoji + escape(p.s) + offmenuBadge + kwBadge + '</div>';
       html += '</div>';
