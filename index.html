@@ -1549,15 +1549,15 @@
     <button type="button" class="mode-card" id="modeBtnItm">
       <span class="m-ico">📋</span>
       <span>
-        <div class="m-title">Faire un inventaire <span>ITM</span></div>
-        <div class="m-desc">Compter le stock de l'établissement</div>
+        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">ITM</div>
+        <div class="m-desc"><b>Faire un inventaire</b> — compter le stock de l'établissement</div>
       </span>
     </button>
     <button type="button" class="mode-card" id="modeBtnTtm">
       <span class="m-ico">🔁</span>
       <span>
-        <div class="m-title">Faire un transfert <span>TTM</span></div>
-        <div class="m-desc">Déclarer des produits qui partent vers un autre établissement — photo obligatoire</div>
+        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">TTM</div>
+        <div class="m-desc"><b>Faire un transfert</b> — produits qui partent vers un autre établissement, photo obligatoire</div>
       </span>
     </button>
   </div>
@@ -1984,7 +1984,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v146';
+const APP_VERSION = 'v148';
 
 /* === ITM APP === */
 (function(){
@@ -7305,7 +7305,7 @@ function ttmMarkHistSent(localId) {
 function ttmSearch(term) {
   const t = normalize((term || '').trim());
   if (!t) return [];
-  const words = t.split(/\s+/).filter(Boolean);
+  const words = ttmExpandAliases(t.split(/\s+/).filter(Boolean));
   const fromTag = ETAB_TO_TAG[state.estab];
   const res = [];
   for (const p of CATALOGUE) {
@@ -7320,6 +7320,106 @@ function ttmSearch(term) {
     return a.p.s.localeCompare(b.p.s);
   });
   return res.slice(0, 40);
+}
+
+/* ---- Recherche approchée (dictée vocale & fautes de frappe) ----
+   La reco vocale entend « Mathieu Domp Perignon » pour « mathu Dom Pérignon » :
+   la recherche exacte ne trouve rien. On complète donc avec un score flou :
+   1. repli phonétique léger (ph→f, doubles lettres, etc.)
+   2. distance d'édition tolérante mot à mot (mathieu ≈ mathu, domp ≈ dom)
+   3. préfixe accepté (math… matche mathusalem)
+   Les résultats approchés s'affichent SOUS les résultats exacts. */
+
+// Abréviations métier → mots du catalogue (étendues côté requête uniquement)
+const TTM_ALIASES = {
+  'mathu': 'mathusalem', 'mathieu': 'mathusalem',
+  'jero': 'jeroboam', 'jero.': 'jeroboam',
+  'mag': 'magnum',
+  'dp': 'dom perignon',
+  'vc': 'veuve clicquot',
+  'rd': 'romanee conti',
+};
+
+function ttmFold(w) {
+  return String(w || '')
+    .replace(/ph/g, 'f')
+    .replace(/th/g, 't')
+    .replace(/qu/g, 'k').replace(/q/g, 'k').replace(/c(?=[aou])/g, 'k')
+    .replace(/y/g, 'i')
+    .replace(/(.)\1+/g, '$1');   // lettres doublées
+}
+
+function ttmLev(a, b, max) {
+  // Levenshtein avec plafond (perf) — renvoie max+1 si dépassé
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > max) return max + 1;
+  let prev = new Array(lb + 1), cur = new Array(lb + 1);
+  for (let j = 0; j <= lb; j++) prev[j] = j;
+  for (let i = 1; i <= la; i++) {
+    cur[0] = i;
+    let rowMin = i;
+    for (let j = 1; j <= lb; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      if (cur[j] < rowMin) rowMin = cur[j];
+    }
+    if (rowMin > max) return max + 1;
+    [prev, cur] = [cur, prev];
+  }
+  return prev[lb];
+}
+
+// Score d'un mot de requête contre les tokens d'un produit : 0 (rien) → 1 (exact)
+function ttmWordScore(qw, tokens) {
+  const qf = ttmFold(qw);
+  let best = 0;
+  for (const t of tokens) {
+    if (t === qw) return 1;
+    if (t.startsWith(qw) && qw.length >= 3) { best = Math.max(best, 0.92); continue; }
+    if (qw.startsWith(t) && t.length >= 3) { best = Math.max(best, 0.85); continue; }
+    const tf = ttmFold(t);
+    if (tf === qf) { best = Math.max(best, 0.95); continue; }
+    if (tf.startsWith(qf) && qf.length >= 3) { best = Math.max(best, 0.88); continue; }
+    const maxD = Math.max(1, Math.floor(Math.max(qf.length, tf.length) / 3));
+    const d = ttmLev(qf, tf, maxD);
+    if (d <= maxD) best = Math.max(best, 1 - d / Math.max(qf.length, tf.length) - 0.1);
+  }
+  return best;
+}
+
+function ttmExpandAliases(words) {
+  const out = [];
+  for (const w of words) {
+    const a = TTM_ALIASES[w];
+    if (a) a.split(' ').forEach(x => out.push(x));
+    else out.push(w);
+  }
+  return out;
+}
+
+function ttmFuzzySearch(term, excludeYs) {
+  const t = normalize((term || '').trim());
+  if (!t) return [];
+  let words = ttmExpandAliases(t.split(/\s+/).filter(w => w.length >= 2));
+  if (!words.length) return [];
+  if (words.length > 6) words = words.slice(0, 6);
+  const fromTag = ETAB_TO_TAG[state.estab];
+  const scored = [];
+  for (const p of CATALOGUE) {
+    if (excludeYs && excludeYs.has(p.y)) continue;
+    if (!p._ttmTokens) p._ttmTokens = normalize(p._search).split(/\s+/).filter(Boolean);
+    let sum = 0, ok = true;
+    for (const w of words) {
+      const s = ttmWordScore(w, p._ttmTokens);
+      if (s < 0.55) { ok = false; break; }
+      sum += s;
+    }
+    if (!ok) continue;
+    const onCarte = (fromTag === null) || (p.t && p.t.indexOf(fromTag) >= 0);
+    scored.push({ p, onCarte, score: sum / words.length + (onCarte ? 0.03 : 0) });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 12);
 }
 
 /* ---- Dictée vocale (Web Speech API — support variable selon téléphone,
@@ -7617,9 +7717,12 @@ function ttmRenderResults() {
   const term = (ttmSearchTerm || '').trim();
   if (term.length < 2) { box.style.display = 'none'; box.innerHTML = ''; return; }
   const results = ttmSearch(term);
-  if (!results.length) {
+  const exactYs = new Set(results.map(r => r.p.y));
+  // Résultats approchés (dictée vocale / fautes) quand l'exact est maigre
+  const fuzzy = results.length < 5 ? ttmFuzzySearch(term, exactYs) : [];
+  if (!results.length && !fuzzy.length) {
     box.style.display = 'block';
-    box.innerHTML = '<div style="padding:12px; color:var(--ink-3); font-size:13px;">Aucun produit trouvé.</div>';
+    box.innerHTML = '<div style="padding:12px; color:var(--ink-3); font-size:13px;">Aucun produit trouvé — reformule ou corrige le texte entendu.</div>';
     return;
   }
   let html = '';
@@ -7630,6 +7733,16 @@ function ttmRenderResults() {
     html += '<span class="r-pill">' + escape(p.p) + '</span>';
     html += '</div>';
   });
+  if (fuzzy.length) {
+    if (results.length) html += '<div style="padding:7px 12px; font-size:11px; font-weight:700; letter-spacing:.4px; color:var(--ink-3); background:var(--surface-2); border-top:1px solid var(--border); border-bottom:1px solid var(--border);">TU VOULAIS PEUT-ÊTRE DIRE…</div>';
+    fuzzy.forEach(r => {
+      const p = r.p;
+      html += '<div class="ttm-result" data-y="' + escape(p.y) + '" style="background:var(--surface-2);">';
+      html += '<div class="r-name">' + escape(p.s) + (r.onCarte ? '' : ' <span style="color:var(--ink-3); font-size:11px;">(hors carte)</span>') + '</div>';
+      html += '<span class="r-pill">' + escape(p.p) + '</span>';
+      html += '</div>';
+    });
+  }
   box.style.display = 'block';
   box.innerHTML = html;
   box.querySelectorAll('[data-y]').forEach(el => el.addEventListener('click', () => {
