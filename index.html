@@ -1549,14 +1549,14 @@
     <button type="button" class="mode-card" id="modeBtnItm">
       <span class="m-ico">📋</span>
       <span>
-        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">ITM</div>
+        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">ITM <span style="font-size:13px; letter-spacing:0;">Inventaire de Tes Morts</span></div>
         <div class="m-desc"><b>Faire un inventaire</b> — compter le stock de l'établissement</div>
       </span>
     </button>
     <button type="button" class="mode-card" id="modeBtnTtm">
       <span class="m-ico">🔁</span>
       <span>
-        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">TTM</div>
+        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">TTM <span style="font-size:13px; letter-spacing:0;">Transferts de Tes Morts</span></div>
         <div class="m-desc"><b>Faire un transfert</b> — produits qui partent vers un autre établissement, photo obligatoire</div>
       </span>
     </button>
@@ -1984,7 +1984,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v148';
+const APP_VERSION = 'v149';
 
 /* === ITM APP === */
 (function(){
@@ -7256,6 +7256,7 @@ const TTM_JPEG_Q = 0.72;
 let ttmStep = 'form';               // 'form' | 'confirm' | 'done'
 let ttmSearchTerm = '';
 let ttmLastSent = null;
+let ttmFromPickerOpen = false;      // admin : sélecteur d'étab de départ ouvert
 
 /* ---- Draft (persisté : si l'app se ferme en pleine saisie, rien n'est perdu) ---- */
 function ttmLoadDraft() {
@@ -7302,11 +7303,20 @@ function ttmMarkHistSent(localId) {
    TOUT le catalogue (un produit transféré n'est pas forcément à la carte
    de la destination). Les produits à la carte de l'étab de départ sortent
    en premier. ---- */
+/* Établissement d'ORIGINE du transfert :
+   - chef de bar : verrouillé sur son PIN (state.estab)
+   - admin (1304) : peut le changer directement dans TTM (fromOverride),
+     sans toucher à state.estab ni à l'inventaire en cours */
+function ttmFrom() {
+  if (currentAuth && currentAuth.role === 'admin' && ttmDraft.fromOverride) return ttmDraft.fromOverride;
+  return state.estab || null;
+}
+
 function ttmSearch(term) {
   const t = normalize((term || '').trim());
   if (!t) return [];
   const words = ttmExpandAliases(t.split(/\s+/).filter(Boolean));
-  const fromTag = ETAB_TO_TAG[state.estab];
+  const fromTag = ETAB_TO_TAG[ttmFrom()];
   const res = [];
   for (const p of CATALOGUE) {
     const s = normalize(p._search);
@@ -7403,7 +7413,7 @@ function ttmFuzzySearch(term, excludeYs) {
   let words = ttmExpandAliases(t.split(/\s+/).filter(w => w.length >= 2));
   if (!words.length) return [];
   if (words.length > 6) words = words.slice(0, 6);
-  const fromTag = ETAB_TO_TAG[state.estab];
+  const fromTag = ETAB_TO_TAG[ttmFrom()];
   const scored = [];
   for (const p of CATALOGUE) {
     if (excludeYs && excludeYs.has(p.y)) continue;
@@ -7473,7 +7483,7 @@ function ttmBuildRecord() {
     app: 'TTM',
     local_id: 'ttm_' + Date.now() + '_' + Math.floor(Math.random()*1e4),
     date: new Date().toISOString(),
-    from: state.estab || 'inconnu',
+    from: ttmFrom() || 'inconnu',
     to: ttmDraft.to,
     personne: (currentAuth && currentAuth.role === 'admin') ? 'admin' : (currentAuth ? currentAuth.label : 'inconnu'),
     lines: ttmDraft.lines.map(l => ({ y: l.y, s: l.s, qty: l.qty, unit: l.unit })),
@@ -7560,7 +7570,7 @@ setInterval(() => ttmFlushQueue().catch(() => {}), 120000);
 
 /* ---- Rendu ---- */
 function ttmCanContinue() {
-  return !!(ttmDraft.to && ttmDraft.lines.length && ttmDraft.photo);
+  return !!(ttmFrom() && ttmDraft.to && ttmDraft.lines.length && ttmDraft.photo);
 }
 
 function renderTtm() {
@@ -7572,7 +7582,8 @@ function renderTtm() {
 }
 
 function ttmRenderForm(root) {
-  const from = state.estab || '—';
+  const from = ttmFrom() || '—';
+  const isAdmin = currentAuth && currentAuth.role === 'admin';
   const dests = Object.keys(ETAB_TO_TAG).filter(n => n !== from);
   const micSupported = !!TtmSpeech;
   const queue = ttmLoadArr(TTM_QUEUE_KEY);
@@ -7584,7 +7595,19 @@ function ttmRenderForm(root) {
 
   // 1. Trajet
   html += '<div class="ttm-card"><div class="ttm-label">1 · Trajet</div>';
-  html += '<div class="ttm-route"><span class="ttm-from">' + escape(from) + '</span><span class="ttm-arrow">→</span></div>';
+  if (isAdmin) {
+    html += '<div class="ttm-route"><button type="button" class="ttm-from" id="ttmFromBtn" style="border:none; cursor:pointer;">' + escape(from) + ' ▾</button><span class="ttm-arrow">→</span></div>';
+    if (ttmFromPickerOpen) {
+      html += '<div class="ttm-label" style="margin-top:10px;">Établissement de départ</div>';
+      html += '<div class="ttm-dest-grid">';
+      Object.keys(ETAB_TO_TAG).forEach(n => {
+        html += '<button type="button" class="ttm-dest' + (from === n ? ' on' : '') + '" data-from="' + escape(n) + '">' + escape(n) + '</button>';
+      });
+      html += '</div><div class="ttm-label" style="margin-top:12px;">Destination</div>';
+    }
+  } else {
+    html += '<div class="ttm-route"><span class="ttm-from">' + escape(from) + '</span><span class="ttm-arrow">→</span></div>';
+  }
   html += '<div class="ttm-dest-grid" style="margin-top:10px;">';
   dests.forEach(n => {
     html += '<button type="button" class="ttm-dest' + (ttmDraft.to === n ? ' on' : '') + '" data-dest="' + escape(n) + '">' + escape(n) + '</button>';
@@ -7639,6 +7662,7 @@ function ttmRenderForm(root) {
 
   if (!ttmCanContinue()) {
     const miss = [];
+    if (!ttmFrom()) miss.push('établissement de départ');
     if (!ttmDraft.to) miss.push('destination');
     if (!ttmDraft.lines.length) miss.push('au moins 1 produit');
     if (!ttmDraft.photo) miss.push('la photo');
@@ -7668,6 +7692,14 @@ function ttmRenderForm(root) {
   /* -- listeners -- */
   const home = document.getElementById('ttmHome');
   if (home) home.addEventListener('click', showModeScreen);
+  const fromBtn = document.getElementById('ttmFromBtn');
+  if (fromBtn) fromBtn.addEventListener('click', () => { ttmFromPickerOpen = !ttmFromPickerOpen; renderTtm(); });
+  root.querySelectorAll('[data-from]').forEach(b => b.addEventListener('click', () => {
+    ttmDraft.fromOverride = b.dataset.from;
+    if (ttmDraft.to === ttmDraft.fromOverride) ttmDraft.to = null;  // origine = destination interdit
+    ttmFromPickerOpen = false;
+    ttmSaveDraft(); renderTtm();
+  }));
   root.querySelectorAll('[data-dest]').forEach(b => b.addEventListener('click', () => {
     ttmDraft.to = b.dataset.dest; ttmSaveDraft(); renderTtm();
   }));
@@ -7729,7 +7761,7 @@ function ttmRenderResults() {
   results.forEach(r => {
     const p = r.p;
     html += '<div class="ttm-result" data-y="' + escape(p.y) + '">';
-    html += '<div class="r-name">' + escape(p.s) + (r.onCarte ? '' : ' <span style="color:var(--ink-3); font-size:11px;">(hors carte ' + escape(state.estab || '') + ')</span>') + '</div>';
+    html += '<div class="r-name">' + escape(p.s) + (r.onCarte ? '' : ' <span style="color:var(--ink-3); font-size:11px;">(hors carte ' + escape(ttmFrom() || '') + ')</span>') + '</div>';
     html += '<span class="r-pill">' + escape(p.p) + '</span>';
     html += '</div>';
   });
