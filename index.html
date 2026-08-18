@@ -1452,6 +1452,58 @@
   .chat-missing-body .chat-suggestion {
     margin: 6px 0;
   }
+
+  /* ---------- TTM (Transferts de Tes Morts) ---------- */
+  .ttm-wrap { padding: 4px 2px 24px; }
+  .ttm-head { display:flex; align-items:baseline; gap:10px; margin: 4px 2px 12px; }
+  .ttm-head h2 { margin:0; font-size: 19px; letter-spacing:-.3px; }
+  .ttm-head .ttm-sub { color: var(--ink-3); font-size: 12.5px; }
+  .ttm-card { background: var(--surface); border:1px solid var(--border); border-radius: var(--radius-l); box-shadow: var(--shadow-1); padding: 14px; margin-bottom: 12px; }
+  .ttm-label { font-size: 11.5px; font-weight: 600; letter-spacing:.4px; text-transform: uppercase; color: var(--ink-3); margin: 2px 0 8px; }
+  .ttm-route { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .ttm-route .ttm-from { font-weight:600; background: var(--accent-soft); color: var(--accent-dark); border-radius:100px; padding:8px 14px; font-size:14px; }
+  .ttm-route .ttm-arrow { color: var(--ink-3); font-size:18px; }
+  .ttm-dest-grid { display:flex; flex-wrap:wrap; gap:8px; }
+  .ttm-dest { padding:9px 13px; border:1px solid var(--border-strong); border-radius:100px; background:var(--surface-2); font-size:13.5px; color:var(--ink-2); }
+  .ttm-dest.on { background: var(--ink); color:#fff; border-color: var(--ink); font-weight:600; }
+  .ttm-search-row { display:flex; gap:8px; align-items:center; }
+  .ttm-search-row .search-wrap { flex:1; margin:0; }
+  .ttm-mic { width:46px; height:46px; border-radius:50%; border:1px solid var(--border-strong); background:var(--surface); font-size:20px; flex:0 0 auto; }
+  .ttm-mic.rec { background: var(--danger); color:#fff; border-color: var(--danger); animation: ttmPulse 1s infinite; }
+  @keyframes ttmPulse { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.08);} }
+  .ttm-results { margin-top:8px; max-height: 300px; overflow-y:auto; border:1px solid var(--border); border-radius: var(--radius); }
+  .ttm-result { display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); background:var(--surface); }
+  .ttm-result:last-child { border-bottom:none; }
+  .ttm-result .r-name { flex:1; font-size:14px; }
+  .ttm-result .r-pill { font-size:10.5px; font-weight:700; color:var(--ink-3); background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:2px 6px; }
+  .ttm-lines { margin-top: 4px; }
+  .ttm-line { display:flex; align-items:center; gap:8px; padding:10px 2px; border-bottom:1px solid var(--border); }
+  .ttm-line .l-name { flex:1; font-size:14px; }
+  .ttm-line .l-unit { font-size:11px; color:var(--ink-3); }
+  .ttm-qty { display:flex; align-items:center; gap:4px; }
+  .ttm-qty button { width:34px; height:34px; border-radius:50%; border:1px solid var(--border-strong); background:var(--surface-2); font-size:18px; line-height:1; }
+  .ttm-qty input { width:56px; text-align:center; font-size:15px; font-weight:600; border:1px solid var(--border); border-radius:8px; padding:6px 2px; }
+  .ttm-del { color: var(--danger); background:none; border:none; font-size:18px; padding:6px; }
+  .ttm-photo-btn { width:100%; padding:14px; border:2px dashed var(--border-strong); border-radius: var(--radius); background:var(--surface-2); color:var(--ink-2); font-size:15px; }
+  .ttm-photo-thumb { position:relative; margin-top:8px; }
+  .ttm-photo-thumb img { width:100%; max-height:220px; object-fit:cover; border-radius: var(--radius); border:1px solid var(--border); }
+  .ttm-photo-redo { position:absolute; right:8px; bottom:8px; background:rgba(27,27,24,.75); color:#fff; border:none; border-radius:100px; padding:7px 13px; font-size:13px; }
+  .ttm-note { width:100%; border:1px solid var(--border); border-radius: var(--radius); padding:10px 12px; font-size:14px; font-family:inherit; resize:vertical; min-height:52px; }
+  .ttm-cta { width:100%; padding:15px; border:none; border-radius:100px; background:var(--accent); color:#fff; font-size:16px; font-weight:600; box-shadow: var(--shadow-2); }
+  .ttm-cta:disabled { background: var(--border-strong); color:var(--ink-3); box-shadow:none; }
+  .ttm-cta.secondary { background: var(--surface); color: var(--ink); border:1px solid var(--border-strong); box-shadow:none; }
+  .ttm-warn { background: #FDF3E3; border:1px solid #E8CFA0; border-radius: var(--radius); padding: 12px 14px; font-size:14px; line-height:1.45; }
+  .ttm-check { display:flex; align-items:flex-start; gap:10px; padding: 12px 4px; font-size:15px; }
+  .ttm-check input { width:22px; height:22px; flex:0 0 auto; accent-color: var(--accent); }
+  .ttm-recap-row { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px dashed var(--border); font-size:14px; }
+  .ttm-recap-row:last-child { border-bottom:none; }
+  .ttm-hist-item { padding:10px 2px; border-bottom:1px solid var(--border); font-size:13.5px; }
+  .ttm-hist-item .h-top { display:flex; justify-content:space-between; gap:8px; }
+  .ttm-hist-item .h-status { font-size:11px; font-weight:700; border-radius:6px; padding:2px 7px; }
+  .ttm-hist-item .h-status.sent { background: var(--accent-soft); color: var(--accent-dark); }
+  .ttm-hist-item .h-status.pending { background:#FDF3E3; color:#9A6B14; }
+  .ttm-done { text-align:center; padding: 30px 10px; }
+  .ttm-done .d-ico { font-size: 44px; }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -1511,6 +1563,7 @@
 <div class="tabs">
   <button class="tab active" data-tab="catalogue">Catalogue</button>
   <button class="tab" data-tab="session">Session <span class="badge" id="badgeSess">0</span></button>
+  <button class="tab" data-tab="ttm">Transferts</button>
       <button class="tab" data-tab="batches">Batchs</button>
       <button class="tab admin-only" data-tab="alerts" style="display:none;">Alertes</button>
       <button class="tab admin-only" data-tab="dataproduct" style="display:none;">Data Product</button>
@@ -1549,6 +1602,10 @@
 
     <!-- Zone dynamique : rendue par renderSessionView() -->
     <div id="sessRoot"></div>
+  </div>
+
+  <div class="view" id="vTtm">
+    <div id="ttmRoot"></div>
   </div>
 
   <div class="view" id="vDemandes">
@@ -1884,7 +1941,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v144';
+const APP_VERSION = 'v145';
 
 /* === ITM APP === */
 (function(){
@@ -2976,6 +3033,7 @@ function switchTab(name){
   if (name === 'dataproduct') renderDataProduct();
   if (name === 'inventaires') renderInventaires();
   if (name === 'demandes') renderDemandes();
+  if (name === 'ttm') renderTtm();
   // scroll reset
   document.querySelector('main').scrollTop = 0;
 }
@@ -7111,6 +7169,473 @@ function renderActionButton(actionButton) {
 
 
 
+
+/* ==================================================================
+   TTM — Transferts de Tes Morts
+   Déclaration de transfert inter-établissements : lignes produits
+   (recherche catalogue identique à ITM), PHOTO OBLIGATOIRE, dictée
+   vocale si le navigateur la supporte, envoi mail à Victor via le
+   backend (endpoint /transfer). Rappel de saisie Yokitup intégré.
+   ================================================================== */
+
+const TTM_DRAFT_KEY = 'ttm_draft_v1';
+const TTM_QUEUE_KEY = 'ttm_queue_v1';
+const TTM_HIST_KEY  = 'ttm_hist_v1';
+const TTM_MAX_PHOTO_PX = 1400;      // côté max après compression
+const TTM_JPEG_Q = 0.72;
+
+let ttmStep = 'form';               // 'form' | 'confirm' | 'done'
+let ttmSearchTerm = '';
+let ttmLastSent = null;
+
+/* ---- Draft (persisté : si l'app se ferme en pleine saisie, rien n'est perdu) ---- */
+function ttmLoadDraft() {
+  try {
+    const d = JSON.parse(localStorage.getItem(TTM_DRAFT_KEY) || 'null');
+    if (d && Array.isArray(d.lines)) return d;
+  } catch(e){}
+  return { to: null, lines: [], photo: null, note: '', yok: false };
+}
+let ttmDraft = ttmLoadDraft();
+function ttmSaveDraft() {
+  try { localStorage.setItem(TTM_DRAFT_KEY, JSON.stringify(ttmDraft)); }
+  catch(e) {
+    // Quota localStorage dépassé (photo trop lourde) : on sauve sans la photo
+    try {
+      const light = Object.assign({}, ttmDraft, { photo: null, _photoLost: true });
+      localStorage.setItem(TTM_DRAFT_KEY, JSON.stringify(light));
+    } catch(e2){}
+  }
+}
+function ttmResetDraft() {
+  ttmDraft = { to: null, lines: [], photo: null, note: '', yok: false };
+  ttmSaveDraft();
+}
+
+/* ---- File d'attente hors-ligne + historique local ---- */
+function ttmLoadArr(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e){ return []; } }
+function ttmSaveArr(key, arr) { try { localStorage.setItem(key, JSON.stringify(arr)); } catch(e){} }
+
+function ttmPushHist(rec, status) {
+  const hist = ttmLoadArr(TTM_HIST_KEY);
+  hist.unshift({ id: rec.local_id, date: rec.date, from: rec.from, to: rec.to,
+                 nLines: rec.lines.length, status: status, yok: rec.yokitup_done });
+  if (hist.length > 25) hist.length = 25;
+  ttmSaveArr(TTM_HIST_KEY, hist);
+}
+function ttmMarkHistSent(localId) {
+  const hist = ttmLoadArr(TTM_HIST_KEY);
+  const h = hist.find(x => x.id === localId);
+  if (h) { h.status = 'sent'; ttmSaveArr(TTM_HIST_KEY, hist); }
+}
+
+/* ---- Recherche produits : même normalisation/tolérance qu'ITM, mais sur
+   TOUT le catalogue (un produit transféré n'est pas forcément à la carte
+   de la destination). Les produits à la carte de l'étab de départ sortent
+   en premier. ---- */
+function ttmSearch(term) {
+  const t = normalize((term || '').trim());
+  if (!t) return [];
+  const words = t.split(/\s+/).filter(Boolean);
+  const fromTag = ETAB_TO_TAG[state.estab];
+  const res = [];
+  for (const p of CATALOGUE) {
+    const s = normalize(p._search);
+    if (!words.every(w => matchWord(w, s))) continue;
+    const onCarte = (fromTag === null) || (p.t && p.t.indexOf(fromTag) >= 0);
+    res.push({ p, onCarte });
+    if (res.length >= 200) break;
+  }
+  res.sort((a, b) => {
+    if (a.onCarte !== b.onCarte) return a.onCarte ? -1 : 1;
+    return a.p.s.localeCompare(b.p.s);
+  });
+  return res.slice(0, 40);
+}
+
+/* ---- Dictée vocale (Web Speech API — support variable selon téléphone,
+   le bouton micro n'apparaît que si le navigateur la propose) ---- */
+const TtmSpeech = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+let ttmRec = null;
+function ttmToggleMic() {
+  const btn = document.getElementById('ttmMic');
+  if (ttmRec) { try { ttmRec.stop(); } catch(e){} return; }
+  if (!TtmSpeech) return;
+  ttmRec = new TtmSpeech();
+  ttmRec.lang = 'fr-FR';
+  ttmRec.interimResults = true;
+  ttmRec.continuous = false;
+  ttmRec.onresult = (ev) => {
+    let txt = '';
+    for (let i = 0; i < ev.results.length; i++) txt += ev.results[i][0].transcript;
+    const inp = document.getElementById('ttmSearch');
+    if (inp) { inp.value = txt; ttmSearchTerm = txt; ttmRenderResults(); }
+  };
+  ttmRec.onend = () => { ttmRec = null; if (btn) btn.classList.remove('rec'); };
+  ttmRec.onerror = () => { ttmRec = null; if (btn) btn.classList.remove('rec'); toast('Micro indisponible'); };
+  try { ttmRec.start(); if (btn) btn.classList.add('rec'); }
+  catch(e) { ttmRec = null; toast('Micro indisponible'); }
+}
+
+/* ---- Photo : compression canvas → JPEG base64 ---- */
+function ttmHandlePhoto(file) {
+  if (!file) return;
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = () => {
+    let w = img.naturalWidth, h = img.naturalHeight;
+    const m = Math.max(w, h);
+    if (m > TTM_MAX_PHOTO_PX) { const k = TTM_MAX_PHOTO_PX / m; w = Math.round(w*k); h = Math.round(h*k); }
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    cv.getContext('2d').drawImage(img, 0, 0, w, h);
+    ttmDraft.photo = cv.toDataURL('image/jpeg', TTM_JPEG_Q);
+    URL.revokeObjectURL(url);
+    ttmSaveDraft();
+    renderTtm();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); toast('Photo illisible, réessaie'); };
+  img.src = url;
+}
+
+/* ---- Construction du record envoyé au backend ---- */
+function ttmBuildRecord() {
+  return {
+    app: 'TTM',
+    local_id: 'ttm_' + Date.now() + '_' + Math.floor(Math.random()*1e4),
+    date: new Date().toISOString(),
+    from: state.estab || 'inconnu',
+    to: ttmDraft.to,
+    personne: (currentAuth && currentAuth.role === 'admin') ? 'admin' : (currentAuth ? currentAuth.label : 'inconnu'),
+    lines: ttmDraft.lines.map(l => ({ y: l.y, s: l.s, qty: l.qty, unit: l.unit })),
+    note: ttmDraft.note || '',
+    yokitup_done: !!ttmDraft.yok,
+    photo: ttmDraft.photo   // dataURL JPEG compressé
+  };
+}
+
+/* ---- Envoi ---- */
+async function ttmPost(rec) {
+  const response = await fetch(BACKEND_URL + '/transfer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(rec),
+    signal: AbortSignal.timeout(20000)
+  });
+  if (!response.ok) {
+    const err = new Error('HTTP ' + response.status);
+    err.status = response.status;
+    throw err;
+  }
+  return true;
+}
+
+async function ttmSend() {
+  const rec = ttmBuildRecord();
+  const btn = document.getElementById('ttmSendBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
+  try {
+    await ttmPost(rec);
+    ttmPushHist(rec, 'sent');
+    ttmLastSent = rec;
+    ttmResetDraft();
+    ttmStep = 'done';
+    renderTtm();
+  } catch (e) {
+    if (e && e.status === 404) {
+      // L'endpoint /transfer n'existe pas encore sur le backend :
+      // on stocke le transfert (photo comprise) via /log pour la trace,
+      // et on prévient clairement.
+      try {
+        await sendLogToBackendReturnId({ query: rec.from + ' -> ' + rec.to, type: 'ttm_transfer', details: rec });
+        ttmPushHist(rec, 'sent');
+        ttmLastSent = rec; ttmLastSent._fallback = true;
+        ttmResetDraft();
+        ttmStep = 'done';
+        renderTtm();
+        toast('Transfert enregistré (backend pas encore à jour : pas de mail auto)');
+      } catch (e2) {
+        ttmQueueAndInform(rec, btn);
+      }
+    } else {
+      ttmQueueAndInform(rec, btn);
+    }
+  }
+}
+
+function ttmQueueAndInform(rec, btn) {
+  const q = ttmLoadArr(TTM_QUEUE_KEY);
+  q.push(rec);
+  if (q.length > 20) q.shift();
+  ttmSaveArr(TTM_QUEUE_KEY, q);
+  ttmPushHist(rec, 'pending');
+  ttmLastSent = rec; ttmLastSent._queued = true;
+  ttmResetDraft();
+  ttmStep = 'done';
+  renderTtm();
+  toast('Hors-ligne : le transfert partira au retour du réseau');
+}
+
+async function ttmFlushQueue() {
+  const q = ttmLoadArr(TTM_QUEUE_KEY);
+  if (!q.length) return;
+  const remaining = [];
+  for (const rec of q) {
+    try { await ttmPost(rec); ttmMarkHistSent(rec.local_id); }
+    catch(e) { remaining.push(rec); }
+  }
+  ttmSaveArr(TTM_QUEUE_KEY, remaining);
+  if (remaining.length < q.length && document.getElementById('vTtm').classList.contains('active')) renderTtm();
+}
+setInterval(() => ttmFlushQueue().catch(() => {}), 120000);
+
+/* ---- Rendu ---- */
+function ttmCanContinue() {
+  return !!(ttmDraft.to && ttmDraft.lines.length && ttmDraft.photo);
+}
+
+function renderTtm() {
+  const root = document.getElementById('ttmRoot');
+  if (!root) return;
+  if (ttmStep === 'done') return ttmRenderDone(root);
+  if (ttmStep === 'confirm') return ttmRenderConfirm(root);
+  ttmRenderForm(root);
+}
+
+function ttmRenderForm(root) {
+  const from = state.estab || '—';
+  const dests = Object.keys(ETAB_TO_TAG).filter(n => n !== from);
+  const micSupported = !!TtmSpeech;
+  const queue = ttmLoadArr(TTM_QUEUE_KEY);
+  const hist = ttmLoadArr(TTM_HIST_KEY);
+
+  let html = '<div class="ttm-wrap">';
+  html += '<div class="ttm-head"><h2>TTM</h2><span class="ttm-sub">Transferts de Tes Morts — chaque transfert = photo + déclaration + saisie Yokitup</span></div>';
+
+  // 1. Trajet
+  html += '<div class="ttm-card"><div class="ttm-label">1 · Trajet</div>';
+  html += '<div class="ttm-route"><span class="ttm-from">' + escape(from) + '</span><span class="ttm-arrow">→</span></div>';
+  html += '<div class="ttm-dest-grid" style="margin-top:10px;">';
+  dests.forEach(n => {
+    html += '<button type="button" class="ttm-dest' + (ttmDraft.to === n ? ' on' : '') + '" data-dest="' + escape(n) + '">' + escape(n) + '</button>';
+  });
+  html += '</div></div>';
+
+  // 2. Produits
+  html += '<div class="ttm-card"><div class="ttm-label">2 · Produits transférés</div>';
+  html += '<div class="ttm-search-row">';
+  html += '<div class="search-wrap" style="position:relative;"><span class="search-ico">⌕</span>';
+  html += '<input class="search" id="ttmSearch" type="search" placeholder="Rechercher un produit…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" value="' + escape(ttmSearchTerm) + '"></div>';
+  if (micSupported) html += '<button type="button" class="ttm-mic" id="ttmMic" aria-label="Dicter">🎙️</button>';
+  html += '</div>';
+  html += '<div class="ttm-results" id="ttmResults" style="display:none;"></div>';
+
+  if (ttmDraft.lines.length) {
+    html += '<div class="ttm-lines">';
+    ttmDraft.lines.forEach((l, i) => {
+      const step = (l.type === 'litre') ? '0.1' : '1';
+      html += '<div class="ttm-line">';
+      html += '<div class="l-name">' + escape(l.s) + ' <span class="l-unit">' + escape(l.unit) + '</span></div>';
+      html += '<div class="ttm-qty">';
+      html += '<button type="button" data-qm="' + i + '">−</button>';
+      html += '<input type="number" inputmode="decimal" step="' + step + '" min="0" value="' + l.qty + '" data-qi="' + i + '">';
+      html += '<button type="button" data-qp="' + i + '">+</button>';
+      html += '</div>';
+      html += '<button type="button" class="ttm-del" data-del="' + i + '">✕</button>';
+      html += '</div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div style="color:var(--ink-3); font-size:13px; padding:10px 2px;">Aucune ligne. Cherche un produit puis tape dessus pour l\'ajouter.</div>';
+  }
+  html += '</div>';
+
+  // 3. Photo obligatoire
+  html += '<div class="ttm-card"><div class="ttm-label">3 · Photo des produits — OBLIGATOIRE</div>';
+  if (ttmDraft.photo) {
+    html += '<div class="ttm-photo-thumb"><img src="' + ttmDraft.photo + '" alt="photo transfert">';
+    html += '<button type="button" class="ttm-photo-redo" id="ttmPhotoRedo">📷 Reprendre</button></div>';
+  } else {
+    html += '<button type="button" class="ttm-photo-btn" id="ttmPhotoBtn">📷 Prendre la photo des produits qui partent</button>';
+  }
+  html += '<input type="file" id="ttmPhotoInput" accept="image/*" capture="environment" style="display:none;">';
+  html += '</div>';
+
+  // 4. Note
+  html += '<div class="ttm-card"><div class="ttm-label">4 · Note (facultatif)</div>';
+  html += '<textarea class="ttm-note" id="ttmNote" placeholder="Ex : dépannage service du soir, demandé par…">' + escape(ttmDraft.note || '') + '</textarea></div>';
+
+  html += '<button type="button" class="ttm-cta" id="ttmContinue"' + (ttmCanContinue() ? '' : ' disabled') + '>Continuer →</button>';
+
+  if (!ttmCanContinue()) {
+    const miss = [];
+    if (!ttmDraft.to) miss.push('destination');
+    if (!ttmDraft.lines.length) miss.push('au moins 1 produit');
+    if (!ttmDraft.photo) miss.push('la photo');
+    html += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Il manque : ' + miss.join(' · ') + '</div>';
+  }
+
+  // File d'attente + historique
+  if (queue.length) {
+    html += '<div class="ttm-card" style="margin-top:14px;"><div class="ttm-label">En attente de réseau (' + queue.length + ')</div>';
+    html += '<div style="font-size:13px; color:var(--ink-2);">Ces transferts partiront automatiquement dès que le téléphone retrouve du réseau.</div></div>';
+  }
+  if (hist.length) {
+    html += '<div class="ttm-card" style="margin-top:14px;"><div class="ttm-label">Derniers transferts (ce téléphone)</div>';
+    hist.slice(0, 8).forEach(h => {
+      const d = new Date(h.date);
+      const dd = isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+      html += '<div class="ttm-hist-item"><div class="h-top"><span><b>' + escape(h.from) + '</b> → <b>' + escape(h.to) + '</b> · ' + h.nLines + ' ligne' + (h.nLines>1?'s':'') + '</span>';
+      html += '<span class="h-status ' + (h.status === 'sent' ? 'sent' : 'pending') + '">' + (h.status === 'sent' ? 'ENVOYÉ' : 'EN ATTENTE') + '</span></div>';
+      html += '<div style="color:var(--ink-3); font-size:11.5px;">' + dd + (h.yok ? ' · Yokitup ✓' : ' · Yokitup non confirmé') + '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  root.innerHTML = html;
+
+  /* -- listeners -- */
+  root.querySelectorAll('[data-dest]').forEach(b => b.addEventListener('click', () => {
+    ttmDraft.to = b.dataset.dest; ttmSaveDraft(); renderTtm();
+  }));
+  const inp = document.getElementById('ttmSearch');
+  if (inp) inp.addEventListener('input', () => { ttmSearchTerm = inp.value; ttmRenderResults(); });
+  const mic = document.getElementById('ttmMic');
+  if (mic) mic.addEventListener('click', ttmToggleMic);
+  const photoInput = document.getElementById('ttmPhotoInput');
+  const openCam = () => photoInput && photoInput.click();
+  const pb = document.getElementById('ttmPhotoBtn'); if (pb) pb.addEventListener('click', openCam);
+  const pr = document.getElementById('ttmPhotoRedo'); if (pr) pr.addEventListener('click', openCam);
+  if (photoInput) photoInput.addEventListener('change', () => ttmHandlePhoto(photoInput.files && photoInput.files[0]));
+  const note = document.getElementById('ttmNote');
+  if (note) note.addEventListener('input', () => { ttmDraft.note = note.value; ttmSaveDraft(); });
+  root.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+    ttmDraft.lines.splice(+b.dataset.del, 1); ttmSaveDraft(); renderTtm();
+  }));
+  root.querySelectorAll('[data-qm]').forEach(b => b.addEventListener('click', () => ttmBumpQty(+b.dataset.qm, -1)));
+  root.querySelectorAll('[data-qp]').forEach(b => b.addEventListener('click', () => ttmBumpQty(+b.dataset.qp, +1)));
+  root.querySelectorAll('[data-qi]').forEach(el => el.addEventListener('change', () => {
+    const i = +el.dataset.qi;
+    const v = parseFloat(String(el.value).replace(',', '.'));
+    if (!isNaN(v) && v > 0) { ttmDraft.lines[i].qty = v; ttmSaveDraft(); }
+    renderTtm();
+  }));
+  const cont = document.getElementById('ttmContinue');
+  if (cont) cont.addEventListener('click', () => {
+    if (!ttmCanContinue()) return;
+    ttmStep = 'confirm';
+    renderTtm();
+  });
+  ttmRenderResults();
+}
+
+function ttmBumpQty(i, delta) {
+  const l = ttmDraft.lines[i];
+  if (!l) return;
+  const step = (l.type === 'litre') ? 0.5 : 1;
+  l.qty = Math.max(step, Math.round((l.qty + delta * step) * 100) / 100);
+  ttmSaveDraft();
+  renderTtm();
+}
+
+function ttmRenderResults() {
+  const box = document.getElementById('ttmResults');
+  if (!box) return;
+  const term = (ttmSearchTerm || '').trim();
+  if (term.length < 2) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const results = ttmSearch(term);
+  if (!results.length) {
+    box.style.display = 'block';
+    box.innerHTML = '<div style="padding:12px; color:var(--ink-3); font-size:13px;">Aucun produit trouvé.</div>';
+    return;
+  }
+  let html = '';
+  results.forEach(r => {
+    const p = r.p;
+    html += '<div class="ttm-result" data-y="' + escape(p.y) + '">';
+    html += '<div class="r-name">' + escape(p.s) + (r.onCarte ? '' : ' <span style="color:var(--ink-3); font-size:11px;">(hors carte ' + escape(state.estab || '') + ')</span>') + '</div>';
+    html += '<span class="r-pill">' + escape(p.p) + '</span>';
+    html += '</div>';
+  });
+  box.style.display = 'block';
+  box.innerHTML = html;
+  box.querySelectorAll('[data-y]').forEach(el => el.addEventListener('click', () => {
+    const p = CATALOGUE_BY_Y[el.dataset.y];
+    if (!p) return;
+    const existing = ttmDraft.lines.find(l => l.y === p.y);
+    if (existing) { existing.qty += 1; }
+    else {
+      ttmDraft.lines.push({ y: p.y, s: p.s, qty: 1, unit: p.p, type: p.e });
+    }
+    ttmSearchTerm = '';
+    ttmSaveDraft();
+    renderTtm();
+  }));
+}
+
+function ttmRenderConfirm(root) {
+  const rec = ttmBuildRecord();
+  let html = '<div class="ttm-wrap">';
+  html += '<div class="ttm-head"><h2>Vérifie et envoie</h2></div>';
+
+  html += '<div class="ttm-card">';
+  html += '<div class="ttm-recap-row"><span>Trajet</span><b>' + escape(rec.from) + ' → ' + escape(rec.to) + '</b></div>';
+  rec.lines.forEach(l => {
+    html += '<div class="ttm-recap-row"><span>' + escape(l.s) + '</span><b>' + fmtQty(l.qty) + ' ' + escape(l.unit) + '</b></div>';
+  });
+  if (rec.note) html += '<div class="ttm-recap-row"><span>Note</span><span style="text-align:right;">' + escape(rec.note) + '</span></div>';
+  html += '</div>';
+
+  if (ttmDraft.photo) html += '<div class="ttm-card"><img src="' + ttmDraft.photo + '" style="width:100%; border-radius:10px;" alt="photo"></div>';
+
+  html += '<div class="ttm-warn"><b>⚠️ Maintenant, saisis ce transfert dans Yokitup.</b><br>La déclaration part au serveur dans tous les cas et figurera dans le récap quotidien de Victor. Si tu envoies sans avoir saisi dans Yokitup, Victor reçoit une alerte immédiate.</div>';
+  html += '<label class="ttm-check"><input type="checkbox" id="ttmYok"' + (ttmDraft.yok ? ' checked' : '') + '> C\'est saisi dans Yokitup ✓</label>';
+
+  html += '<button type="button" class="ttm-cta" id="ttmSendBtn">📤 Envoyer la déclaration</button>';
+  html += '<button type="button" class="ttm-cta secondary" id="ttmBack" style="margin-top:10px;">← Modifier</button>';
+  html += '</div>';
+  root.innerHTML = html;
+
+  const yok = document.getElementById('ttmYok');
+  if (yok) yok.addEventListener('change', () => { ttmDraft.yok = yok.checked; ttmSaveDraft(); });
+  const back = document.getElementById('ttmBack');
+  if (back) back.addEventListener('click', () => { ttmStep = 'form'; renderTtm(); });
+  const send = document.getElementById('ttmSendBtn');
+  if (send) send.addEventListener('click', () => {
+    if (!ttmDraft.yok) {
+      if (!confirm('Tu envoies SANS avoir saisi le transfert dans Yokitup ?\n\nVictor recevra une alerte immédiate « NON saisi dans Yokitup ».')) return;
+    }
+    ttmSend();
+  });
+}
+
+function ttmRenderDone(root) {
+  const r = ttmLastSent || {};
+  const queued = !!r._queued;
+  const fallback = !!r._fallback;
+  let html = '<div class="ttm-wrap"><div class="ttm-done">';
+  html += '<div class="d-ico">' + (queued ? '📶' : '✅') + '</div>';
+  if (queued) {
+    html += '<h2>Transfert en attente de réseau</h2>';
+    html += '<p style="color:var(--ink-2);">Il partira automatiquement dès que le téléphone retrouve du réseau. Rien d\'autre à faire.</p>';
+  } else if (fallback) {
+    html += '<h2>Transfert enregistré</h2>';
+    html += '<p style="color:var(--ink-2);">La trace (photo comprise) est stockée côté serveur. Le mail automatique n\'est pas encore actif sur le backend — préviens Victor.</p>';
+  } else {
+    html += '<h2>Transfert déclaré ✓</h2>';
+    html += '<p style="color:var(--ink-2);">' + escape(r.from || '') + ' → ' + escape(r.to || '') + ' · ' + ((r.lines||[]).length) + ' ligne(s)' + (r.yokitup_done ? ' · Yokitup ✓' : ' · <b style="color:#9A6B14;">Yokitup non confirmé</b>') + '</p>';
+    html += '<p style="color:var(--ink-3); font-size:13px;">Il figurera dans le récap quotidien de Victor' + (r.yokitup_done ? '.' : ' — et Victor vient de recevoir une alerte « non saisi ».') + '</p>';
+  }
+  if (!r.yokitup_done && !queued) {
+    html += '<div class="ttm-warn" style="text-align:left; margin:14px 0;">Pense à saisir le transfert dans Yokitup si ce n\'est pas fait — Victor va vérifier demain.</div>';
+  }
+  html += '<button type="button" class="ttm-cta" id="ttmNew" style="margin-top:12px;">Nouveau transfert</button>';
+  html += '</div></div>';
+  root.innerHTML = html;
+  const b = document.getElementById('ttmNew');
+  if (b) b.addEventListener('click', () => { ttmStep = 'form'; ttmLastSent = null; renderTtm(); });
+}
 
 /* ---------- Init ---------- */
 
