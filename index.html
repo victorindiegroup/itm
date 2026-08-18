@@ -1454,6 +1454,28 @@
   }
 
   /* ---------- TTM (Transferts de Tes Morts) ---------- */
+  .mode-screen {
+    position: fixed; inset: 0; z-index: 900;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; overflow-y: auto;
+  }
+  .mode-screen.hidden { display: none; }
+  .mode-box { width: 100%; max-width: 360px; text-align: center; }
+  .mode-box .m-mascot { width: 84px; height: 84px; object-fit: contain; margin-bottom: 6px; }
+  .mode-box h1 { margin: 0 0 2px; font-size: 21px; letter-spacing: -.4px; }
+  .mode-box .m-sub { color: var(--ink-3); font-size: 13.5px; margin-bottom: 22px; }
+  .mode-card {
+    display: flex; align-items: center; gap: 14px; width: 100%;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-l); box-shadow: var(--shadow-1);
+    padding: 18px 16px; margin-bottom: 12px; text-align: left;
+  }
+  .mode-card:active { background: var(--surface-2); }
+  .mode-card .m-ico { font-size: 30px; flex: 0 0 auto; }
+  .mode-card .m-title { font-weight: 700; font-size: 16.5px; }
+  .mode-card .m-title span { color: var(--ink-3); font-weight: 500; font-size: 12px; margin-left: 6px; }
+  .mode-card .m-desc { color: var(--ink-2); font-size: 12.5px; margin-top: 2px; }
   .ttm-wrap { padding: 4px 2px 24px; }
   .ttm-head { display:flex; align-items:baseline; gap:10px; margin: 4px 2px 12px; }
   .ttm-head h2 { margin:0; font-size: 19px; letter-spacing:-.3px; }
@@ -1519,6 +1541,28 @@
 <body>
 
 <!-- ÉCRAN DE LOGIN -->
+<div id="modeScreen" class="mode-screen hidden">
+  <div class="mode-box">
+    <img src="./mascot.png" alt="" class="m-mascot">
+    <h1 id="modeHello">Salut 👋</h1>
+    <div class="m-sub">Qu'est-ce qu'on fait ?</div>
+    <button type="button" class="mode-card" id="modeBtnItm">
+      <span class="m-ico">📋</span>
+      <span>
+        <div class="m-title">Faire un inventaire <span>ITM</span></div>
+        <div class="m-desc">Compter le stock de l'établissement</div>
+      </span>
+    </button>
+    <button type="button" class="mode-card" id="modeBtnTtm">
+      <span class="m-ico">🔁</span>
+      <span>
+        <div class="m-title">Faire un transfert <span>TTM</span></div>
+        <div class="m-desc">Déclarer des produits qui partent vers un autre établissement — photo obligatoire</div>
+      </span>
+    </button>
+  </div>
+</div>
+
 <div id="loginScreen" class="login-screen">
   <div class="login-box">
     <img src="./mascot.png" alt="ITM" class="login-mascot">
@@ -1563,7 +1607,6 @@
 <div class="tabs">
   <button class="tab active" data-tab="catalogue">Catalogue</button>
   <button class="tab" data-tab="session">Session <span class="badge" id="badgeSess">0</span></button>
-  <button class="tab" data-tab="ttm">Transferts</button>
       <button class="tab" data-tab="batches">Batchs</button>
       <button class="tab admin-only" data-tab="alerts" style="display:none;">Alertes</button>
       <button class="tab admin-only" data-tab="dataproduct" style="display:none;">Data Product</button>
@@ -1941,7 +1984,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v145';
+const APP_VERSION = 'v146';
 
 /* === ITM APP === */
 (function(){
@@ -2049,6 +2092,8 @@ function onLoginSuccess() {
   // Relancer le rendu
   if (typeof renderHeader === 'function') renderHeader();
   if (typeof renderCatalogue === 'function') renderCatalogue();
+  // Menu de choix ITM / TTM
+  showModeScreen();
   // Message de bienvenue
   const welcomeName = currentAuth.role === 'admin' ? 'Admin' : currentAuth.etab;
   if (typeof toast === 'function') {
@@ -2056,11 +2101,35 @@ function onLoginSuccess() {
   }
 }
 
+/* ---------- Menu d'accueil ITM / TTM ----------
+   Affiché après le PIN et à chaque ouverture de l'app.
+   Retour possible en tapant le logo « ITM » du header. */
+function showModeScreen() {
+  const hello = document.getElementById('modeHello');
+  if (hello && currentAuth) {
+    hello.textContent = 'Salut ' + (currentAuth.role === 'admin' ? 'Victor' : currentAuth.label) + ' 👋';
+  }
+  document.getElementById('modeScreen').classList.remove('hidden');
+}
+function chooseMode(mode) {
+  document.getElementById('modeScreen').classList.add('hidden');
+  if (mode === 'ttm') {
+    switchTab('ttm');
+  } else {
+    // ITM : comportement historique — catalogue si inventaire actif, sinon session
+    switchTab(state.currentInventory ? 'catalogue' : 'session');
+  }
+}
+document.getElementById('modeBtnItm').addEventListener('click', () => chooseMode('itm'));
+document.getElementById('modeBtnTtm').addEventListener('click', () => chooseMode('ttm'));
+document.querySelector('header .logo').addEventListener('click', showModeScreen);
+
 /* Init auth au démarrage : si déjà loggé, skip l'écran */
 currentAuth = loadAuth();
   updateAdminUIVisibility();
 if (currentAuth) {
   document.getElementById('loginScreen').classList.add('hidden');
+  showModeScreen();
 }
 setupLogin();
 
@@ -7410,7 +7479,8 @@ function ttmRenderForm(root) {
   const hist = ttmLoadArr(TTM_HIST_KEY);
 
   let html = '<div class="ttm-wrap">';
-  html += '<div class="ttm-head"><h2>TTM</h2><span class="ttm-sub">Transferts de Tes Morts — chaque transfert = photo + déclaration + saisie Yokitup</span></div>';
+  html += '<div class="ttm-head"><h2>TTM</h2><span class="ttm-sub">Transferts de Tes Morts</span>';
+  html += '<button type="button" id="ttmHome" style="margin-left:auto; background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; color:var(--ink-2);">🏠 Menu</button></div>';
 
   // 1. Trajet
   html += '<div class="ttm-card"><div class="ttm-label">1 · Trajet</div>';
@@ -7496,6 +7566,8 @@ function ttmRenderForm(root) {
   root.innerHTML = html;
 
   /* -- listeners -- */
+  const home = document.getElementById('ttmHome');
+  if (home) home.addEventListener('click', showModeScreen);
   root.querySelectorAll('[data-dest]').forEach(b => b.addEventListener('click', () => {
     ttmDraft.to = b.dataset.dest; ttmSaveDraft(); renderTtm();
   }));
@@ -7631,10 +7703,13 @@ function ttmRenderDone(root) {
     html += '<div class="ttm-warn" style="text-align:left; margin:14px 0;">Pense à saisir le transfert dans Yokitup si ce n\'est pas fait — Victor va vérifier demain.</div>';
   }
   html += '<button type="button" class="ttm-cta" id="ttmNew" style="margin-top:12px;">Nouveau transfert</button>';
+  html += '<button type="button" class="ttm-cta secondary" id="ttmDoneHome" style="margin-top:10px;">🏠 Retour au menu</button>';
   html += '</div></div>';
   root.innerHTML = html;
   const b = document.getElementById('ttmNew');
   if (b) b.addEventListener('click', () => { ttmStep = 'form'; ttmLastSent = null; renderTtm(); });
+  const dh = document.getElementById('ttmDoneHome');
+  if (dh) dh.addEventListener('click', () => { ttmStep = 'form'; ttmLastSent = null; showModeScreen(); });
 }
 
 /* ---------- Init ---------- */
