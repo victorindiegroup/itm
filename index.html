@@ -2008,7 +2008,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v158';
+const APP_VERSION = 'v159';
 
 /* === ITM APP === */
 (function(){
@@ -7385,7 +7385,7 @@ function ttmSearch(term) {
     if (viaKwYs.has(p.y)) continue;
     if (standardOnly && ttmIsLargeFormat(p)) continue;
     const s = normalize(p._search);
-    if (!words.every(w => matchWord(w, s))) continue;
+    if (!words.every(w => ttmMatchWordP(w, p, s))) continue;
     const onCarte = (fromTag === null) || (p.t && p.t.indexOf(fromTag) >= 0);
     res.push({ p, onCarte });
     if (res.length >= 200) break;
@@ -7409,14 +7409,9 @@ function ttmSearch(term) {
 // NB : la requête est déjà normalisée (minuscules, sans accents) quand ces
 // tables s'appliquent → « Jéro » arrive ici en « jero ».
 const TTM_ALIASES = {
-  // formats
-  'mathu': 'mathusalem', 'mathieu': 'mathusalem', 'mathus': 'mathusalem',
-  'jero': 'jeroboam', 'gero': 'jeroboam', 'jerob': 'jeroboam',
-  'reho': 'rehoboam',
-  'salma': 'salmanazar',
-  'baltha': 'balthazar',
-  'nabu': 'nabuchodonosor',
-  'mag': 'magnum',
+  // formats — mots que le micro déforme, ramenés au mot canonique
+  // (le matching par FAMILLE ci-dessous fait le lien avec les fiches M./J./MATHU.)
+  'mathieu': 'mathusalem', 'gero': 'jeroboam', 'jerob': 'jeroboam',
   // marques
   'dp': 'dom perignon', 'dompe': 'dom perignon',
   'vc': 'veuve clicquot',
@@ -7424,6 +7419,41 @@ const TTM_ALIASES = {
   'belve': 'belvedere',
   'rd': 'romanee conti',
 };
+
+/* FAMILLES DE FORMATS — le point clé : dans le catalogue, les fiches
+   s'appellent « M. DOM PERIGNON », « MAG BELUGA », « J. DOM PERIGNON »,
+   « JB », « MATHU. ARMAND »… presque jamais le mot entier. Un mot de
+   format dit à la voix matche donc n'importe quel membre de sa famille
+   présent comme TOKEN EXACT dans le nom de la fiche. */
+const TTM_FORMAT_FAMILIES = {
+  magnum:        ['magnum','mag','m'],
+  jeroboam:      ['jeroboam','jero','jb','j'],
+  mathusalem:    ['mathusalem','mathu','mathus'],
+  rehoboam:      ['rehoboam','reho'],
+  salmanazar:    ['salmanazar','salma'],
+  balthazar:     ['balthazar','baltha'],
+  nabuchodonosor:['nabuchodonosor','nabu'],
+};
+const TTM_WORD_TO_FAMILY = {};
+for (const fam of Object.keys(TTM_FORMAT_FAMILIES)) {
+  for (const w of TTM_FORMAT_FAMILIES[fam]) {
+    if (w.length >= 3) TTM_WORD_TO_FAMILY[w] = TTM_FORMAT_FAMILIES[fam];  // « m »/« j » trop ambigus côté requête
+  }
+}
+const TTM_ALL_FORMAT_TOKENS = new Set([].concat(...Object.values(TTM_FORMAT_FAMILIES)));
+function ttmTokens(p) {
+  if (!p._ttmTokens) p._ttmTokens = normalize(p._search).split(/\s+/).filter(Boolean);
+  return p._ttmTokens;
+}
+function ttmMatchWordP(w, p, s) {
+  const fam = TTM_WORD_TO_FAMILY[w];
+  if (fam) {
+    const toks = ttmTokens(p);
+    for (const f of fam) if (toks.indexOf(f) >= 0) return true;
+    return false;  // mot de format : exiger la famille, pas un match texte flou
+  }
+  return matchWord(w, s);
+}
 
 // Abréviations en PLUSIEURS mots (« dom p », « d p »…) — remplacées avant le
 // découpage en mots. Ordre : des plus longues aux plus courtes.
@@ -7447,8 +7477,10 @@ const TTM_STOP_WORDS = new Set(['de','d','du','des','le','la','les','l','au','au
 const TTM_STD_FORMAT_WORDS = new Set(['bouteille','bouteilles','btl','bt','flacon','flacons','quille','quilles','col','cols']);
 const TTM_LARGE_FORMAT_RE = /(magnum|jeroboam|mathusalem|rehoboam|salmanazar|balthazar|nabuchodonosor|imperiale|\b1[57]5 ?cl|\b[36]00 ?cl|\b150 ?cl)/;
 function ttmIsLargeFormat(p) {
-  if (!p._ttmLarge0 && p._ttmLarge0 !== false) {
-    p._ttmLarge0 = TTM_LARGE_FORMAT_RE.test(normalize((p._search || '') + ' ' + (p.s || '')));
+  if (p._ttmLarge0 === undefined) {
+    const byRe = TTM_LARGE_FORMAT_RE.test(normalize((p._search || '') + ' ' + (p.s || '')));
+    const byTok = ttmTokens(p).some(t => TTM_ALL_FORMAT_TOKENS.has(t));
+    p._ttmLarge0 = byRe || byTok;
   }
   return p._ttmLarge0;
 }
@@ -7499,6 +7531,8 @@ function ttmLev(a, b, max) {
 
 // Score d'un mot de requête contre les tokens d'un produit : 0 (rien) → 1 (exact)
 function ttmWordScore(qw, tokens) {
+  const fam = TTM_WORD_TO_FAMILY[qw];
+  if (fam) return fam.some(f => tokens.indexOf(f) >= 0) ? 1 : 0;
   const qf = ttmFold(qw);
   let best = 0;
   for (const t of tokens) {
@@ -7538,7 +7572,7 @@ function ttmFuzzySearch(term, excludeYs) {
   for (const p of CATALOGUE) {
     if (excludeYs && excludeYs.has(p.y)) continue;
     if (standardOnly && ttmIsLargeFormat(p)) continue;
-    if (!p._ttmTokens) p._ttmTokens = normalize(p._search).split(/\s+/).filter(Boolean);
+    ttmTokens(p);
     let sum = 0, ok = true;
     for (const w of words) {
       const s = ttmWordScore(w, p._ttmTokens);
