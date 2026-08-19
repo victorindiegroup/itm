@@ -2008,7 +2008,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v159';
+const APP_VERSION = 'v160';
 
 /* === ITM APP === */
 (function(){
@@ -7415,6 +7415,7 @@ const TTM_ALIASES = {
   // marques
   'dp': 'dom perignon', 'dompe': 'dom perignon',
   'vc': 'veuve clicquot',
+  'peignon': 'perignon', 'peignons': 'perignon', 'perignons': 'perignon', 'perinion': 'perignon',
   'clico': 'clicquot', 'cliquot': 'clicquot', 'clicot': 'clicquot',
   'belve': 'belvedere',
   'rd': 'romanee conti',
@@ -7440,6 +7441,10 @@ for (const fam of Object.keys(TTM_FORMAT_FAMILIES)) {
     if (w.length >= 3) TTM_WORD_TO_FAMILY[w] = TTM_FORMAT_FAMILIES[fam];  // « m »/« j » trop ambigus côté requête
   }
 }
+// Transcriptions vocales SANS conflit catalogue → familles directes
+TTM_WORD_TO_FAMILY['go'] = TTM_FORMAT_FAMILIES.jeroboam;      // le micro sort « Go » pour jéro
+TTM_WORD_TO_FAMILY['gero'] = TTM_FORMAT_FAMILIES.jeroboam;
+TTM_WORD_TO_FAMILY['mathieu'] = TTM_FORMAT_FAMILIES.mathusalem;
 const TTM_ALL_FORMAT_TOKENS = new Set([].concat(...Object.values(TTM_FORMAT_FAMILIES)));
 function ttmTokens(p) {
   if (!p._ttmTokens) p._ttmTokens = normalize(p._search).split(/\s+/).filter(Boolean);
@@ -7458,6 +7463,16 @@ function ttmMatchWordP(w, p, s) {
 // Abréviations en PLUSIEURS mots (« dom p », « d p »…) — remplacées avant le
 // découpage en mots. Ordre : des plus longues aux plus courtes.
 const TTM_PHRASE_ALIASES = [
+  // transcriptions vocales foireuses de Dom Pérignon (relevées terrain)
+  ['d eau peignons', 'dom perignon'],
+  ['d eau peignon', 'dom perignon'],
+  ['d eau perignon', 'dom perignon'],
+  ['d eau perignons', 'dom perignon'],
+  ['dom peignons', 'dom perignon'],
+  ['dom peignon', 'dom perignon'],
+  ['don perignon', 'dom perignon'],
+  ['do perignon', 'dom perignon'],
+  // abréviations
   ['dom per', 'dom perignon'],
   ['dom pe', 'dom perignon'],
   ['dom p', 'dom perignon'],
@@ -7573,11 +7588,15 @@ function ttmFuzzySearch(term, excludeYs) {
     if (excludeYs && excludeYs.has(p.y)) continue;
     if (standardOnly && ttmIsLargeFormat(p)) continue;
     ttmTokens(p);
-    let sum = 0, ok = true;
+    let sum = 0, fails = 0, ok = true;
+    const allowSkip = words.length >= 3 ? 1 : 0;   // 1 mot parasite toléré dès 3 mots
     for (const w of words) {
-      const s = ttmWordScore(w, p._ttmTokens);
-      if (s < 0.55) { ok = false; break; }
-      sum += s;
+      const sc = ttmWordScore(w, p._ttmTokens);
+      if (sc < 0.55) {
+        fails += 1;
+        if (fails > allowSkip || TTM_WORD_TO_FAMILY[w]) { ok = false; break; }  // jamais skipper un mot de FORMAT
+        sum += 0.3;
+      } else sum += sc;
     }
     if (!ok) continue;
     const onCarte = (fromTag === null) || (p.t && p.t.indexOf(fromTag) >= 0);
