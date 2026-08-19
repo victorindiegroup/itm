@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#F7F6F2">
-<title>OTM — Outils de Tes Morts</title>
+<title>OTM — Indie Group</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1585,14 +1585,14 @@
     <button type="button" class="mode-card" id="modeBtnItm">
       <span class="m-ico">📋</span>
       <span>
-        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">ITM <span style="font-size:13px; letter-spacing:0;">Inventaire de Tes Morts</span></div>
+        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">ITM <span style="font-size:13px; letter-spacing:0;">Inventaires</span></div>
         <div class="m-desc"><b>Faire un inventaire</b> — compter le stock de l'établissement</div>
       </span>
     </button>
     <button type="button" class="mode-card" id="modeBtnTtm">
       <span class="m-ico">🔁</span>
       <span>
-        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">TTM <span style="font-size:13px; letter-spacing:0;">Transferts de Tes Morts</span></div>
+        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">TTM <span style="font-size:13px; letter-spacing:0;">Transferts</span></div>
         <div class="m-desc"><b>Faire un transfert</b> — produits qui partent vers un autre établissement, photo obligatoire</div>
       </span>
     </button>
@@ -1603,7 +1603,7 @@
   <div class="login-box">
     <img src="./mascot.png" alt="ITM" class="login-mascot">
     <div class="login-title">OTM</div>
-    <div style="color:var(--ink-2); font-size:14px; font-weight:600; letter-spacing:.2px; margin:2px 0 14px;">Outils de Tes Morts</div>
+    <div style="color:var(--ink-2); font-size:14px; font-weight:600; letter-spacing:.2px; margin:2px 0 14px;">Indie Group</div>
     <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 16px; max-width:290px; margin:0 auto 20px; text-align:center;">
       <div style="font-size:12.5px; color:var(--ink-2); line-height:1.5;">La boîte à outils des équipes <b>Indie Group</b></div>
       <div style="display:flex; justify-content:center; gap:14px; margin-top:8px; font-size:12px; color:var(--ink-3);">
@@ -2029,7 +2029,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v174';
+const APP_VERSION = 'v177';
 
 /* === ITM APP === */
 (function(){
@@ -2153,7 +2153,7 @@ function showModeScreen() {
   const logoEl = document.querySelector('header .logo');
   const titleEl = document.querySelector('header .h-title');
   if (logoEl) logoEl.textContent = 'OTM';
-  if (titleEl) titleEl.textContent = 'Outils de Tes Morts';
+  if (titleEl) titleEl.textContent = 'Indie Group';
   ttmFetchAttention();   // pastille « X à valider » sur la carte TTM + toast
   const hello = document.getElementById('modeHello');
   if (hello && currentAuth) {
@@ -7890,7 +7890,7 @@ function renderTtm() {
 }
 
 function ttmHeadHtml() {
-  let h = '<div class="ttm-head"><h2>TTM</h2><span class="ttm-sub">Transferts de Tes Morts</span>';
+  let h = '<div class="ttm-head"><h2>TTM</h2><span class="ttm-sub">Transferts entre établissements</span>';
   h += '<button type="button" id="ttmHome" style="margin-left:auto; background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; color:var(--ink-2);">🏠 Menu</button></div>';
   const nAtt = ttmAttentionCount();
   h += '<div class="ttm-tabs">';
@@ -7931,6 +7931,14 @@ async function ttmFetchAttention(force) {
 }
 // Pastille sur la carte TTM du menu d'accueil
 function ttmUpdateModeBadge() {
+  // Badge sur l'ICÔNE de l'app (écran d'accueil) — API Badging des PWA.
+  // Ne peut être posé que quand l'app tourne ; il persiste après fermeture.
+  try {
+    const n0 = ttmAttention.incoming.length + ttmAttention.outgoing.length;
+    if (navigator.setAppBadge) {
+      if (n0 > 0) navigator.setAppBadge(n0); else if (navigator.clearAppBadge) navigator.clearAppBadge();
+    }
+  } catch (e) {}
   const card = document.getElementById('modeBtnTtm');
   if (!card) return;
   let b = document.getElementById('ttmModeBadge');
