@@ -2008,7 +2008,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v161';
+const APP_VERSION = 'v162';
 
 /* === ITM APP === */
 (function(){
@@ -3868,10 +3868,21 @@ function renderDataProductEditor(root) {
   root.querySelectorAll('.dp-kw-remove').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.dataset.id;
-      const list = getAllLiaisons().filter(l => l.id !== id);
-      saveLiaisonsLocal(list);
+      const src = getAllLiaisons().find(l => l.id === id);
+      const local = loadLiaisonsLocal();
+      const tomb = {
+        id: id,
+        deleted: true,
+        updatedAt: new Date().toISOString(),
+        keyword: src ? src.keyword : '',
+        productYokitup: src ? src.productYokitup : '',
+        etabs: (src && src.etabs) || [],
+      };
+      const idx = local.findIndex(l => l.id === id);
+      if (idx >= 0) local[idx] = tomb; else local.push(tomb);
+      saveLiaisonsLocal(local);   // tombstone → la copie distante ne reviendra pas
       renderDataProductEditor(root);
-      toast('Mot-clé retiré');
+      toast('Mot-clé retiré ✓');
     });
   });
 
@@ -3882,25 +3893,27 @@ function renderDataProductEditor(root) {
     const kws = raw.split(',').map(s => s.trim()).filter(Boolean);
     if (kws.length === 0) { toast('Aucun mot-clé valide'); return; }
 
-    const list = getAllLiaisons();
+    const visible = getAllLiaisons();          // pour la détection de doublons (fusion)
+    const local = loadLiaisonsLocal();          // liste réellement stockée (tombstones inclus)
     let added = 0;
     for (const kw of kws) {
       // Éviter les doublons
-      const exists = list.some(l => l.keyword.toLowerCase() === kw.toLowerCase() 
-                                    && l.productYokitup === p.y 
+      const exists = visible.some(l => (l.keyword || '').toLowerCase() === kw.toLowerCase()
+                                    && l.productYokitup === p.y
                                     && l.etab === scope);
       if (!exists) {
-        list.push({
+        local.push({
           id: uidLiaison(),
           keyword: kw,
           productYokitup: p.y,
           etab: scope,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         });
         added++;
       }
     }
-    saveLiaisonsLocal(list);
+    saveLiaisonsLocal(local);
     toast(added + ' mot' + (added > 1 ? 's' : '') + '-clé' + (added > 1 ? 's' : '') + ' ajouté' + (added > 1 ? 's' : ''));
     renderDataProductEditor(root);
   });
