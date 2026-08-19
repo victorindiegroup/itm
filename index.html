@@ -1456,6 +1456,8 @@
   /* ---------- TTM (Transferts de Tes Morts) ---------- */
   /* Mode TTM plein écran : les onglets ITM et la pastille zone disparaissent */
   body.ttm-mode .tabs { display: none !important; }
+  body.ttm-mode .logo { background: var(--ink); }
+  .logo { transition: background .2s; }
   body.ttm-mode .zone-pill { display: none !important; }
   body.ttm-mode .h-sub { visibility: hidden; }
   .ttm-tabs { display: flex; gap: 8px; margin: 0 0 12px; }
@@ -2018,7 +2020,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v169';
+const APP_VERSION = 'v170';
 
 /* === ITM APP === */
 (function(){
@@ -2148,12 +2150,18 @@ function showModeScreen() {
 }
 function chooseMode(mode) {
   document.getElementById('modeScreen').classList.add('hidden');
+  const logoEl = document.querySelector('header .logo');
+  const titleEl = document.querySelector('header .h-title');
   if (mode === 'ttm') {
     document.body.classList.add('ttm-mode');   // TTM plein écran : onglets ITM masqués
+    if (logoEl) logoEl.textContent = 'TTM';
+    if (titleEl) titleEl.textContent = 'Transferts';
     ttmFetchAttention(true).then(() => renderTtm());
     switchTab('ttm');
   } else {
     document.body.classList.remove('ttm-mode');
+    if (logoEl) logoEl.textContent = 'ITM';
+    if (titleEl) titleEl.textContent = 'Inventaire';
     // ITM : comportement historique — catalogue si inventaire actif, sinon session
     switchTab(state.currentInventory ? 'catalogue' : 'session');
   }
@@ -7365,7 +7373,7 @@ function ttmMarkHistSent(localId) {
    (catégories « LIQUIDE - … » : jus, purées, fruits) gardent leur unité. */
 function ttmUnitLabel(p) {
   const u = p.p || '';
-  if (p.e === 'litre' && !((p.c || '').toUpperCase().startsWith('LIQUIDE'))) return 'BTL';
+  if (p.e === 'litre' && u !== 'KG') return 'BTL';   // verse (alcool ou soft) → bouteilles ; KG (fruits) inchangé
   return u;
 }
 // Unité d'affichage d'une LIGNE (brouillon ou serveur) : on repart toujours du
@@ -7374,7 +7382,7 @@ function ttmUnitLabel(p) {
 function ttmLineUnit(l) {
   const p = (typeof CATALOGUE_BY_Y !== 'undefined' && CATALOGUE_BY_Y[l.y]) ? CATALOGUE_BY_Y[l.y] : null;
   if (p) return ttmUnitLabel(p);
-  if ((l.unit || '').toUpperCase() === 'LITRE' && l.type !== undefined && l.type === 'litre') return 'BTL';
+  if ((l.unit || '').toUpperCase() === 'LITRE') return 'BTL';
   return l.unit || '';
 }
 
