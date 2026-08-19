@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#F7F6F2">
-<title>ITM — Indie Group</title>
+<title>OTM — Outils de Tes Morts</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1581,7 +1581,7 @@
   <div class="mode-box">
     <img src="./mascot.png" alt="" class="m-mascot">
     <h1 id="modeHello">Salut 👋</h1>
-    <div class="m-sub">Qu'est-ce qu'on fait ?</div>
+    <div class="m-sub">OTM · Qu'est-ce qu'on fait ?</div>
     <button type="button" class="mode-card" id="modeBtnItm">
       <span class="m-ico">📋</span>
       <span>
@@ -1602,8 +1602,8 @@
 <div id="loginScreen" class="login-screen">
   <div class="login-box">
     <img src="./mascot.png" alt="ITM" class="login-mascot">
-    <div class="login-title">ITM</div>
-    <div class="login-sub">Entre ton code d'accès</div>
+    <div class="login-title">OTM</div>
+    <div class="login-sub">Outils de Tes Morts — entre ton code d'accès</div>
     <div class="login-pin-display">
       <span class="login-pin-dot" data-i="0"></span>
       <span class="login-pin-dot" data-i="1"></span>
@@ -1629,7 +1629,7 @@
 </div>
 
 <header>
-  <div class="logo">ITM</div>
+  <div class="logo">OTM</div>
   <div class="h-main">
     <div class="h-title">Inventaire</div>
     <div class="h-sub" id="hSubDate" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px"></div>
@@ -2020,7 +2020,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v170';
+const APP_VERSION = 'v171';
 
 /* === ITM APP === */
 (function(){
@@ -2141,6 +2141,10 @@ function onLoginSuccess() {
    Affiché après le PIN et à chaque ouverture de l'app.
    Retour possible en tapant le logo « ITM » du header. */
 function showModeScreen() {
+  const logoEl = document.querySelector('header .logo');
+  const titleEl = document.querySelector('header .h-title');
+  if (logoEl) logoEl.textContent = 'OTM';
+  if (titleEl) titleEl.textContent = 'Outils de Tes Morts';
   ttmFetchAttention();   // pastille « X à valider » sur la carte TTM + toast
   const hello = document.getElementById('modeHello');
   if (hello && currentAuth) {

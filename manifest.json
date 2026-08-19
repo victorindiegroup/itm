@@ -1,7 +1,7 @@
 {
-  "name": "ITM — Indie Group",
-  "short_name": "ITM",
-  "description": "Gestion d'inventaire pour Indie Group",
+  "name": "OTM — Outils de Tes Morts",
+  "short_name": "OTM",
+  "description": "Les outils d'Indie Group : inventaires (ITM), transferts (TTM)…",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
