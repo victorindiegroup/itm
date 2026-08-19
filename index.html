@@ -2018,7 +2018,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v164';
+const APP_VERSION = 'v166';
 
 /* === ITM APP === */
 (function(){
@@ -7998,22 +7998,75 @@ async function ttmRenderHist(root) {
 
 /* ---- Onglet Réception : valider les transferts entrants,
    répondre aux propositions du destinataire sur mes envois ---- */
-let ttmRecvEdit = {};   // id → true si le mode « quantités reçues » est ouvert
-
-function ttmRecvLinesHtml(rec, editable) {
-  const src = rec.proposedLines && !editable ? rec.proposedLines : rec.lines;
-  let h = '';
-  (editable ? rec.lines : src).forEach((l, i) => {
-    const proposed = rec.proposedLines ? rec.proposedLines.find(x => x.y === l.y) : null;
-    h += '<div class="ttm-recap-row"><span>' + escape(l.s) + '</span>';
-    if (editable) {
-      h += '<input type="number" inputmode="decimal" min="0" step="0.5" value="' + l.qty + '" data-rq="' + escape(rec.kvId) + '" data-ry="' + escape(l.y) + '" style="width:64px; text-align:center; font-weight:700; border:1px solid var(--border-strong); border-radius:8px; padding:6px 2px;">';
-    } else if (proposed && Number(proposed.qty) !== Number(l.qty) && rec.status === 'awaiting_sender') {
-      h += '<b>' + fmtQty(l.qty) + ' → <span style="color:var(--danger);">' + fmtQty(proposed.qty) + '</span> ' + escape(l.unit || '') + '</b>';
-    } else {
-      h += '<b>' + fmtQty(l.qty) + ' ' + escape(l.unit || '') + '</b>';
+/* Pop-up « Qu'as-tu reçu ? » : la commande ligne à ligne, quantité envoyée
+   rappelée, et un champ libre REÇU par référence. Champs vides au départ :
+   le barman saisit consciemment chaque quantité. */
+function ttmOpenRecvModal(rec) {
+  const ov = document.createElement('div');
+  ov.className = 'v-modal';
+  let rows = '';
+  rec.lines.forEach((l, i) => {
+    rows += '<div style="display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px dashed var(--border);">';
+    rows += '<div style="flex:1; min-width:0;"><div style="font-size:14px;">' + escape(l.s) + '</div>';
+    rows += '<div style="color:var(--ink-3); font-size:11.5px;">envoyé : <b>' + fmtQty(l.qty) + '</b> ' + escape(l.unit || '') + '</div></div>';
+    rows += '<input type="number" inputmode="decimal" min="0" step="0.5" placeholder="?" data-mi="' + i + '" style="width:74px; flex:0 0 auto; text-align:center; font-weight:700; font-size:18px; border:2px solid var(--accent); border-radius:10px; padding:9px 2px; background:#fff;">';
+    rows += '</div>';
+  });
+  ov.innerHTML = '<div class="v-modal-card" style="text-align:left; max-height:86vh; overflow-y:auto;">'
+    + '<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">'
+    + '<img src="./v_question.png" alt="" style="height:64px;">'
+    + '<div style="font-weight:700; font-size:16px;">Qu\'as-tu reçu de ' + escape(rec.from) + ' ?</div></div>'
+    + '<div style="color:var(--ink-3); font-size:12.5px; margin-bottom:6px;">Remplis la case <b>de chaque ligne</b> avec la quantité réellement reçue (mets 0 si rien).</div>'
+    + rows
+    + '<textarea class="ttm-note" id="mComment" style="margin-top:12px;" placeholder="Commentaire facultatif (casse, carton manquant…)"></textarea>'
+    + '<button type="button" class="vm-ok" id="mSend">Envoyer ma version à ' + escape(rec.from) + '</button>'
+    + '<button type="button" class="ttm-cta secondary" id="mCancel" style="margin-top:8px;">Annuler</button>'
+    + '</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#mCancel').addEventListener('click', () => ov.remove());
+  ov.querySelector('#mSend').addEventListener('click', async () => {
+    const lines = [];
+    for (let i = 0; i < rec.lines.length; i++) {
+      const inp = ov.querySelector('[data-mi="' + i + '"]');
+      const raw = (inp.value || '').trim();
+      if (raw === '') {
+        toast('Remplis toutes les cases (mets 0 si rien reçu)');
+        inp.focus();
+        return;
+      }
+      const v = parseFloat(raw.replace(',', '.'));
+      if (isNaN(v) || v < 0) { toast('Quantité invalide sur « ' + rec.lines[i].s + ' »'); inp.focus(); return; }
+      lines.push({ y: rec.lines[i].y, s: rec.lines[i].s, unit: rec.lines[i].unit, qty: v });
     }
-    h += '</div>';
+    const identical = lines.every((l, i) => Number(l.qty) === Number(rec.lines[i].qty));
+    if (identical) {
+      toast('Ces quantités sont identiques à l\'envoi — utilise plutôt « Je valide, bien reçu » ✅');
+      return;
+    }
+    const btn = ov.querySelector('#mSend');
+    btn.disabled = true; btn.textContent = 'Envoi…';
+    try {
+      await ttmRespond(rec.kvId, 'receiver', 'propose', lines, ov.querySelector('#mComment').value.trim());
+      ov.remove();
+      toast('Ta version est partie à ' + rec.from);
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Envoyer ma version à ' + rec.from;
+      toast('Erreur : ' + e.message);
+      return;
+    }
+    await ttmFetchAttention(true); renderTtm();
+  });
+}
+
+function ttmRecvLinesHtml(rec) {
+  let h = '';
+  rec.lines.forEach((l, i) => {
+    const proposed = rec.proposedLines ? rec.proposedLines.find(x => x.y === l.y) : null;
+    if (proposed && Number(proposed.qty) !== Number(l.qty) && rec.status === 'awaiting_sender') {
+      h += '<div class="ttm-recap-row"><span>' + escape(l.s) + '</span><b>' + fmtQty(l.qty) + ' → <span style="color:var(--danger);">' + fmtQty(proposed.qty) + '</span> ' + escape(l.unit || '') + '</b></div>';
+    } else {
+      h += '<div class="ttm-recap-row"><span>' + escape(l.s) + '</span><b>' + fmtQty(l.qty) + ' ' + escape(l.unit || '') + '</b></div>';
+    }
   });
   return h;
 }
@@ -8030,28 +8083,20 @@ async function ttmRenderRecv(root) {
   }
 
   inc.forEach(rec => {
-    const editing = !!ttmRecvEdit[rec.kvId];
     html += vSayHtml('v_question', '<b>' + escape(rec.from) + '</b> a fait un transfert chez toi le <b>' + escape(new Date(rec.date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit'})) + ' ' + escape(new Date(rec.date).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})) + '</b> (par ' + escape(rec.personne || '?') + '). Tu confirmes la réception ?');
     html += '<div class="ttm-card">';
-    html += ttmRecvLinesHtml(rec, editing);
+    html += ttmRecvLinesHtml(rec);
     if (rec.note) html += '<div style="color:var(--ink-3); font-size:12.5px; margin-top:6px;">Note : ' + escape(rec.note) + '</div>';
     if (rec.photo) html += '<img src="' + rec.photo + '" style="width:100%; border-radius:10px; margin-top:10px;" alt="photo">';
-    if (!editing) {
-      html += '<button type="button" class="ttm-cta" style="margin-top:12px;" data-rok="' + escape(rec.kvId) + '">✅ Je valide, bien reçu</button>';
-      html += '<button type="button" class="ttm-cta secondary" style="margin-top:8px;" data-rno="' + escape(rec.kvId) + '">✋ Pas d\'accord — indiquer ce que j\'ai reçu</button>';
-    } else {
-      html += '<div class="ttm-label" style="margin-top:12px;">Corrige les quantités RÉELLEMENT reçues (0 si rien)</div>';
-      html += '<textarea class="ttm-note" data-rcm="' + escape(rec.kvId) + '" placeholder="Commentaire (ex : carton manquant, casse…)"></textarea>';
-      html += '<button type="button" class="ttm-cta" style="margin-top:10px;" data-rsend="' + escape(rec.kvId) + '">Envoyer ma version à ' + escape(rec.from) + '</button>';
-      html += '<button type="button" class="ttm-cta secondary" style="margin-top:8px;" data-rcancel="' + escape(rec.kvId) + '">Annuler</button>';
-    }
+    html += '<button type="button" class="ttm-cta" style="margin-top:12px;" data-rok="' + escape(rec.kvId) + '">✅ Je valide, bien reçu</button>';
+    html += '<button type="button" class="ttm-cta secondary" style="margin-top:8px;" data-rno="' + escape(rec.kvId) + '">✋ Pas d\'accord — indiquer ce que j\'ai reçu</button>';
     html += '</div>';
   });
 
   out.forEach(rec => {
     html += vSayHtml('v_pointe', '<b>' + escape(rec.to) + '</b> n\'est pas d\'accord avec ton envoi du <b>' + escape(new Date(rec.date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit'})) + '</b>. Regarde sa version (en rouge) :');
     html += '<div class="ttm-card">';
-    html += ttmRecvLinesHtml(rec, false);
+    html += ttmRecvLinesHtml(rec);
     const lastH = (rec.history || []).slice(-1)[0];
     if (lastH && lastH.comment) html += '<div style="color:var(--ink-3); font-size:12.5px; margin-top:6px;">« ' + escape(lastH.comment) + ' » — ' + escape(lastH.personne || '') + '</div>';
     html += '<button type="button" class="ttm-cta" style="margin-top:12px;" data-sok="' + escape(rec.kvId) + '">✅ J\'accepte ses quantités (clôture)</button>';
@@ -8070,25 +8115,9 @@ async function ttmRenderRecv(root) {
     catch (e) { toast('Erreur : ' + e.message); }
     await ttmFetchAttention(true); renderTtm();
   }));
-  root.querySelectorAll('[data-rno]').forEach(b => b.addEventListener('click', () => { ttmRecvEdit[b.dataset.rno] = true; renderTtm(); }));
-  root.querySelectorAll('[data-rcancel]').forEach(b => b.addEventListener('click', () => { delete ttmRecvEdit[b.dataset.rcancel]; renderTtm(); }));
-  root.querySelectorAll('[data-rsend]').forEach(b => b.addEventListener('click', async () => {
-    const id = b.dataset.rsend;
-    const rec = ttmAttention.incoming.find(r => r.kvId === id);
-    if (!rec) return;
-    const lines = rec.lines.map(l => {
-      const inp = root.querySelector('[data-rq="' + id + '"][data-ry="' + CSS.escape(l.y) + '"]');
-      const v = inp ? parseFloat(String(inp.value).replace(',', '.')) : l.qty;
-      return { y: l.y, s: l.s, unit: l.unit, qty: isNaN(v) || v < 0 ? 0 : v };
-    });
-    const cm = root.querySelector('[data-rcm="' + id + '"]');
-    busy(b);
-    try {
-      await ttmRespond(id, 'receiver', 'propose', lines, cm ? cm.value.trim() : '');
-      delete ttmRecvEdit[id];
-      toast('Ta version est partie à ' + rec.from);
-    } catch (e) { toast('Erreur : ' + e.message); }
-    await ttmFetchAttention(true); renderTtm();
+  root.querySelectorAll('[data-rno]').forEach(b => b.addEventListener('click', () => {
+    const rec = ttmAttention.incoming.find(r => r.kvId === b.dataset.rno);
+    if (rec) ttmOpenRecvModal(rec);
   }));
   root.querySelectorAll('[data-sok]').forEach(b => b.addEventListener('click', async () => {
     busy(b);
