@@ -2008,7 +2008,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v162';
+const APP_VERSION = 'v163';
 
 /* === ITM APP === */
 (function(){
@@ -2129,6 +2129,7 @@ function onLoginSuccess() {
    Affiché après le PIN et à chaque ouverture de l'app.
    Retour possible en tapant le logo « ITM » du header. */
 function showModeScreen() {
+  ttmFetchAttention();   // pastille « X à valider » sur la carte TTM + toast
   const hello = document.getElementById('modeHello');
   if (hello && currentAuth) {
     hello.textContent = 'Salut ' + (currentAuth.role === 'admin' ? 'Victor' : currentAuth.label) + ' 👋';
@@ -2139,6 +2140,7 @@ function chooseMode(mode) {
   document.getElementById('modeScreen').classList.add('hidden');
   if (mode === 'ttm') {
     document.body.classList.add('ttm-mode');   // TTM plein écran : onglets ITM masqués
+    ttmFetchAttention(true).then(() => renderTtm());
     switchTab('ttm');
   } else {
     document.body.classList.remove('ttm-mode');
@@ -7333,7 +7335,7 @@ function ttmSaveArr(key, arr) { try { localStorage.setItem(key, JSON.stringify(a
 function ttmPushHist(rec, status) {
   const hist = ttmLoadArr(TTM_HIST_KEY);
   hist.unshift({ id: rec.local_id, date: rec.date, from: rec.from, to: rec.to,
-                 nLines: rec.lines.length, status: status, yok: rec.yokitup_done });
+                 nLines: rec.lines.length, status: status });
   if (hist.length > 25) hist.length = 25;
   ttmSaveArr(TTM_HIST_KEY, hist);
 }
@@ -7677,7 +7679,6 @@ function ttmBuildRecord() {
     personne: (currentAuth && currentAuth.role === 'admin') ? 'admin' : (currentAuth ? currentAuth.label : 'inconnu'),
     lines: ttmDraft.lines.map(l => ({ y: l.y, s: l.s, qty: l.qty, unit: l.unit })),
     note: ttmDraft.note || '',
-    yokitup_done: !!ttmDraft.yok,
     photo: ttmDraft.photo   // dataURL JPEG compressé
   };
 }
@@ -7756,6 +7757,20 @@ async function ttmFlushQueue() {
   if (remaining.length < q.length && document.getElementById('vTtm').classList.contains('active')) renderTtm();
 }
 setInterval(() => ttmFlushQueue().catch(() => {}), 120000);
+setInterval(() => { if (currentAuth) ttmFetchAttention().then(() => {
+  if (document.body.classList.contains('ttm-mode') && ttmView === 'recv') renderTtm();
+}); }, 90000);
+// Toast d'accueil si des transferts attendent une validation
+let ttmToastShownFor = 0;
+const _ttmOrigUpdateBadge = ttmUpdateModeBadge;
+ttmUpdateModeBadge = function() {
+  _ttmOrigUpdateBadge();
+  const n = ttmAttention.incoming.length;
+  if (n && n !== ttmToastShownFor) {
+    ttmToastShownFor = n;
+    toast('📦 ' + n + ' transfert' + (n > 1 ? 's' : '') + ' à valider dans TTM');
+  }
+};
 
 /* ---- Rendu ---- */
 function ttmCanContinue() {
@@ -7801,6 +7816,7 @@ function ttmTutoHtml() {
 function renderTtm() {
   const root = document.getElementById('ttmRoot');
   if (!root) return;
+  if (ttmView === 'recv') return ttmRenderRecv(root);
   if (ttmView === 'hist') return ttmRenderHist(root);
   if (ttmStep === 'done') return ttmRenderDone(root);
   if (ttmStep === 'confirm') return ttmRenderConfirm(root);
@@ -7810,9 +7826,11 @@ function renderTtm() {
 function ttmHeadHtml() {
   let h = '<div class="ttm-head"><h2>TTM</h2><span class="ttm-sub">Transferts de Tes Morts</span>';
   h += '<button type="button" id="ttmHome" style="margin-left:auto; background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; color:var(--ink-2);">🏠 Menu</button></div>';
+  const nAtt = ttmAttentionCount();
   h += '<div class="ttm-tabs">';
   h += '<button type="button" id="ttmTabNew" class="' + (ttmView === 'new' ? 'on' : '') + '">➕ Transfert</button>';
-  h += '<button type="button" id="ttmTabHist" class="' + (ttmView === 'hist' ? 'on' : '') + '">🕘 Historique</button>';
+  h += '<button type="button" id="ttmTabRecv" class="' + (ttmView === 'recv' ? 'on' : '') + '">📥 Réception' + (nAtt ? ' <span style="background:var(--danger); color:#fff; border-radius:100px; padding:1px 7px; font-size:11px;">' + nAtt + '</span>' : '') + '</button>';
+  h += '<button type="button" id="ttmTabHist" class="' + (ttmView === 'hist' ? 'on' : '') + '">🕘</button>';
   h += '</div>';
   return h;
 }
@@ -7821,8 +7839,58 @@ function ttmBindHead() {
   if (home) home.addEventListener('click', showModeScreen);
   const tn = document.getElementById('ttmTabNew');
   if (tn) tn.addEventListener('click', () => { ttmView = 'new'; renderTtm(); });
+  const tr = document.getElementById('ttmTabRecv');
+  if (tr) tr.addEventListener('click', () => { ttmView = 'recv'; ttmFetchAttention().then(renderTtm); renderTtm(); });
   const th = document.getElementById('ttmTabHist');
   if (th) th.addEventListener('click', () => { ttmView = 'hist'; renderTtm(); });
+}
+
+/* ---- Transferts en attente d'action de MON établissement ----
+   incoming : transferts reçus à valider (je suis destinataire)
+   outgoing : mes envois où le destinataire propose d'autres quantités */
+let ttmAttention = { incoming: [], outgoing: [], fetchedAt: 0 };
+function ttmAttentionCount() { return ttmAttention.incoming.length + ttmAttention.outgoing.length; }
+async function ttmFetchAttention(force) {
+  const etab = state.estab;
+  if (!etab) return;
+  if (!force && Date.now() - ttmAttention.fetchedAt < 30000) return;
+  try {
+    const r = await fetch(BACKEND_URL + '/transfers-attention?etab=' + encodeURIComponent(etab), { signal: AbortSignal.timeout(15000) });
+    const data = await r.json();
+    if (data.ok) {
+      ttmAttention = { incoming: data.incoming || [], outgoing: data.outgoing || [], fetchedAt: Date.now() };
+      ttmUpdateModeBadge();
+    }
+  } catch (e) { /* hors-ligne : on garde l'état précédent */ }
+}
+// Pastille sur la carte TTM du menu d'accueil
+function ttmUpdateModeBadge() {
+  const card = document.getElementById('modeBtnTtm');
+  if (!card) return;
+  let b = document.getElementById('ttmModeBadge');
+  const n = ttmAttentionCount();
+  if (n) {
+    if (!b) {
+      b = document.createElement('span');
+      b.id = 'ttmModeBadge';
+      b.style.cssText = 'margin-left:auto; background:var(--danger); color:#fff; border-radius:100px; padding:4px 10px; font-size:13px; font-weight:700; flex:0 0 auto;';
+      card.appendChild(b);
+    }
+    b.textContent = n;
+  } else if (b) b.remove();
+}
+// Réponse au serveur (valider / proposer)
+async function ttmRespond(id, by, action, lines, comment) {
+  const personne = (currentAuth && currentAuth.role === 'admin') ? 'admin' : (currentAuth ? currentAuth.label : '?');
+  const r = await fetch(BACKEND_URL + '/transfer-respond', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, by, action, personne, lines, comment }),
+    signal: AbortSignal.timeout(20000)
+  });
+  const data = await r.json();
+  if (!data.ok) throw new Error(data.error || 'réponse serveur invalide');
+  return data;
 }
 
 /* ---- Onglet Historique ----
@@ -7846,7 +7914,7 @@ async function ttmRenderHist(root) {
       const dd = isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
       html += '<div class="ttm-hist-item"><div class="h-top"><span><b>' + escape(h.from) + '</b> → <b>' + escape(h.to) + '</b> · ' + h.nLines + ' ligne' + (h.nLines>1?'s':'') + '</span>';
       html += '<span class="h-status ' + (h.status === 'sent' ? 'sent' : 'pending') + '">' + (h.status === 'sent' ? 'ENVOYÉ' : 'EN ATTENTE') + '</span></div>';
-      html += '<div style="color:var(--ink-3); font-size:11.5px;">' + dd + (h.yok ? ' · Yokitup ✓' : ' · Yokitup non confirmé') + '</div></div>';
+      html += '<div style="color:var(--ink-3); font-size:11.5px;">' + dd + '</div></div>';
     });
   }
   html += '</div>';
@@ -7870,18 +7938,140 @@ async function ttmRenderHist(root) {
       if (!data.ok) throw new Error(data.error || 'réponse serveur invalide');
       if (!data.transfers.length) { body.innerHTML = 'Aucun transfert sur le serveur.'; return; }
       let sh = '';
+      const stLbl = { awaiting_receiver: 'ATTEND RÉCEPTION', awaiting_sender: 'RETOUR ENVOYEUR', closed: 'CLOS' };
       data.transfers.slice(0, 40).forEach(t => {
         const d = new Date(t.date || t.receivedAt);
         const dd = isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+        const closed = t.status === 'closed';
         sh += '<div class="ttm-hist-item"><div class="h-top"><span><b>' + escape(t.from) + '</b> → <b>' + escape(t.to) + '</b> · ' + t.nbLines + ' ligne' + (t.nbLines>1?'s':'') + ' · ' + escape(t.personne || '?') + '</span>';
-        sh += '<span class="h-status ' + (t.yokitup_done ? 'sent' : 'pending') + '">' + (t.yokitup_done ? 'YOKITUP ✓' : 'NON SAISI') + '</span></div>';
-        sh += '<div style="color:var(--ink-3); font-size:11.5px;">' + dd + (t.digestSentAt ? ' · dans un récap envoyé' : ' · récap à venir') + '</div></div>';
+        sh += '<span class="h-status ' + (closed ? 'sent' : 'pending') + '">' + (stLbl[t.status] || t.status) + (t.ecart ? ' ⚠️' : '') + '</span></div>';
+        sh += '<div style="color:var(--ink-3); font-size:11.5px; display:flex; align-items:center; gap:8px;">' + dd
+           + (closed ? ' · clôturé' : ' <button type="button" data-fclose="' + escape(t.id) + '" style="border:1px solid var(--border-strong); background:var(--surface); border-radius:100px; padding:2px 10px; font-size:11px;">Clôturer (admin)</button>')
+           + '</div></div>';
       });
       body.innerHTML = sh;
+      body.querySelectorAll('[data-fclose]').forEach(b => b.addEventListener('click', async () => {
+        if (!confirm('Clôture forcée (admin) : le transfert sera clos avec les dernières quantités connues et le récap partira par mail. Continuer ?')) return;
+        b.disabled = true;
+        try {
+          const rr = await fetch(BACKEND_URL + '/transfer-respond', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Admin-Token': token },
+            body: JSON.stringify({ id: b.dataset.fclose, action: 'force_close', comment: 'clôture admin depuis le suivi' })
+          });
+          const dd2 = await rr.json();
+          if (!dd2.ok) throw new Error(dd2.error || '?');
+          toast('Clôturé ✓ — récap envoyé');
+        } catch (e) { toast('Erreur : ' + e.message); }
+        renderTtm();
+      }));
     } catch (e) {
       body.innerHTML = 'Impossible de charger la liste serveur (' + escape(e.message) + ').';
     }
   }
+}
+
+
+/* ---- Onglet Réception : valider les transferts entrants,
+   répondre aux propositions du destinataire sur mes envois ---- */
+let ttmRecvEdit = {};   // id → true si le mode « quantités reçues » est ouvert
+
+function ttmRecvLinesHtml(rec, editable) {
+  const src = rec.proposedLines && !editable ? rec.proposedLines : rec.lines;
+  let h = '';
+  (editable ? rec.lines : src).forEach((l, i) => {
+    const proposed = rec.proposedLines ? rec.proposedLines.find(x => x.y === l.y) : null;
+    h += '<div class="ttm-recap-row"><span>' + escape(l.s) + '</span>';
+    if (editable) {
+      h += '<input type="number" inputmode="decimal" min="0" step="0.5" value="' + l.qty + '" data-rq="' + escape(rec.kvId) + '" data-ry="' + escape(l.y) + '" style="width:64px; text-align:center; font-weight:700; border:1px solid var(--border-strong); border-radius:8px; padding:6px 2px;">';
+    } else if (proposed && Number(proposed.qty) !== Number(l.qty) && rec.status === 'awaiting_sender') {
+      h += '<b>' + fmtQty(l.qty) + ' → <span style="color:var(--danger);">' + fmtQty(proposed.qty) + '</span> ' + escape(l.unit || '') + '</b>';
+    } else {
+      h += '<b>' + fmtQty(l.qty) + ' ' + escape(l.unit || '') + '</b>';
+    }
+    h += '</div>';
+  });
+  return h;
+}
+
+async function ttmRenderRecv(root) {
+  let html = '<div class="ttm-wrap">';
+  html += ttmHeadHtml();
+
+  const inc = ttmAttention.incoming;
+  const out = ttmAttention.outgoing;
+
+  if (!inc.length && !out.length) {
+    html += vSayHtml('v_pouce', 'Rien à valider pour <b>' + escape(state.estab || '') + '</b> — tous les transferts sont à jour ✓');
+  }
+
+  inc.forEach(rec => {
+    const editing = !!ttmRecvEdit[rec.kvId];
+    html += vSayHtml('v_question', '<b>' + escape(rec.from) + '</b> a fait un transfert chez toi le <b>' + escape(new Date(rec.date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit'})) + ' ' + escape(new Date(rec.date).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})) + '</b> (par ' + escape(rec.personne || '?') + '). Tu confirmes la réception ?');
+    html += '<div class="ttm-card">';
+    html += ttmRecvLinesHtml(rec, editing);
+    if (rec.note) html += '<div style="color:var(--ink-3); font-size:12.5px; margin-top:6px;">Note : ' + escape(rec.note) + '</div>';
+    if (rec.photo) html += '<img src="' + rec.photo + '" style="width:100%; border-radius:10px; margin-top:10px;" alt="photo">';
+    if (!editing) {
+      html += '<button type="button" class="ttm-cta" style="margin-top:12px;" data-rok="' + escape(rec.kvId) + '">✅ Je valide, bien reçu</button>';
+      html += '<button type="button" class="ttm-cta secondary" style="margin-top:8px;" data-rno="' + escape(rec.kvId) + '">✋ Pas d\'accord — indiquer ce que j\'ai reçu</button>';
+    } else {
+      html += '<div class="ttm-label" style="margin-top:12px;">Corrige les quantités RÉELLEMENT reçues (0 si rien)</div>';
+      html += '<textarea class="ttm-note" data-rcm="' + escape(rec.kvId) + '" placeholder="Commentaire (ex : carton manquant, casse…)"></textarea>';
+      html += '<button type="button" class="ttm-cta" style="margin-top:10px;" data-rsend="' + escape(rec.kvId) + '">Envoyer ma version à ' + escape(rec.from) + '</button>';
+      html += '<button type="button" class="ttm-cta secondary" style="margin-top:8px;" data-rcancel="' + escape(rec.kvId) + '">Annuler</button>';
+    }
+    html += '</div>';
+  });
+
+  out.forEach(rec => {
+    html += vSayHtml('v_pointe', '<b>' + escape(rec.to) + '</b> n\'est pas d\'accord avec ton envoi du <b>' + escape(new Date(rec.date).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit'})) + '</b>. Regarde sa version (en rouge) :');
+    html += '<div class="ttm-card">';
+    html += ttmRecvLinesHtml(rec, false);
+    const lastH = (rec.history || []).slice(-1)[0];
+    if (lastH && lastH.comment) html += '<div style="color:var(--ink-3); font-size:12.5px; margin-top:6px;">« ' + escape(lastH.comment) + ' » — ' + escape(lastH.personne || '') + '</div>';
+    html += '<button type="button" class="ttm-cta" style="margin-top:12px;" data-sok="' + escape(rec.kvId) + '">✅ J\'accepte ses quantités (clôture)</button>';
+    html += '<div style="color:var(--ink-3); font-size:12px; margin-top:8px; text-align:center;">Un doute ? Appelle-les — sinon Victor tranchera depuis son suivi.</div>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  root.innerHTML = html;
+  ttmBindHead();
+
+  const busy = (btn) => { btn.disabled = true; btn.textContent = '…'; };
+  root.querySelectorAll('[data-rok]').forEach(b => b.addEventListener('click', async () => {
+    busy(b);
+    try { await ttmRespond(b.dataset.rok, 'receiver', 'accept'); toast('Réception validée ✓ — transfert clôturé'); }
+    catch (e) { toast('Erreur : ' + e.message); }
+    await ttmFetchAttention(true); renderTtm();
+  }));
+  root.querySelectorAll('[data-rno]').forEach(b => b.addEventListener('click', () => { ttmRecvEdit[b.dataset.rno] = true; renderTtm(); }));
+  root.querySelectorAll('[data-rcancel]').forEach(b => b.addEventListener('click', () => { delete ttmRecvEdit[b.dataset.rcancel]; renderTtm(); }));
+  root.querySelectorAll('[data-rsend]').forEach(b => b.addEventListener('click', async () => {
+    const id = b.dataset.rsend;
+    const rec = ttmAttention.incoming.find(r => r.kvId === id);
+    if (!rec) return;
+    const lines = rec.lines.map(l => {
+      const inp = root.querySelector('[data-rq="' + id + '"][data-ry="' + CSS.escape(l.y) + '"]');
+      const v = inp ? parseFloat(String(inp.value).replace(',', '.')) : l.qty;
+      return { y: l.y, s: l.s, unit: l.unit, qty: isNaN(v) || v < 0 ? 0 : v };
+    });
+    const cm = root.querySelector('[data-rcm="' + id + '"]');
+    busy(b);
+    try {
+      await ttmRespond(id, 'receiver', 'propose', lines, cm ? cm.value.trim() : '');
+      delete ttmRecvEdit[id];
+      toast('Ta version est partie à ' + rec.from);
+    } catch (e) { toast('Erreur : ' + e.message); }
+    await ttmFetchAttention(true); renderTtm();
+  }));
+  root.querySelectorAll('[data-sok]').forEach(b => b.addEventListener('click', async () => {
+    busy(b);
+    try { await ttmRespond(b.dataset.sok, 'sender', 'accept'); toast('Accord ✓ — transfert clôturé, récap envoyé à Victor'); }
+    catch (e) { toast('Erreur : ' + e.message); }
+    await ttmFetchAttention(true); renderTtm();
+  }));
 }
 
 function ttmRenderForm(root) {
@@ -8167,26 +8357,18 @@ function ttmRenderConfirm(root) {
 
   if (ttmDraft.photo) html += '<div class="ttm-card"><img src="' + ttmDraft.photo + '" style="width:100%; border-radius:10px;" alt="photo"></div>';
 
-  html += vSayHtml('v_question',
-    '<b>Et dans Yokitup, tu l\'as saisi ce transfert ?</b><br>La déclaration part au serveur dans tous les cas — mais si tu envoies sans avoir saisi dans Yokitup, Victor reçoit une alerte immédiate.');
-  html += '<label class="ttm-check"><input type="checkbox" id="ttmYok"' + (ttmDraft.yok ? ' checked' : '') + '> C\'est saisi dans Yokitup ✓</label>';
+  html += vSayHtml('v_pointe',
+    '<b>Vérifie bien les lignes et la photo.</b><br>' + escape(rec.to) + ' recevra ce transfert dans son appli et devra <b>valider la réception</b>. Tant que vous n\'êtes pas d\'accord tous les deux, le transfert reste ouvert.');
 
-  html += '<button type="button" class="ttm-cta" id="ttmSendBtn">📤 Envoyer la déclaration</button>';
+  html += '<button type="button" class="ttm-cta" id="ttmSendBtn">📤 Envoyer à ' + escape(rec.to) + '</button>';
   html += '<button type="button" class="ttm-cta secondary" id="ttmBack" style="margin-top:10px;">← Modifier</button>';
   html += '</div>';
   root.innerHTML = html;
 
-  const yok = document.getElementById('ttmYok');
-  if (yok) yok.addEventListener('change', () => { ttmDraft.yok = yok.checked; ttmSaveDraft(); });
   const back = document.getElementById('ttmBack');
   if (back) back.addEventListener('click', () => { ttmStep = 'form'; renderTtm(); });
   const send = document.getElementById('ttmSendBtn');
-  if (send) send.addEventListener('click', () => {
-    if (!ttmDraft.yok) {
-      if (!confirm('Tu envoies SANS avoir saisi le transfert dans Yokitup ?\n\nVictor recevra une alerte immédiate « NON saisi dans Yokitup ».')) return;
-    }
-    ttmSend();
-  });
+  if (send) send.addEventListener('click', () => { ttmSend(); });
 }
 
 function ttmRenderDone(root) {
@@ -8202,12 +8384,9 @@ function ttmRenderDone(root) {
     html += '<h2>Transfert enregistré</h2>';
     html += '<p style="color:var(--ink-2);">La trace (photo comprise) est stockée côté serveur. Le mail automatique n\'est pas encore actif sur le backend — préviens Victor.</p>';
   } else {
-    html += '<h2>Transfert déclaré ✓</h2>';
-    html += '<p style="color:var(--ink-2);">' + escape(r.from || '') + ' → ' + escape(r.to || '') + ' · ' + ((r.lines||[]).length) + ' ligne(s)' + (r.yokitup_done ? ' · Yokitup ✓' : ' · <b style="color:#9A6B14;">Yokitup non confirmé</b>') + '</p>';
-    html += '<p style="color:var(--ink-3); font-size:13px;">Il figurera dans le récap quotidien de Victor' + (r.yokitup_done ? '.' : ' — et Victor vient de recevoir une alerte « non saisi ».') + '</p>';
-  }
-  if (!r.yokitup_done && !queued) {
-    html += '<div class="ttm-warn" style="text-align:left; margin:14px 0;">Pense à saisir le transfert dans Yokitup si ce n\'est pas fait — Victor va vérifier demain.</div>';
+    html += '<h2>Transfert envoyé ✓</h2>';
+    html += '<p style="color:var(--ink-2);">' + escape(r.from || '') + ' → ' + escape(r.to || '') + ' · ' + ((r.lines||[]).length) + ' ligne(s)</p>';
+    html += '<p style="color:var(--ink-3); font-size:13px;">' + escape(r.to || 'Le destinataire') + ' va recevoir la demande de validation dans son appli. Une fois la réception validée des deux côtés, le transfert est clôturé et Victor reçoit le récap.</p>';
   }
   html += '<button type="button" class="ttm-cta" id="ttmNew" style="margin-top:12px;">Nouveau transfert</button>';
   html += '<button type="button" class="ttm-cta secondary" id="ttmDoneHome" style="margin-top:10px;">🏠 Retour au menu</button>';
