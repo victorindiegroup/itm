@@ -2000,7 +2000,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v150';
+const APP_VERSION = 'v152';
 
 /* === ITM APP === */
 (function(){
@@ -7276,6 +7276,7 @@ let ttmView = 'new';                // onglet interne : 'new' (transfert) | 'his
 let ttmSearchTerm = '';
 let ttmLastSent = null;
 let ttmFromPickerOpen = false;      // admin : sélecteur d'étab de départ ouvert
+let ttmPendingQty = null;           // quantité annoncée avant le produit (voix/clavier)
 
 /* ---- Draft (persisté : si l'app se ferme en pleine saisie, rien n'est perdu) ---- */
 function ttmLoadDraft() {
@@ -7297,7 +7298,8 @@ function ttmSaveDraft() {
   }
 }
 function ttmResetDraft() {
-  ttmDraft = { to: null, lines: [], photo: null, note: '', yok: false };
+  const keepFrom = ttmDraft && ttmDraft.fromOverride;  // admin : garder le départ choisi pour le transfert suivant
+  ttmDraft = { to: null, lines: [], photo: null, note: '', yok: false, fromOverride: keepFrom || null };
   ttmSaveDraft();
 }
 
@@ -7692,15 +7694,14 @@ function ttmRenderForm(root) {
   // 1. Trajet
   html += '<div class="ttm-card"><div class="ttm-label">1 · Trajet</div>';
   if (isAdmin) {
-    html += '<div class="ttm-route"><button type="button" class="ttm-from" id="ttmFromBtn" style="border:none; cursor:pointer;">' + escape(from) + ' ▾</button><span class="ttm-arrow">→</span></div>';
-    if (ttmFromPickerOpen) {
-      html += '<div class="ttm-label" style="margin-top:10px;">Établissement de départ</div>';
-      html += '<div class="ttm-dest-grid">';
-      Object.keys(ETAB_TO_TAG).forEach(n => {
-        html += '<button type="button" class="ttm-dest' + (from === n ? ' on' : '') + '" data-from="' + escape(n) + '">' + escape(n) + '</button>';
-      });
-      html += '</div><div class="ttm-label" style="margin-top:12px;">Destination</div>';
-    }
+    // Admin : pas affecté à un établissement → choix du DÉPART affiché d'office
+    html += '<div class="ttm-label" style="margin-top:2px;">Départ</div>';
+    html += '<div class="ttm-dest-grid">';
+    Object.keys(ETAB_TO_TAG).forEach(n => {
+      html += '<button type="button" class="ttm-dest' + (from === n ? ' on' : '') + '" data-from="' + escape(n) + '">' + escape(n) + '</button>';
+    });
+    html += '</div>';
+    html += '<div class="ttm-label" style="margin-top:12px;">Arrivée</div>';
   } else {
     html += '<div class="ttm-route"><span class="ttm-from">' + escape(from) + '</span><span class="ttm-arrow">→</span></div>';
   }
@@ -7782,7 +7783,6 @@ function ttmRenderForm(root) {
   root.querySelectorAll('[data-from]').forEach(b => b.addEventListener('click', () => {
     ttmDraft.fromOverride = b.dataset.from;
     if (ttmDraft.to === ttmDraft.fromOverride) ttmDraft.to = null;  // origine = destination interdit
-    ttmFromPickerOpen = false;
     ttmSaveDraft(); renderTtm();
   }));
   root.querySelectorAll('[data-dest]').forEach(b => b.addEventListener('click', () => {
@@ -7828,10 +7828,33 @@ function ttmBumpQty(i, delta) {
   renderTtm();
 }
 
+/* ---- Quantité annoncée AVANT le produit (« 3 mathu dom pérignon ») ----
+   Marche à la voix comme au clavier. Chiffres ou lettres (deux, trois…).
+   Garde-fou : une valeur > 200 n'est PAS traitée comme quantité (sinon
+   « 1942 » ou « 1530 añejo » deviendraient des quantités). */
+const TTM_NUM_WORDS = { 'un':1,'une':1,'deux':2,'trois':3,'quatre':4,'cinq':5,'six':6,'sept':7,'huit':8,'neuf':9,'dix':10,'onze':11,'douze':12,'treize':13,'quatorze':14,'quinze':15,'seize':16,'vingt':20,'trente':30 };
+function ttmParseQty(term) {
+  const t = (term || '').trim();
+  let m = /^(\d+(?:[.,]\d+)?)\s+(.+)$/.exec(t);
+  if (m) {
+    const q = parseFloat(m[1].replace(',', '.'));
+    if (q > 0 && q <= 200) return { qty: q, rest: m[2] };
+  }
+  m = /^([a-zA-Zéèêûî]+)\s+(.+)$/.exec(t);
+  if (m && TTM_NUM_WORDS[normalize(m[1])]) {
+    return { qty: TTM_NUM_WORDS[normalize(m[1])], rest: m[2] };
+  }
+  return { qty: null, rest: t };
+}
+
 function ttmRenderResults() {
   const box = document.getElementById('ttmResults');
   if (!box) return;
-  const term = (ttmSearchTerm || '').trim();
+  const raw = (ttmSearchTerm || '').trim();
+  if (raw.length < 2) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const parsed = ttmParseQty(raw);
+  ttmPendingQty = parsed.qty;                    // utilisée au tap sur un résultat
+  const term = parsed.rest;
   if (term.length < 2) { box.style.display = 'none'; box.innerHTML = ''; return; }
   const results = ttmSearch(term);
   const exactYs = new Set(results.map(r => r.p.y));
@@ -7843,6 +7866,9 @@ function ttmRenderResults() {
     return;
   }
   let html = '';
+  if (parsed.qty) {
+    html += '<div style="padding:8px 12px; font-size:12.5px; background:var(--accent-soft); color:var(--accent-dark); border-bottom:1px solid var(--border);"><b>Quantité entendue : ' + fmtQty(parsed.qty) + '</b> — tape le produit pour l\'ajouter en ' + fmtQty(parsed.qty) + ' d\'un coup</div>';
+  }
   results.forEach(r => {
     const p = r.p;
     const wc = (typeof wineColor === 'function') ? wineColor(p.c) : null;
@@ -7867,11 +7893,13 @@ function ttmRenderResults() {
   box.querySelectorAll('[data-y]').forEach(el => el.addEventListener('click', () => {
     const p = CATALOGUE_BY_Y[el.dataset.y];
     if (!p) return;
+    const addQty = ttmPendingQty || 1;
     const existing = ttmDraft.lines.find(l => l.y === p.y);
-    if (existing) { existing.qty += 1; }
+    if (existing) { existing.qty += addQty; }
     else {
-      ttmDraft.lines.push({ y: p.y, s: p.s, qty: 1, unit: p.p, type: p.e, c: p.c });
+      ttmDraft.lines.push({ y: p.y, s: p.s, qty: addQty, unit: p.p, type: p.e, c: p.c });
     }
+    ttmPendingQty = null;
     ttmSearchTerm = '';
     ttmSaveDraft();
     renderTtm();
