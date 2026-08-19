@@ -2008,7 +2008,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v160';
+const APP_VERSION = 'v161';
 
 /* === ITM APP === */
 (function(){
@@ -2549,7 +2549,7 @@ function getAllLiaisons() {
   const byId = {};
   LIAISONS_REMOTE.forEach(l => { byId[l.id] = l; });
   local.forEach(l => { byId[l.id] = l; });  // local prend priorité
-  return Object.values(byId);
+  return Object.values(byId).filter(l => !l.deleted);   // tombstones masqués partout
 }
 
 // Filtrer les liaisons applicables à l'étab actif
@@ -3664,8 +3664,10 @@ function renderDpCatalog(container) {
 
 // ---------- Sous-mode LIAISONS (toutes les liaisons existantes) ----------
 function renderDpLinkages(container) {
-  const local = loadLiaisonsLocal();
-  const remote = LIAISONS_REMOTE.filter(r => !local.some(l => l.id === r.id));
+  const localAll = loadLiaisonsLocal();
+  const deletedIds = new Set(localAll.filter(l => l.deleted).map(l => l.id));
+  const local = localAll.filter(l => !l.deleted);
+  const remote = LIAISONS_REMOTE.filter(r => !deletedIds.has(r.id) && !local.some(l => l.id === r.id));
   const totalCount = local.length + remote.length;
 
   let html = '';
@@ -10545,16 +10547,26 @@ function saveLiaisonEditor() {
 function deleteLiaisonEditor() {
   if (!currentLiaison) return;
   confirmCb = () => {
-    const list = loadLiaisonsLocal().filter(l => l.id !== currentLiaison.id);
-    saveLiaisonsLocal(list);
+    const list = loadLiaisonsLocal();
+    const tomb = {
+      id: currentLiaison.id,
+      deleted: true,
+      updatedAt: new Date().toISOString(),
+      keyword: currentLiaison.keyword,
+      productYokitup: currentLiaison.productYokitup,
+      etabs: currentLiaison.etabs || [],
+    };
+    const idx = list.findIndex(l => l.id === currentLiaison.id);
+    if (idx >= 0) list[idx] = tomb; else list.push(tomb);
+    saveLiaisonsLocal(list);   // auto-push admin → le backend reçoit aussi la suppression
     closeLiaisonEditor();
     if (document.getElementById('vDataproduct') && document.getElementById('vDataproduct').classList.contains('active')) {
       renderDataProduct();
     }
-    toast('Liaison supprimée');
+    toast('Liaison supprimée ✓');
   };
   document.getElementById('confirmTitle').textContent = 'Supprimer cette liaison ?';
-  document.getElementById('confirmMsg').textContent = 'Action définitive sur ce téléphone. Si la liaison est aussi sur GitHub, elle reviendra à la prochaine connexion.';
+  document.getElementById('confirmMsg').textContent = 'La suppression est enregistrée et synchronisée : la liaison ne reviendra pas au prochain sync. Pense à re-Publier pour la retirer aussi chez les chefs.';
   openSheet('shConfirm','ovConfirm');
 }
 
