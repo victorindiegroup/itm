@@ -1603,7 +1603,15 @@
   <div class="login-box">
     <img src="./mascot.png" alt="ITM" class="login-mascot">
     <div class="login-title">OTM</div>
-    <div class="login-sub">Outils de Tes Morts — entre ton code d'accès</div>
+    <div style="color:var(--ink-2); font-size:14px; font-weight:600; letter-spacing:.2px; margin:2px 0 14px;">Outils de Tes Morts</div>
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px 16px; max-width:290px; margin:0 auto 20px; text-align:center;">
+      <div style="font-size:12.5px; color:var(--ink-2); line-height:1.5;">La boîte à outils des équipes <b>Indie Group</b></div>
+      <div style="display:flex; justify-content:center; gap:14px; margin-top:8px; font-size:12px; color:var(--ink-3);">
+        <span>📋 <b>ITM</b> · inventaires</span>
+        <span>🔁 <b>TTM</b> · transferts</span>
+      </div>
+    </div>
+    <div class="login-sub">Entre ton code d'accès 👇</div>
     <div class="login-pin-display">
       <span class="login-pin-dot" data-i="0"></span>
       <span class="login-pin-dot" data-i="1"></span>
@@ -1634,6 +1642,7 @@
     <div class="h-title">Inventaire</div>
     <div class="h-sub" id="hSubDate" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px"></div>
   </div>
+  <button class="zone-pill" id="btnHomeMenu" type="button" style="background:var(--surface-2); color:var(--ink-2); border:1px solid var(--border);" aria-label="Menu des modules">🏠</button>
   <button class="zone-pill" id="btnZone" type="button">
     <span id="zoneLabel">Zone</span>
     <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2020,7 +2029,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v171';
+const APP_VERSION = 'v174';
 
 /* === ITM APP === */
 (function(){
@@ -2173,6 +2182,7 @@ function chooseMode(mode) {
 document.getElementById('modeBtnItm').addEventListener('click', () => chooseMode('itm'));
 document.getElementById('modeBtnTtm').addEventListener('click', () => chooseMode('ttm'));
 document.querySelector('header .logo').addEventListener('click', showModeScreen);
+document.getElementById('btnHomeMenu').addEventListener('click', showModeScreen);
 
 /* Init auth au démarrage : si déjà loggé, skip l'écran */
 currentAuth = loadAuth();
@@ -8321,8 +8331,14 @@ function ttmRenderForm(root) {
 function ttmBumpQty(i, delta) {
   const l = ttmDraft.lines[i];
   if (!l) return;
-  const step = (l.type === 'litre') ? 0.5 : 1;
-  l.qty = Math.max(step, Math.round((l.qty + delta * step) * 100) / 100);
+  // + / − travaillent en BOUTEILLES ENTIÈRES (les décimales se tapent au clavier).
+  // Depuis une valeur décimale : + monte à l'entier suivant, − descend à l'entier inférieur.
+  const q = Number(l.qty) || 0;
+  let v;
+  if (Number.isInteger(q)) v = q + delta;
+  else v = delta > 0 ? Math.ceil(q) : Math.floor(q);
+  if (v < 1) v = Number.isInteger(q) ? 1 : q;   // jamais 0 ni négatif via les boutons
+  l.qty = Math.round(v * 100) / 100;
   ttmSaveDraft();
   renderTtm();
 }
