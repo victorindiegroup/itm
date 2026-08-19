@@ -2008,7 +2008,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v156';
+const APP_VERSION = 'v158';
 
 /* === ITM APP === */
 (function(){
@@ -7357,7 +7357,9 @@ function ttmGetLiaisons() {
 function ttmSearch(term) {
   const t = ttmApplyPhraseAliases(normalize((term || '').trim()));
   if (!t) return [];
-  const words = ttmDropStopWords(ttmExpandAliases(t.split(/\s+/).filter(Boolean)));
+  const rawWords = ttmExpandAliases(t.split(/\s+/).filter(Boolean));
+  const standardOnly = ttmWantsStandard(rawWords);
+  const words = ttmDropStopWords(rawWords);
   const fromTag = ETAB_TO_TAG[ttmFrom()];
 
   // 1. Liaisons manuelles d'abord (même logique bidirectionnelle qu'ITM)
@@ -7381,6 +7383,7 @@ function ttmSearch(term) {
   const res = [];
   for (const p of CATALOGUE) {
     if (viaKwYs.has(p.y)) continue;
+    if (standardOnly && ttmIsLargeFormat(p)) continue;
     const s = normalize(p._search);
     if (!words.every(w => matchWord(w, s))) continue;
     const onCarte = (fromTag === null) || (p.t && p.t.indexOf(fromTag) >= 0);
@@ -7437,10 +7440,24 @@ const TTM_PHRASE_ALIASES = [
 // dom pérignon »). Les formats qui portent du sens (magnum, mathusalem,
 // jéroboam…) sont conservés. Appliqué APRÈS le matching des liaisons
 // manuelles, qui travaillent sur la phrase complète.
-const TTM_STOP_WORDS = new Set(['bouteille','bouteilles','btl','bt','flacon','flacons','quille','quilles','col','cols','de','d','du','des','le','la','les','l','au','aux','et','a']);
+const TTM_STOP_WORDS = new Set(['de','d','du','des','le','la','les','l','au','aux','et','a']);
+// « bouteille » (et synonymes) = filtre FORMAT STANDARD : le mot est retiré de
+// la recherche ET les grands formats (magnum, jéro, mathu…) sont exclus des
+// résultats. « 4 bouteilles dom p » ne montre plus les magnums.
+const TTM_STD_FORMAT_WORDS = new Set(['bouteille','bouteilles','btl','bt','flacon','flacons','quille','quilles','col','cols']);
+const TTM_LARGE_FORMAT_RE = /(magnum|jeroboam|mathusalem|rehoboam|salmanazar|balthazar|nabuchodonosor|imperiale|\b1[57]5 ?cl|\b[36]00 ?cl|\b150 ?cl)/;
+function ttmIsLargeFormat(p) {
+  if (!p._ttmLarge0 && p._ttmLarge0 !== false) {
+    p._ttmLarge0 = TTM_LARGE_FORMAT_RE.test(normalize((p._search || '') + ' ' + (p.s || '')));
+  }
+  return p._ttmLarge0;
+}
 function ttmDropStopWords(words) {
-  const kept = words.filter(w => !TTM_STOP_WORDS.has(w));
+  const kept = words.filter(w => !TTM_STOP_WORDS.has(w) && !TTM_STD_FORMAT_WORDS.has(w));
   return kept.length ? kept : words;   // garde-fou : jamais de requête vide
+}
+function ttmWantsStandard(words) {
+  return words.some(w => TTM_STD_FORMAT_WORDS.has(w));
 }
 
 function ttmApplyPhraseAliases(t) {
@@ -7511,13 +7528,16 @@ function ttmExpandAliases(words) {
 function ttmFuzzySearch(term, excludeYs) {
   const t = ttmApplyPhraseAliases(normalize((term || '').trim()));
   if (!t) return [];
-  let words = ttmDropStopWords(ttmExpandAliases(t.split(/\s+/).filter(w => w.length >= 2)));
+  const rawW = ttmExpandAliases(t.split(/\s+/).filter(w => w.length >= 2));
+  const standardOnly = ttmWantsStandard(rawW);
+  let words = ttmDropStopWords(rawW);
   if (!words.length) return [];
   if (words.length > 6) words = words.slice(0, 6);
   const fromTag = ETAB_TO_TAG[ttmFrom()];
   const scored = [];
   for (const p of CATALOGUE) {
     if (excludeYs && excludeYs.has(p.y)) continue;
+    if (standardOnly && ttmIsLargeFormat(p)) continue;
     if (!p._ttmTokens) p._ttmTokens = normalize(p._search).split(/\s+/).filter(Boolean);
     let sum = 0, ok = true;
     for (const w of words) {
@@ -7965,6 +7985,45 @@ function ttmParseQty(term) {
   return { qty: null, rest: t };
 }
 
+// Mots AMBIGUS que le micro sort à la place de « jéro » (et autres) : on ne
+// peut PAS les remplacer d'office — « Giraud » est un vrai champagne (Henri
+// Giraud) du catalogue. On cherche donc DEUX FOIS : la phrase telle quelle,
+// PUIS une variante où ces mots deviennent le format visé, et on fusionne.
+const TTM_ALT_ALIASES = {
+  'geraud': 'jeroboam', 'giraud': 'jeroboam', 'gerard': 'jeroboam',
+  'jerome': 'jeroboam', 'gyro': 'jeroboam', 'zero': 'jeroboam', 'go': 'jeroboam',
+  // « mag » dit vite → le micro entend « mac » / « MC » — ambigu (Macallan !)
+  'mac': 'magnum', 'mc': 'magnum', 'mack': 'magnum', 'maque': 'magnum',
+};
+function ttmAltVariant(term) {
+  const t = normalize((term || '').trim());
+  if (!t) return null;
+  let changed = false;
+  const words = t.split(/\s+/).map(w => {
+    if (TTM_ALT_ALIASES[w]) { changed = true; return TTM_ALT_ALIASES[w]; }
+    return w;
+  });
+  return changed ? words.join(' ') : null;
+}
+// Recherche fusionnée : phrase d'origine d'abord, variante « format » ensuite
+function ttmSearchAll(term) {
+  const base = ttmSearch(term);
+  const variant = ttmAltVariant(term);
+  if (!variant) return base;
+  const seen = new Set(base.map(r => r.p.y));
+  const extra = ttmSearch(variant).filter(r => !seen.has(r.p.y));
+  return base.concat(extra).slice(0, 40);
+}
+function ttmFuzzyAll(term, excludeYs) {
+  const base = ttmFuzzySearch(term, excludeYs);
+  const variant = ttmAltVariant(term);
+  if (!variant) return base;
+  const seen = new Set(base.map(r => r.p.y));
+  excludeYs.forEach(y => seen.add(y));
+  const extra = ttmFuzzySearch(variant, seen).filter(r => !seen.has(r.p.y));
+  return base.concat(extra).slice(0, 12);
+}
+
 function ttmRenderResults() {
   const box = document.getElementById('ttmResults');
   if (!box) return;
@@ -7974,10 +8033,10 @@ function ttmRenderResults() {
   ttmPendingQty = parsed.qty;                    // utilisée au tap sur un résultat
   const term = parsed.rest;
   if (term.length < 2) { box.style.display = 'none'; box.innerHTML = ''; return; }
-  const results = ttmSearch(term);
+  const results = ttmSearchAll(term);
   const exactYs = new Set(results.map(r => r.p.y));
   // Résultats approchés (dictée vocale / fautes) quand l'exact est maigre
-  const fuzzy = results.length < 5 ? ttmFuzzySearch(term, exactYs) : [];
+  const fuzzy = results.length < 5 ? ttmFuzzyAll(term, exactYs) : [];
   if (!results.length && !fuzzy.length) {
     box.style.display = 'block';
     box.innerHTML = '<div style="padding:12px; color:var(--ink-3); font-size:13px;">Aucun produit trouvé — reformule ou corrige le texte entendu.</div>';
