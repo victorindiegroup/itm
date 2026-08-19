@@ -1,6 +1,6 @@
 // ITM Service Worker — offline-first
 // Change la version à chaque mise à jour du code pour forcer le re-téléchargement
-const CACHE_VERSION = 'itm-v155-le-v-parle';
+const CACHE_VERSION = 'itm-v156-ttm-formats';
 const CACHE_NAME = `itm-cache-${CACHE_VERSION}`;
 
 // Ressources à mettre en cache dès l'installation

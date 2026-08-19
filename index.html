@@ -2008,7 +2008,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v155';
+const APP_VERSION = 'v156';
 
 /* === ITM APP === */
 (function(){
@@ -7357,7 +7357,7 @@ function ttmGetLiaisons() {
 function ttmSearch(term) {
   const t = ttmApplyPhraseAliases(normalize((term || '').trim()));
   if (!t) return [];
-  const words = ttmExpandAliases(t.split(/\s+/).filter(Boolean));
+  const words = ttmDropStopWords(ttmExpandAliases(t.split(/\s+/).filter(Boolean)));
   const fromTag = ETAB_TO_TAG[ttmFrom()];
 
   // 1. Liaisons manuelles d'abord (même logique bidirectionnelle qu'ITM)
@@ -7432,6 +7432,17 @@ const TTM_PHRASE_ALIASES = [
   ['v c', 'veuve clicquot'],
 ];
 
+// Mots « transparents » ignorés dans la recherche : formats bouteille par
+// défaut et petits mots de liaison que la dictée ajoute (« 4 bouteilles DE
+// dom pérignon »). Les formats qui portent du sens (magnum, mathusalem,
+// jéroboam…) sont conservés. Appliqué APRÈS le matching des liaisons
+// manuelles, qui travaillent sur la phrase complète.
+const TTM_STOP_WORDS = new Set(['bouteille','bouteilles','btl','bt','flacon','flacons','quille','quilles','col','cols','de','d','du','des','le','la','les','l','au','aux','et','a']);
+function ttmDropStopWords(words) {
+  const kept = words.filter(w => !TTM_STOP_WORDS.has(w));
+  return kept.length ? kept : words;   // garde-fou : jamais de requête vide
+}
+
 function ttmApplyPhraseAliases(t) {
   let out = ' ' + t + ' ';
   for (const [abbr, full] of TTM_PHRASE_ALIASES) {
@@ -7500,7 +7511,7 @@ function ttmExpandAliases(words) {
 function ttmFuzzySearch(term, excludeYs) {
   const t = ttmApplyPhraseAliases(normalize((term || '').trim()));
   if (!t) return [];
-  let words = ttmExpandAliases(t.split(/\s+/).filter(w => w.length >= 2));
+  let words = ttmDropStopWords(ttmExpandAliases(t.split(/\s+/).filter(w => w.length >= 2)));
   if (!words.length) return [];
   if (words.length > 6) words = words.slice(0, 6);
   const fromTag = ETAB_TO_TAG[ttmFrom()];
