@@ -1470,6 +1470,16 @@
   .ttm-result.prod-wine-porto,  .ttm-line.prod-wine-porto  { background: #EDDDE1; border-left: 6px solid #4A1220; }
   .ttm-result.prod-wine-sake,   .ttm-line.prod-wine-sake   { background: #F7F3EA; border-left: 6px solid #B8AC8C; }
   .ttm-line.prod-wine-rouge, .ttm-line.prod-wine-blanc, .ttm-line.prod-wine-rose, .ttm-line.prod-wine-orange, .ttm-line.prod-wine-bulles, .ttm-line.prod-wine-porto, .ttm-line.prod-wine-sake { padding-left: 8px; border-radius: 8px; }
+  /* Le V en modal centré (messages importants) */
+  .v-modal { position: fixed; inset: 0; z-index: 950; background: rgba(27,27,24,.45); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .v-modal.hidden { display: none; }
+  .v-modal-card { background: var(--bg); border-radius: 18px; box-shadow: 0 12px 40px rgba(0,0,0,.25); padding: 20px 18px; max-width: 360px; width: 100%; text-align: center; }
+  .v-modal-card .vm-img { height: 120px; margin-bottom: 8px; }
+  .v-modal-card .vm-text { font-size: 14.5px; line-height: 1.5; text-align: left; background: var(--surface); border: 1.5px solid var(--ink); border-radius: 14px; padding: 14px; }
+  .v-modal-card .vm-ok { width: 100%; margin-top: 14px; padding: 13px; border: none; border-radius: 100px; background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; }
+  .v-modal-card .vm-nomore { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: 12.5px; color: var(--ink-3); }
+  .v-modal-card .vm-nomore input { width: 18px; height: 18px; accent-color: var(--accent); }
+
   /* Le V qui parle : encadré avec le personnage + bulle de dialogue */
   .v-say { display:flex; align-items:flex-end; gap:10px; margin: 4px 0 12px; }
   .v-say .v-img { width:76px; height:auto; flex:0 0 auto; }
@@ -2008,7 +2018,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v163';
+const APP_VERSION = 'v164';
 
 /* === ITM APP === */
 (function(){
@@ -7802,15 +7812,29 @@ function vSayHidden(key) {
   try { return localStorage.getItem('vsay_hidden_' + key) === '1'; } catch(e){ return false; }
 }
 
-const TTM_TUTO_KEY = 'ttm_vocal_v1';
-function ttmTutoHtml() {
-  if (vSayHidden(TTM_TUTO_KEY)) return '';
-  return vSayHtml('v_parle',
-    'Salut ! Pour aller vite, utilise le <b>micro 🎙️</b> : dis <b>la quantité D\'ABORD, puis le produit</b>.<br>' +
-    '→ « <b>3 mathu Dom P</b> » ajoute 3 mathusalems Dom Pérignon d\'un coup.<br>' +
-    'Les abréviations passent : <b>mathu, jéro, mag, Dom P, DP, VC</b>… et les surnoms maison aussi.<br>' +
-    'Et n\'oublie pas : <b>pas de photo, pas de transfert</b> 📷',
-    TTM_TUTO_KEY);
+const TTM_TUTO_KEY = 'ttm_vocal_v2';   // v2 : ré-affiché pour tout le monde (modal centré)
+let ttmTutoSeenThisLoad = false;       // au plus 1 fois par lancement de l'app
+function ttmShowTutoModal() {
+  if (vSayHidden(TTM_TUTO_KEY) || ttmTutoSeenThisLoad) return;
+  ttmTutoSeenThisLoad = true;
+  const ov = document.createElement('div');
+  ov.className = 'v-modal';
+  ov.innerHTML = '<div class="v-modal-card">'
+    + '<img class="vm-img" src="./v_parle.png" alt="">'
+    + '<div class="vm-text">Salut ! Pour aller vite, utilise le <b>micro 🎙️</b> : dis <b>la quantité D\'ABORD, puis le produit</b>.<br><br>'
+    + '→ « <b>3 mathu Dom P</b> » ajoute 3 mathusalems Dom Pérignon d\'un coup.<br><br>'
+    + 'Les abréviations passent : <b>mathu, jéro, mag, Dom P, DP, VC</b>… et les surnoms maison aussi.<br><br>'
+    + 'Et n\'oublie pas : <b>pas de photo, pas de transfert</b> 📷</div>'
+    + '<button type="button" class="vm-ok" id="vmOk">C\'est compris 👍</button>'
+    + '<label class="vm-nomore"><input type="checkbox" id="vmNoMore"> Ne plus afficher ce message</label>'
+    + '</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#vmOk').addEventListener('click', () => {
+    if (ov.querySelector('#vmNoMore').checked) {
+      try { localStorage.setItem('vsay_hidden_' + TTM_TUTO_KEY, '1'); } catch(e){}
+    }
+    ov.remove();
+  });
 }
 
 function renderTtm() {
@@ -8084,7 +8108,6 @@ function ttmRenderForm(root) {
 
   let html = '<div class="ttm-wrap">';
   html += ttmHeadHtml();
-  html += ttmTutoHtml();
 
   // 1. Trajet
   html += '<div class="ttm-card"><div class="ttm-label">1 · Trajet</div>';
@@ -8213,6 +8236,7 @@ function ttmRenderForm(root) {
     renderTtm();
   });
   ttmRenderResults();
+  ttmShowTutoModal();   // modal centré, 1 fois par lancement, désactivable
 }
 
 function ttmBumpQty(i, delta) {
