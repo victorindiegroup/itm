@@ -1470,6 +1470,14 @@
   .ttm-result.prod-wine-porto,  .ttm-line.prod-wine-porto  { background: #EDDDE1; border-left: 6px solid #4A1220; }
   .ttm-result.prod-wine-sake,   .ttm-line.prod-wine-sake   { background: #F7F3EA; border-left: 6px solid #B8AC8C; }
   .ttm-line.prod-wine-rouge, .ttm-line.prod-wine-blanc, .ttm-line.prod-wine-rose, .ttm-line.prod-wine-orange, .ttm-line.prod-wine-bulles, .ttm-line.prod-wine-porto, .ttm-line.prod-wine-sake { padding-left: 8px; border-radius: 8px; }
+  /* Le V qui parle : encadré avec le personnage + bulle de dialogue */
+  .v-say { display:flex; align-items:flex-end; gap:10px; margin: 4px 0 12px; }
+  .v-say .v-img { width:76px; height:auto; flex:0 0 auto; }
+  .v-say .v-bubble { position:relative; flex:1; background: var(--surface); border:1.5px solid var(--ink); border-radius:14px; padding:12px 14px; font-size:14px; line-height:1.45; box-shadow: var(--shadow-1); }
+  .v-say .v-bubble:before { content:''; position:absolute; left:-9px; bottom:18px; width:14px; height:14px; background:var(--surface); border-left:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink); transform:rotate(45deg); }
+  .v-say .v-bubble b { color: var(--ink); }
+  .v-say .v-nomore { display:flex; align-items:center; gap:8px; margin-top:10px; padding-top:8px; border-top:1px dashed var(--border-strong); font-size:12.5px; color:var(--ink-3); }
+  .v-say .v-nomore input { width:18px; height:18px; accent-color: var(--accent); }
   .mode-screen {
     position: fixed; inset: 0; z-index: 900;
     background: var(--bg);
@@ -2000,7 +2008,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v154';
+const APP_VERSION = 'v155';
 
 /* === ITM APP === */
 (function(){
@@ -7655,6 +7663,42 @@ function ttmCanContinue() {
   return !!(ttmFrom() && ttmDraft.to && ttmDraft.lines.length && ttmDraft.photo);
 }
 
+/* ---- Le V qui parle : encadré personnage + bulle ----
+   pose : v_parle · v_question · v_pointe · v_pouce · v_clipboard · v_merci
+   dismissKey : si fourni, ajoute « Ne plus afficher ce message » (persisté). */
+function vSayHtml(pose, innerHtml, dismissKey) {
+  let h = '<div class="v-say"><img class="v-img" src="./' + pose + '.png" alt="">';
+  h += '<div class="v-bubble">' + innerHtml;
+  if (dismissKey) {
+    h += '<label class="v-nomore"><input type="checkbox" data-vdismiss="' + escape(dismissKey) + '"> Ne plus afficher ce message</label>';
+  }
+  h += '</div></div>';
+  return h;
+}
+function vSayBind(root) {
+  root.querySelectorAll('[data-vdismiss]').forEach(cb => cb.addEventListener('change', () => {
+    if (cb.checked) {
+      try { localStorage.setItem('vsay_hidden_' + cb.dataset.vdismiss, '1'); } catch(e){}
+      toast('Ok, je ne le remontrerai plus 👍');
+      renderTtm();
+    }
+  }));
+}
+function vSayHidden(key) {
+  try { return localStorage.getItem('vsay_hidden_' + key) === '1'; } catch(e){ return false; }
+}
+
+const TTM_TUTO_KEY = 'ttm_vocal_v1';
+function ttmTutoHtml() {
+  if (vSayHidden(TTM_TUTO_KEY)) return '';
+  return vSayHtml('v_parle',
+    'Salut ! Pour aller vite, utilise le <b>micro 🎙️</b> : dis <b>la quantité D\'ABORD, puis le produit</b>.<br>' +
+    '→ « <b>3 mathu Dom P</b> » ajoute 3 mathusalems Dom Pérignon d\'un coup.<br>' +
+    'Les abréviations passent : <b>mathu, jéro, mag, Dom P, DP, VC</b>… et les surnoms maison aussi.<br>' +
+    'Et n\'oublie pas : <b>pas de photo, pas de transfert</b> 📷',
+    TTM_TUTO_KEY);
+}
+
 function renderTtm() {
   const root = document.getElementById('ttmRoot');
   if (!root) return;
@@ -7751,6 +7795,7 @@ function ttmRenderForm(root) {
 
   let html = '<div class="ttm-wrap">';
   html += ttmHeadHtml();
+  html += ttmTutoHtml();
 
   // 1. Trajet
   html += '<div class="ttm-card"><div class="ttm-label">1 · Trajet</div>';
@@ -7839,6 +7884,7 @@ function ttmRenderForm(root) {
 
   /* -- listeners -- */
   ttmBindHead();
+  vSayBind(root);
   const fromBtn = document.getElementById('ttmFromBtn');
   if (fromBtn) fromBtn.addEventListener('click', () => { ttmFromPickerOpen = !ttmFromPickerOpen; renderTtm(); });
   root.querySelectorAll('[data-from]').forEach(b => b.addEventListener('click', () => {
@@ -7983,7 +8029,8 @@ function ttmRenderConfirm(root) {
 
   if (ttmDraft.photo) html += '<div class="ttm-card"><img src="' + ttmDraft.photo + '" style="width:100%; border-radius:10px;" alt="photo"></div>';
 
-  html += '<div class="ttm-warn"><b>⚠️ Maintenant, saisis ce transfert dans Yokitup.</b><br>La déclaration part au serveur dans tous les cas et figurera dans le récap quotidien de Victor. Si tu envoies sans avoir saisi dans Yokitup, Victor reçoit une alerte immédiate.</div>';
+  html += vSayHtml('v_question',
+    '<b>Et dans Yokitup, tu l\'as saisi ce transfert ?</b><br>La déclaration part au serveur dans tous les cas — mais si tu envoies sans avoir saisi dans Yokitup, Victor reçoit une alerte immédiate.');
   html += '<label class="ttm-check"><input type="checkbox" id="ttmYok"' + (ttmDraft.yok ? ' checked' : '') + '> C\'est saisi dans Yokitup ✓</label>';
 
   html += '<button type="button" class="ttm-cta" id="ttmSendBtn">📤 Envoyer la déclaration</button>';
@@ -8009,7 +8056,7 @@ function ttmRenderDone(root) {
   const queued = !!r._queued;
   const fallback = !!r._fallback;
   let html = '<div class="ttm-wrap"><div class="ttm-done">';
-  html += '<div class="d-ico">' + (queued ? '📶' : '✅') + '</div>';
+  html += queued ? '<div class="d-ico">📶</div>' : '<img src="./v_pouce.png" alt="" style="height:110px; margin-bottom:4px;">';
   if (queued) {
     html += '<h2>Transfert en attente de réseau</h2>';
     html += '<p style="color:var(--ink-2);">Il partira automatiquement dès que le téléphone retrouve du réseau. Rien d\'autre à faire.</p>';

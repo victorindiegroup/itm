@@ -1,6 +1,6 @@
 // ITM Service Worker — offline-first
 // Change la version à chaque mise à jour du code pour forcer le re-téléchargement
-const CACHE_VERSION = 'itm-v154-ttm-liaisons';
+const CACHE_VERSION = 'itm-v155-le-v-parle';
 const CACHE_NAME = `itm-cache-${CACHE_VERSION}`;
 
 // Ressources à mettre en cache dès l'installation
@@ -12,6 +12,12 @@ const CORE_ASSETS = [
   './icon-512.png',
   './catalogue.json',
   './mascot.png',
+  './v_parle.png',
+  './v_question.png',
+  './v_pointe.png',
+  './v_pouce.png',
+  './v_clipboard.png',
+  './v_merci.png',
   './pos_pablo.csv',
   './pos_pablo_sbh.csv',
   './pos_ormeau.csv',
