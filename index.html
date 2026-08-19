@@ -2000,7 +2000,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v152';
+const APP_VERSION = 'v154';
 
 /* === ITM APP === */
 (function(){
@@ -7333,13 +7333,46 @@ function ttmFrom() {
   return state.estab || null;
 }
 
+/* Liaisons manuelles ITM (mots-clés admin → produit) réutilisées telles quelles
+   dans TTM : même source de données (publiées backend + locales), filtrées sur
+   l'établissement de DÉPART du transfert. */
+function ttmGetLiaisons() {
+  const all = (typeof getAllLiaisons === 'function') ? getAllLiaisons() : [];
+  const fromTag = ETAB_TO_TAG[ttmFrom()];
+  return all.filter(l => {
+    if (!l.etabs || l.etabs.length === 0) return true;
+    if (l.etabs.includes('*')) return true;
+    return fromTag && l.etabs.includes(fromTag);
+  });
+}
+
 function ttmSearch(term) {
-  const t = normalize((term || '').trim());
+  const t = ttmApplyPhraseAliases(normalize((term || '').trim()));
   if (!t) return [];
   const words = ttmExpandAliases(t.split(/\s+/).filter(Boolean));
   const fromTag = ETAB_TO_TAG[ttmFrom()];
+
+  // 1. Liaisons manuelles d'abord (même logique bidirectionnelle qu'ITM)
+  const viaKw = [];
+  const viaKwYs = new Set();
+  for (const l of ttmGetLiaisons()) {
+    const kwNorm = normalize(l.keyword);
+    if (!kwNorm) continue;
+    const kwWords = kwNorm.split(/\s+/).filter(Boolean);
+    const allQueryInKw = words.every(w => matchWord(w, kwNorm));
+    const allKwInQuery = kwWords.every(w => matchWord(w, t));
+    if (!allQueryInKw && !allKwInQuery) continue;
+    const p = CATALOGUE_BY_Y[l.productYokitup] || CATALOGUE.find(x => x.y === l.productYokitup);
+    if (!p || viaKwYs.has(p.y)) continue;
+    viaKwYs.add(p.y);
+    const onCarte = (fromTag === null) || (p.t && p.t.indexOf(fromTag) >= 0);
+    viaKw.push({ p, onCarte, viaKw: l.keyword });
+  }
+
+  // 2. Recherche classique par nom
   const res = [];
   for (const p of CATALOGUE) {
+    if (viaKwYs.has(p.y)) continue;
     const s = normalize(p._search);
     if (!words.every(w => matchWord(w, s))) continue;
     const onCarte = (fromTag === null) || (p.t && p.t.indexOf(fromTag) >= 0);
@@ -7350,7 +7383,7 @@ function ttmSearch(term) {
     if (a.onCarte !== b.onCarte) return a.onCarte ? -1 : 1;
     return a.p.s.localeCompare(b.p.s);
   });
-  return res.slice(0, 40);
+  return viaKw.concat(res).slice(0, 40);
 }
 
 /* ---- Recherche approchée (dictée vocale & fautes de frappe) ----
@@ -7362,14 +7395,42 @@ function ttmSearch(term) {
    Les résultats approchés s'affichent SOUS les résultats exacts. */
 
 // Abréviations métier → mots du catalogue (étendues côté requête uniquement)
+// NB : la requête est déjà normalisée (minuscules, sans accents) quand ces
+// tables s'appliquent → « Jéro » arrive ici en « jero ».
 const TTM_ALIASES = {
-  'mathu': 'mathusalem', 'mathieu': 'mathusalem',
-  'jero': 'jeroboam', 'jero.': 'jeroboam',
+  // formats
+  'mathu': 'mathusalem', 'mathieu': 'mathusalem', 'mathus': 'mathusalem',
+  'jero': 'jeroboam', 'gero': 'jeroboam', 'jerob': 'jeroboam',
+  'reho': 'rehoboam',
+  'salma': 'salmanazar',
+  'baltha': 'balthazar',
+  'nabu': 'nabuchodonosor',
   'mag': 'magnum',
-  'dp': 'dom perignon',
+  // marques
+  'dp': 'dom perignon', 'dompe': 'dom perignon',
   'vc': 'veuve clicquot',
+  'clico': 'clicquot', 'cliquot': 'clicquot', 'clicot': 'clicquot',
+  'belve': 'belvedere',
   'rd': 'romanee conti',
 };
+
+// Abréviations en PLUSIEURS mots (« dom p », « d p »…) — remplacées avant le
+// découpage en mots. Ordre : des plus longues aux plus courtes.
+const TTM_PHRASE_ALIASES = [
+  ['dom per', 'dom perignon'],
+  ['dom pe', 'dom perignon'],
+  ['dom p', 'dom perignon'],
+  ['d p', 'dom perignon'],
+  ['v c', 'veuve clicquot'],
+];
+
+function ttmApplyPhraseAliases(t) {
+  let out = ' ' + t + ' ';
+  for (const [abbr, full] of TTM_PHRASE_ALIASES) {
+    out = out.split(' ' + abbr + ' ').join(' ' + full + ' ');
+  }
+  return out.trim();
+}
 
 function ttmFold(w) {
   return String(w || '')
@@ -7429,7 +7490,7 @@ function ttmExpandAliases(words) {
 }
 
 function ttmFuzzySearch(term, excludeYs) {
-  const t = normalize((term || '').trim());
+  const t = ttmApplyPhraseAliases(normalize((term || '').trim()));
   if (!t) return [];
   let words = ttmExpandAliases(t.split(/\s+/).filter(w => w.length >= 2));
   if (!words.length) return [];
@@ -7872,8 +7933,9 @@ function ttmRenderResults() {
   results.forEach(r => {
     const p = r.p;
     const wc = (typeof wineColor === 'function') ? wineColor(p.c) : null;
+    const kwBadge = r.viaKw ? ' <span style="font-size:10.5px; color:var(--accent-dark); background:var(--accent-soft); border-radius:6px; padding:1px 6px;">🔎 via « ' + escape(r.viaKw) + ' »</span>' : '';
     html += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-y="' + escape(p.y) + '">';
-    html += '<div class="r-name">' + escape(p.s) + (r.onCarte ? '' : ' <span style="color:var(--ink-3); font-size:11px;">(hors carte ' + escape(ttmFrom() || '') + ')</span>') + '</div>';
+    html += '<div class="r-name">' + escape(p.s) + kwBadge + (r.onCarte ? '' : ' <span style="color:var(--ink-3); font-size:11px;">(hors carte ' + escape(ttmFrom() || '') + ')</span>') + '</div>';
     html += '<span class="r-pill">' + escape(p.p) + '</span>';
     html += '</div>';
   });
