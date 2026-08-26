@@ -2029,7 +2029,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v177';
+const APP_VERSION = 'v178';
 
 /* === ITM APP === */
 (function(){
@@ -4648,6 +4648,10 @@ const SOFT_CANETTE_ETABS = new Set([
 // Cas spécial : SOFT en "VERSE" + bar SBH → on ajoute le format canette 33cL à la fin.
 function getFormatsForProduct(product) {
   if (!product) return FORMATS_LITRE;
+  // Cas spécial APONA : uniquement 10cl et 15cl (pas de 50/70/75/100).
+  if (((product.y || product.s || '').toUpperCase()).includes('APONA')) {
+    return [{label: '10cl', cl: 10}, {label: '15cl', cl: 15}];
+  }
   const isSoft = (product.c || '').toUpperCase().includes('SOFT');
   const isVerse = /\bVERSE\b\s*$/.test((product.y || product.s || '').toUpperCase());
   if (isSoft && isVerse && SOFT_CANETTE_ETABS.has(state.estab)) {
