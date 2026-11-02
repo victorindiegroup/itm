@@ -2029,7 +2029,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v178';
+const APP_VERSION = 'v179';
 
 /* === ITM APP === */
 (function(){
@@ -2780,6 +2780,57 @@ async function sendInventoryToBackend(inventory, etab, cigarettesCounted, etabHa
     throw new Error(data.error || ('HTTP ' + response.status));
   }
   return await response.json();
+}
+
+// v179 : marquer le statut d'envoi réel d'un inventaire archivé.
+// status: 'cloud' (confirmé par le Worker) | 'shared' (feuille de partage validée)
+// 'exported' est conservé pour compat avec l'ancien rendu/les anciens inventaires.
+function markInventorySent(inv, status) {
+  // Retrouver l'objet DANS state.inventories (exportAndMailInventory peut
+  // recevoir un spread/une copie) pour que la sauvegarde soit effective.
+  const stored = (state.inventories || []).find(i => i.id === inv.id) || inv;
+  stored.sendStatus = status;
+  stored.exported = true;
+  if (status === 'cloud') stored.cloudSentAt = new Date().toISOString();
+  saveState();
+  try { renderSession(); } catch (e) {}
+}
+
+// v179 : renvoi automatique des inventaires jamais confirmés par le Worker.
+// Appelé au démarrage, au retour du focus et au retour du réseau.
+// Ne concerne que les inventaires créés depuis la v179 (champ sendStatus présent)
+// et de moins de 30 jours. Statuts retentés : 'pending' ET 'shared' (le partage
+// natif a pu envoyer un mail, mais le Worker n'a rien reçu → l'admin ne voit
+// rien dans sa liste tant que le cloud n'a pas confirmé).
+let _retryingInventories = false;
+async function retryPendingInventories() {
+  if (_retryingInventories) return;
+  if (navigator.onLine === false) return;
+  const cutoff = Date.now() - 30 * 24 * 3600 * 1000;
+  const pending = (state.inventories || []).filter(i =>
+    i.sendStatus && i.sendStatus !== 'cloud' &&
+    new Date(i.finishedAt || 0).getTime() > cutoff
+  );
+  if (pending.length === 0) return;
+  _retryingInventories = true;
+  try {
+    for (const inv of pending) {
+      try {
+        const etab = inv.etab || state.estab;
+        const cigs = inventoryHasCigarettes(inv);
+        const hasCigs = etabHasCigarettes(etab);
+        await sendInventoryToBackend({ ...inv, etab: etab }, etab, cigs, hasCigs);
+        markInventorySent(inv, 'cloud');
+        toast('Inventaire du ' + fmtDate(inv.date) + ' envoyé ✓');
+      } catch (e) {
+        console.warn('Renvoi auto inventaire échoué (' + inv.id + ') :', e.message);
+        // On n'alerte pas le chef à chaque échec silencieux : le badge
+        // "⏳ En attente" reste visible dans l'historique.
+      }
+    }
+  } finally {
+    _retryingInventories = false;
+  }
 }
 
 // Récupérer tous les inventaires clôturés (admin)
@@ -5243,8 +5294,21 @@ function renderSession(){
     state.inventories.forEach(inv => {
       const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
       const typeLbl = invTypeLabel(inv.type);
-      const statusClass = inv.exported ? 'exported' : 'not-exported';
-      const statusLbl = inv.exported ? '✓ Envoyé' : '⚠ Non envoyé';
+      // v179 : badge basé sur le statut d'envoi RÉEL.
+      // 'cloud' = confirmé par le serveur ; 'shared' = feuille de partage validée
+      // (mail probable) mais serveur pas encore confirmé → renvoi auto en cours ;
+      // 'pending' = rien de confirmé → renvoi auto en cours.
+      // Anciens inventaires (pas de sendStatus) : on garde l'affichage historique.
+      let statusClass, statusLbl;
+      if (inv.sendStatus === 'cloud' || (!inv.sendStatus && inv.exported)) {
+        statusClass = 'exported'; statusLbl = '✓ Envoyé';
+      } else if (inv.sendStatus === 'shared') {
+        statusClass = 'exported'; statusLbl = '✓ Partagé';
+      } else if (inv.sendStatus === 'pending') {
+        statusClass = 'not-exported'; statusLbl = '⏳ En attente d\'envoi';
+      } else {
+        statusClass = 'not-exported'; statusLbl = '⚠ Non envoyé';
+      }
       // Étab : utilise inv.etab si présent, sinon fallback sur l'étab actif (anciens inventaires sans champ)
       const etabLbl = inv.etab ? `${escape(inv.etab)} · ` : '';
       const personLbl = inv.personne ? `${escape(inv.personne)}` : '';
@@ -8963,8 +9027,11 @@ function confirmFinishInventory(){
     // 1. Archiver l'inventaire dans state.inventories + clear currentInventory
     const inv = finishInventory();
     if (!inv) return;
-    // 2. Marquer exporté + sauver AVANT tout (pour que le localStorage soit fiable)
-    inv.exported = true;
+    // 2. v179 : on NE marque PLUS "exporté" en avance. Le statut reste 'pending'
+    // tant qu'aucun envoi n'est confirmé (cloud ou partage). Avant, le badge
+    // "✓ Envoyé" s'affichait même si le POST échouait et que le chef annulait
+    // le partage → inventaires perdus sans que personne ne s'en rende compte.
+    inv.sendStatus = 'pending';
     saveState();
     // 3. Re-render l'UI avant le mailto (qui peut suspendre l'exécution)
     renderSession();
@@ -9100,17 +9167,22 @@ async function exportAndMailInventory(inv) {
   // Si ça marche, le chef n'a plus besoin d'envoyer par mail
   // Si ça échoue, on continue sur le workflow mail classique
   let sentToCloud = false;
+  const invEtab = inv.etab || state.estab;
   try {
     const cigs = inventoryHasCigarettes(inv);
-    const hasCigs = etabHasCigarettes(state.estab);
+    const hasCigs = etabHasCigarettes(invEtab);
     await sendInventoryToBackend({
       ...inv,
-      etab: state.estab
-    }, state.estab, cigs, hasCigs);
+      etab: invEtab
+    }, invEtab, cigs, hasCigs);
     sentToCloud = true;
+    markInventorySent(inv, 'cloud');
     toast('Inventaire envoyé ✓');
   } catch (e) {
     console.warn('Envoi cloud échoué, fallback mail:', e.message);
+    // v179 : prévenir clairement le chef que l'envoi direct a échoué,
+    // et que l'appli réessaiera toute seule.
+    toast('⚠ Serveur injoignable — partage manuel proposé. L\'appli réessaiera automatiquement.');
   }
 
   // Si cloud OK, on s'arrête là. Sinon, on continue vers le partage classique.
@@ -9208,11 +9280,15 @@ async function exportAndMailInventory(inv) {
         text: bodyShare,
         files: [csvFile]
       });
+      // v179 : le partage a abouti (feuille de partage validée). Le mail est
+      // probablement parti, mais le serveur ne l'a pas : le renvoi auto
+      // continuera de tenter le cloud en arrière-plan (statut 'shared').
+      markInventorySent(inv, 'shared');
       toast('Inventaire partagé');
       return;
     } catch (err) {
       if (err.name === 'AbortError') {
-        toast('Envoi annulé');
+        toast('Envoi annulé — l\'inventaire sera renvoyé automatiquement dès que possible');
         return;
       }
       console.warn('navigator.share a échoué:', err);
@@ -9286,7 +9362,7 @@ function buildDiagReport() {
     lines.push('type : ' + (inv.type || '(non défini)'));
     lines.push('personne : ' + (inv.personne || '(aucun)'));
     lines.push('lines.length : ' + ((inv.lines||[]).length));
-    lines.push('exported : ' + inv.exported);
+    lines.push('exported : ' + inv.exported + (inv.sendStatus ? ' (' + inv.sendStatus + ')' : ''));
     lines.push('');
 
     // Liste de TOUS les produits saisis dans CET inventaire
@@ -9947,8 +10023,9 @@ function resendInventoryDetail() {
   if (!currentDetailInvId) return;
   const inv = state.inventories.find(i => i.id === currentDetailInvId);
   if (!inv) return;
-  // Marquer comme envoyé et sauver avant le partage (au cas où l'exécution s'interrompe)
-  inv.exported = true;
+  // v179 : plus de marquage optimiste. Le statut repasse en 'pending' et ne
+  // deviendra 'cloud'/'shared' que si l'envoi aboutit réellement.
+  inv.sendStatus = 'pending';
   saveState();
   renderSession();
   // Lancer le partage (async, non bloquant)
@@ -9970,7 +10047,7 @@ window.debugITM = function() {
   } : null);
   console.log('inventories archivés:', state.inventories.map(i => ({
     id: i.id, date: i.date, moment: i.moment, personne: i.personne,
-    nbLines: i.lines.length, exported: i.exported
+    nbLines: i.lines.length, exported: i.exported, sendStatus: i.sendStatus
   })));
   console.log('state.lines (via proxy):', state.lines.length, 'lignes');
   console.log('Descriptor lines:', Object.getOwnPropertyDescriptor(state, 'lines'));
@@ -11076,11 +11153,21 @@ function init(){
       .catch(err => { console.warn('Sync batchs échouée :', err.message); });
   }
 
+  // v179 : renvoi auto des inventaires non confirmés, au démarrage…
+  retryPendingInventories().catch(() => {});
+
   // Au retour du focus (app en arrière-plan puis ramenée devant) → re-sync batchs
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && state.estab) {
       syncBatchesForEtab(state.estab).catch(() => {});
+      // v179 : …au retour du focus…
+      retryPendingInventories().catch(() => {});
     }
+  });
+
+  // v179 : …et dès que le réseau revient.
+  window.addEventListener('online', () => {
+    retryPendingInventories().catch(() => {});
   });
 
   // Détecter l'ouverture du clavier mobile via visualViewport
