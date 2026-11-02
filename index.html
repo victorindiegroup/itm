@@ -1927,7 +1927,8 @@
   <div class="sheet-body" id="invDetailBody"></div>
   <div class="sheet-foot">
     <button type="button" class="btn-cancel" id="invDetailClose">Fermer</button>
-    <button type="button" class="btn-sec" id="invDetailDownload">📥 Excel</button>
+    <button type="button" class="btn-sec" id="invDetailYokitup">📊 Excel Yokitup</button>
+    <button type="button" class="btn-sec" id="invDetailDownload">📥 Excel détaillé</button>
     <button type="button" class="btn-sec" id="invDetailPdf">📄 PDF</button>
     <button type="button" class="btn-sec admin-only" id="invDetailDelete" style="color: var(--danger); border-color: var(--danger);">Supprimer</button>
     <button type="button" class="btn-valid" id="invDetailResend">Renvoyer par mail</button>
@@ -2029,7 +2030,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v179';
+const APP_VERSION = 'v180';
 
 /* === ITM APP === */
 (function(){
@@ -9643,13 +9644,18 @@ function buildDetailedXlsx(inv) {
 
   const data = [
     ...headerRows,
-    ['Produit', 'Zone', 'Quantité', 'Total produit', 'Commentaire'],
+    ['Produit', 'Nom Yokitup', 'Zone', 'Quantité', 'Total produit', 'Commentaire'],
   ];
 
   items.forEach(it => {
     if (it.zones.length === 0) return;
+    // v180 : colonne "Nom Yokitup" (champ y exact, avec préfixes B./M./etc.)
+    // pour que le fichier détaillé soit raccordable à Yokitup sans deviner.
+    // Les batchs n'ont pas de nom Yokitup : ils sont décomposés en ingrédients
+    // dans l'Excel Yokitup (bouton dédié).
+    const yName = it.isBatch ? '(batch — décomposé dans l\'Excel Yokitup)' : (it.product && it.product.y) || '';
     it.zones.forEach(z => {
-      data.push([it.label, z.zone, z.qty, it.total, z.comment || '']);
+      data.push([it.label, yName, z.zone, z.qty, it.total, z.comment || '']);
     });
   });
 
@@ -9657,6 +9663,7 @@ function buildDetailedXlsx(inv) {
   // Largeurs de colonnes pour la lisibilité
   ws['!cols'] = [
     { wch: 50 },  // Produit
+    { wch: 55 },  // Nom Yokitup
     { wch: 15 },  // Zone
     { wch: 12 },  // Quantité
     { wch: 14 },  // Total produit
@@ -9666,6 +9673,23 @@ function buildDetailedXlsx(inv) {
   XLSX.utils.book_append_sheet(wb, ws, 'Détail par zone');
   const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
   return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+// v180 : téléchargement de l'Excel FORMAT IMPORT YOKITUP depuis le sheet de détail
+// (même fichier que le bouton "Télécharger Excel" des cartes : product_name = nom
+// Yokitup exact, agrégé une ligne par produit, batchs décomposés — importable tel quel).
+function downloadCurrentYokitupXlsx() {
+  const inv = currentDetailInv || (state.inventories || []).find(i => i.id === currentDetailInvId);
+  if (!inv) {
+    toast('Aucun inventaire à télécharger');
+    return;
+  }
+  try {
+    downloadInventoryCSV(inv);
+    toast('Excel Yokitup téléchargé');
+  } catch (e) {
+    toast('Erreur : ' + e.message);
+  }
 }
 
 // Déclenche le téléchargement du xlsx détaillé pour l'inventaire courant (sheet de détail)
@@ -11507,6 +11531,7 @@ function init(){
   document.getElementById('invDetailDelete').addEventListener('click', deleteInventoryDetail);
   document.getElementById('invDetailResend').addEventListener('click', resendInventoryDetail);
   document.getElementById('invDetailDownload').addEventListener('click', downloadCurrentDetailXlsx);
+  document.getElementById('invDetailYokitup').addEventListener('click', downloadCurrentYokitupXlsx);
   document.getElementById('invDetailPdf').addEventListener('click', openCurrentDetailPdf);
 
   // Éditeur batch
