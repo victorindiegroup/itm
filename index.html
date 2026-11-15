@@ -1562,24 +1562,52 @@
   .ttm-hist-item .h-status.pending { background:#FDF3E3; color:#9A6B14; }
   .ttm-done { text-align:center; padding: 30px 10px; }
   .ttm-done .d-ico { font-size: 44px; }
-  /* ---------- DTM « La Douane » (v181) ---------- */
+  /* ---------- ETM « L'Épicerie » (ex-DTM, v182) ---------- */
   body.dtm-mode .tabs { display: none !important; }
   body.dtm-mode .logo { background: var(--ink); }
   body.dtm-mode .zone-pill { display: none !important; }
   body.dtm-mode .h-sub { visibility: hidden; }
+  .dtm-bigshot { width:100%; min-height:34vh; border:2.5px dashed var(--border-strong); border-radius:18px; background:var(--surface-2); color:var(--ink-2); font-size:46px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+  .dtm-bigshot span { font-size:18px; font-weight:700; color:var(--ink); }
+  .dtm-bigshot small { font-size:12.5px; color:var(--ink-3); max-width:240px; line-height:1.4; }
+  .dtm-bigshot:active { background:var(--accent-soft, var(--surface)); border-color:var(--accent); }
+  .dtm-pop { max-width:380px; width:100%; text-align:left; }
+  .dtm-pop-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:6px; }
+  .dtm-pop-thumb { width:64px; height:64px; object-fit:cover; border-radius:10px; }
+  .dtm-pop-x { width:40px; height:40px; border-radius:50%; border:1px solid var(--border-strong); background:var(--surface-2); font-size:17px; margin-left:auto; flex:0 0 auto; }
+  .dtm-pop-title { font-size:21px; font-weight:800; margin:4px 0 12px; letter-spacing:-.3px; }
+  .dtm-pop-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .dtm-pop-qty { grid-template-columns:1fr 1fr 1fr; }
+  .dtm-pop-chip { padding:18px 8px; border:1.5px solid var(--border-strong); border-radius:14px; background:var(--surface); font-size:17px; font-weight:700; color:var(--ink); }
+  .dtm-pop-chip:active { background:var(--accent-soft, var(--surface-2)); border-color:var(--accent); }
+  .dtm-pop-chip small { display:block; font-size:12.5px; font-weight:600; color:var(--ink-3); margin-top:2px; }
+  .dtm-pop-qty .dtm-pop-chip { font-size:24px; padding:16px 0; }
+  /* spécificité renforcée : .ttm-qty button imposait fond crème + rond 46px */
+  .dtm-pop-ok, .dtm-pop .ttm-qty button.dtm-pop-ok { width:auto; height:auto; min-height:50px; padding:14px 26px; border:none; border-radius:14px; background:#1D9E75; color:#fff; font-size:17px; font-weight:800; letter-spacing:.5px; margin-left:10px; flex:0 0 auto; box-shadow:0 3px 10px rgba(29,158,117,.35); line-height:1.2; }
+  .dtm-pop-ok:active, .dtm-pop .ttm-qty button.dtm-pop-ok:active { transform:scale(.97); background:#157A5A; }
+  .dtm-pop-link { display:block; width:100%; margin-top:12px; padding:11px; border:none; background:none; color:var(--accent-dark, var(--accent)); font-size:14px; font-weight:600; text-align:center; }
+  .dtm-pop-prod { margin:-4px 0 10px; font-size:15px; font-weight:600; }
+  .dtm-pop .ttm-result { padding:15px 14px; }
+  .dtm-pop .ttm-result .r-name { font-size:16px; }
+  .dtm-pop .ttm-qty button { width:46px; height:46px; font-size:22px; }
+  .dtm-who-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+  .dtm-who { flex:1; text-align:left; padding:17px 18px; font-size:17.5px; font-weight:600; border:1px solid var(--border-strong); border-radius:14px; background:var(--surface); color:var(--ink); }
+  .dtm-who:active, .dtm-who.on { background:var(--accent-soft, var(--surface-2)); border-color:var(--accent); }
+  button.dtm-fmt-btn { border-style:dashed; cursor:pointer; }
+  .dtm-fmt { display:inline-block; background:var(--surface-2); border:1px solid var(--border-strong); border-radius:100px; padding:2px 10px; font-size:13px; font-weight:700; color:var(--ink-2); white-space:nowrap; vertical-align:middle; margin-left:4px; }
   .dtm-banner { background:#FBF3CE; border:1.5px solid #C08A14; color:#7a5a0e; border-radius:12px; padding:10px 12px; font-size:13px; line-height:1.45; margin:0 0 12px; }
   .dtm-swap { margin-left:6px; width:40px; height:40px; border-radius:50%; border:1px solid var(--border-strong); background:var(--surface-2); font-size:18px; color:var(--ink-2); flex:0 0 auto; }
-  .dtm-chip { padding:8px 13px; border:1px solid var(--border-strong); border-radius:100px; background:var(--surface-2); font-size:13px; color:var(--ink-2); }
+  .dtm-chip { padding:12px 18px; border:1px solid var(--border-strong); border-radius:100px; background:var(--surface-2); font-size:15.5px; color:var(--ink-2); }
   .dtm-chip.on { background:var(--ink); color:#fff; border-color:var(--ink); font-weight:600; }
   .dtm-line { display:flex; gap:10px; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:10px; }
-  .dtm-line img, .dtm-nophoto { width:54px; height:54px; object-fit:cover; border-radius:8px; flex:0 0 auto; background:var(--surface-2); }
+  .dtm-line img, .dtm-nophoto { width:66px; height:66px; object-fit:cover; border-radius:10px; flex:0 0 auto; background:var(--surface-2); }
   .dtm-nophoto { display:flex; align-items:center; justify-content:center; font-size:22px; color:var(--ink-3); }
   .dtm-line-main { flex:1; min-width:0; }
-  .dtm-line .l-name { font-size:14px; }
+  .dtm-line .l-name { font-size:15.5px; line-height:1.3; }
   .dtm-line .l-name.dtm-unlinked { color:#C04343; font-weight:600; }
-  .dtm-line-sub { color:var(--ink-3); font-size:11.5px; margin-top:2px; }
+  .dtm-line-sub { color:var(--ink-3); font-size:12.5px; margin-top:3px; }
   .dtm-line-qty { flex:0 0 auto; }
-  .dtm-link-btn { margin-top:6px; padding:7px 12px; border-radius:100px; border:1px solid var(--border-strong); background:var(--surface-2); font-size:12.5px; color:var(--ink-2); }
+  .dtm-link-btn { margin-top:8px; padding:11px 18px; border-radius:100px; border:1.5px solid var(--border-strong); background:var(--surface-2); font-size:14.5px; font-weight:600; color:var(--ink-2); }
   .dtm-closure { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
   .dtm-closure-mini { font-size:12.5px; color:var(--ink-2); padding:4px 0; border-bottom:1px dashed var(--border); }
   .dtm-badge { border-radius:100px; padding:3px 9px; font-size:11px; font-weight:600; }
@@ -1590,6 +1618,26 @@
   .dtm-stamp { font-size:110px; line-height:1; filter:drop-shadow(0 8px 18px rgba(0,0,0,.4)); }
   .dtm-stamp-txt { margin-top:6px; display:inline-block; border:4px solid #C0392B; color:#C0392B; border-radius:10px; padding:4px 14px; font-weight:800; font-size:22px; letter-spacing:2px; background:rgba(255,255,255,.88); transform:rotate(-7deg); }
   @keyframes dtmStampIn { 0% { transform:scale(2.6) rotate(-16deg); opacity:0; } 60% { transform:scale(.94) rotate(4deg); opacity:1; } 100% { transform:scale(1) rotate(0); } }
+  /* Ergonomie DTM (retour Victor 15/11) : service, cave sombre, une main —
+     tout est plus gros QUE DANS TTM, scopé #vDtm pour ne rien changer ailleurs. */
+  #vDtm .search { font-size:17px; padding:15px 14px 15px 44px; }   /* ≥16px : empêche le zoom auto iOS à la prise de focus */
+  #vDtm .search-ico { font-size:19px; }
+  #vDtm .ttm-results { max-height:46vh; }
+  #vDtm .ttm-result { padding:16px 14px; gap:10px; min-height:56px; }
+  #vDtm .ttm-result .r-name { font-size:16.5px; line-height:1.35; }
+  #vDtm .ttm-result:active { background:var(--surface-2); }
+  #vDtm .ttm-qty button { width:46px; height:46px; font-size:22px; }
+  #vDtm .ttm-qty input { font-size:18px; width:64px; padding:9px 2px; }
+  #vDtm .ttm-photo-btn { padding:24px 14px; font-size:17px; }
+  #vDtm .ttm-photo-thumb img { max-height:220px; }
+  #vDtm .ttm-cta { padding:17px; font-size:17px; }
+  #vDtm .ttm-from { font-size:15px; padding:9px 15px; }
+  #vDtm .ttm-card { padding:16px 14px; }
+  #vDtm .ttm-label { font-size:12px; }
+  #vDtm .ttm-del { width:40px; height:40px; font-size:17px; }
+  #vDtm .ttm-tabs button { padding:13px 10px; font-size:15px; }
+  .dtm-line { padding:12px 10px; gap:12px; }
+  .dtm-banner { font-size:14px; padding:12px 14px; }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -1625,10 +1673,10 @@
       </span>
     </button>
     <button type="button" class="mode-card" id="modeBtnDtm" style="display:none;">
-      <span class="m-ico">🛂</span>
+      <span class="m-ico">🛒</span>
       <span>
-        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">DTM <span style="font-size:13px; letter-spacing:0;">La Douane</span></div>
-        <div class="m-desc"><b>Déclarer un prélèvement</b> — bouteille qui passe entre Pablo et Cream, photo en 10 s</div>
+        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">ETM <span style="font-size:13px; letter-spacing:0;">L'Épicerie</span></div>
+        <div class="m-desc"><b>Déclarer un prélèvement</b> — une bouteille passe entre Pablo et Cream, photo en 10 s</div>
       </span>
     </button>
   </div>
@@ -2069,7 +2117,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v181';
+const APP_VERSION = 'v183';
 
 /* === ITM APP === */
 (function(){
@@ -2187,6 +2235,11 @@ function onLoginSuccess() {
   }
 }
 
+/* TTM en veille (demande Victor 15/11/2026) : tuile masquée sur l'écran d'accueil,
+   pastilles/toasts/app-badge coupés. Le module et ses données restent intacts —
+   repasser le flag à false pour tout réactiver. */
+const TTM_STANDBY = true;
+
 /* ---------- Menu d'accueil ITM / TTM ----------
    Affiché après le PIN et à chaque ouverture de l'app.
    Retour possible en tapant le logo « ITM » du header. */
@@ -2199,7 +2252,9 @@ function showModeScreen() {
   // l'évaluation du script, AVANT l'init de `state` et des modules TTM/DTM.
   // (corrige le ReferenceError v180 « state before initialization » au lancement)
   setTimeout(function(){
-    ttmFetchAttention();   // pastille « X à valider » sur la carte TTM + toast
+    var ttmCard = document.getElementById('modeBtnTtm');
+    if (ttmCard) ttmCard.style.display = TTM_STANDBY ? 'none' : '';
+    if (!TTM_STANDBY) ttmFetchAttention();   // pastille « X à valider » sur la carte TTM + toast
     dtmModeRefresh();      // tuile DTM : visibilité (Pablo/Cream/admin) + badge « veille non clôturée »
   }, 0);
   const hello = document.getElementById('modeHello');
@@ -2222,8 +2277,8 @@ function chooseMode(mode) {
   } else if (mode === 'dtm') {
     document.body.classList.add('dtm-mode');   // DTM plein écran, même principe que TTM
     document.body.classList.remove('ttm-mode');
-    if (logoEl) logoEl.textContent = 'DTM';
-    if (titleEl) titleEl.textContent = 'La Douane';
+    if (logoEl) logoEl.textContent = 'ETM';
+    if (titleEl) titleEl.textContent = 'L\'Épicerie';
     dtmFetchState(true).then(() => { if (document.body.classList.contains('dtm-mode')) renderDtm(); });
     switchTab('dtm');
   } else {
@@ -7935,7 +7990,7 @@ async function ttmFlushQueue() {
   if (remaining.length < q.length && document.getElementById('vTtm').classList.contains('active')) renderTtm();
 }
 setInterval(() => ttmFlushQueue().catch(() => {}), 120000);
-setInterval(() => { if (currentAuth) ttmFetchAttention().then(() => {
+setInterval(() => { if (currentAuth && !TTM_STANDBY) ttmFetchAttention().then(() => {
   if (document.body.classList.contains('ttm-mode') && ttmView === 'recv') renderTtm();
 }); }, 90000);
 // Toast d'accueil si des transferts attendent une validation
@@ -11648,12 +11703,12 @@ function init(){
 })();
 
 /* ==================================================================
-   DTM — « La Douane » (v181)
+   ETM — « L'Épicerie » (ex-DTM « La Douane », renommé — identifiants internes dtm* conservés)
    Prélèvements Pablo SBH ↔ Cream SBH (stock physique partagé).
    Capture pendant le service : PHOTO OBLIGATOIRE (≈10 s), produit
    optionnel (le lien se fait à la clôture), offline-first (IndexedDB,
    idempotent par clientId). Clôture en fin de service → numéro
-   DTM-AAAAMMJJ-n + mail récap à Victor (backend /dtm/*). Tampon 🛂.
+   ETM-AAAAMMJJ-n + mail récap à Victor (backend /dtm/*). Tampon 🧾.
    Visible uniquement : PINs Pablo SBH, Cream SBH et admin.
    ================================================================== */
 
@@ -11676,6 +11731,13 @@ var dtmLinkTerm = '';
 var dtmDone = null;             // résultat de la dernière clôture (écran done)
 var dtmMemQueue = [];           // fallback si IndexedDB indisponible
 var dtmFlushing = false;
+/* Profils nominatifs : qui fait la douane (historique par personne).
+   Liste synchronisée entre téléphones via le KV du Worker (slug /batches/dtm-profils),
+   défauts si le serveur n'a rien. Choix mémorisé par téléphone. */
+var DTM_PROFILES_DEFAULT = ['Nathan', 'Fabien', 'Alessandro', 'Julie'];
+var dtmProfile = null;
+try { dtmProfile = localStorage.getItem('itm_dtm_profile_v1') || null; } catch (e) {}
+var dtmProfilesList = null;
 
 function dtmCanAccess() {
   if (!currentAuth) return false;
@@ -11683,8 +11745,32 @@ function dtmCanAccess() {
   return currentAuth.etab === DTM_PABLO || currentAuth.etab === DTM_CREAM;
 }
 function dtmPersonne() {
+  if (dtmProfile) return dtmProfile;
   if (!currentAuth) return '?';
   return currentAuth.role === 'admin' ? 'Victor (admin)' : currentAuth.label;
+}
+async function dtmFetchProfiles(force) {
+  if (dtmProfilesList && !force) return dtmProfilesList;
+  try {
+    var r = await fetch(BACKEND_URL + '/batches/dtm-profils', { signal: AbortSignal.timeout(12000) });
+    var d = await r.json();
+    if (d && d.ok && Array.isArray(d.batches) && d.batches.length) {
+      dtmProfilesList = d.batches.filter(function (x) { return typeof x === 'string' && x.trim(); });
+    }
+  } catch (e) { /* hors-ligne : défauts */ }
+  if (!dtmProfilesList || !dtmProfilesList.length) dtmProfilesList = DTM_PROFILES_DEFAULT.slice();
+  return dtmProfilesList;
+}
+async function dtmSaveProfiles(list) {
+  dtmProfilesList = list;
+  var r = await fetch(BACKEND_URL + '/batches/dtm-profils', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ batches: list }),
+    signal: AbortSignal.timeout(15000)
+  });
+  var d = await r.json();
+  if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
 }
 function dtmFromTo() {
   return dtmDir === 'CP' ? { from: 'Cream SBH', to: 'Pablo SBH' } : { from: 'Pablo SBH', to: 'Cream SBH' };
@@ -11733,6 +11819,25 @@ function dtmSearchProducts(term) {
   }
   res.sort(function (a, b) { return (a.s || '').length - (b.s || '').length; });
   return res.slice(0, 40);
+}
+
+/* Pastille format : le nom court `s` ne distingue PAS 75cl / Magnum / Jéroboam
+   (même s, seuls y et le conditionnement changent) — on dérive du catalogue :
+   n = Bouteille/Magnum/Jeroboam…, q+u = contenance. Verse (n vide, non-btl) → rien. */
+/* « Autre » → saisie libre en centilitres, normalisée « 70cl » / « 62,5cl » */
+function dtmClStr(v) {
+  v = parseFloat(String(v == null ? '' : v).replace(',', '.'));
+  if (isNaN(v) || v <= 0 || v > 10000) return null;
+  return String(v).replace('.', ',') + 'cl';
+}
+
+function dtmProdFormat(p) {
+  if (!p) return null;
+  // Règle finale (Victor) : PARTOUT le nom du CONTENANT — Bouteille, Magnum,
+  // Jéroboam, Mathusalem, Demie… La contenance (70cl…) seulement s'il n'y a pas de nom.
+  if (p.n) return p.n;
+  var size = (p.q && String(p.u || '').toLowerCase() === 'cl') ? (String(p.q).replace('.', ',') + 'cl') : (p.q ? p.q + (p.u || '') : '');
+  return size || null;
 }
 
 /* ---- File offline : IndexedDB (photos trop lourdes pour localStorage),
@@ -11811,7 +11916,7 @@ async function dtmFlushQueue() {
         // 4xx (hors 408/429) = rejet définitif (ex. photo trop lourde) : on retire et on prévient
         if (e && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429) {
           await dtmQueueDel(rec.clientId);
-          toast('🛂 Capture refusée par le serveur : ' + e.message);
+          toast('🛒 Capture refusée par le serveur : ' + e.message);
         }
         // sinon (réseau / 5xx) : on garde, on retentera
       }
@@ -11883,6 +11988,7 @@ function dtmHandlePhoto(file) {
     dtmCap.photo = cv.toDataURL('image/jpeg', DTM_JPEG_Q);
     URL.revokeObjectURL(url);
     renderDtm();
+    dtmOpenCaptureModal('format');   // tac-au-tac : format puis quantité en pop-up
   };
   img.onerror = function () { URL.revokeObjectURL(url); toast('Photo illisible, réessaie'); };
   img.src = url;
@@ -11898,7 +12004,7 @@ async function dtmSaveCapture() {
     from: ft.from, to: ft.to,
     y: dtmCap.prod ? dtmCap.prod.y : null,
     s: dtmCap.prod ? dtmCap.prod.s : null,
-    format: dtmCap.format || null,
+    format: dtmCap.format || (dtmCap.prod && dtmCap.prod.fmt) || null,
     qty: dtmCap.qty || 1,
     unit: null,
     personne: dtmPersonne(),
@@ -11908,7 +12014,7 @@ async function dtmSaveCapture() {
   dtmCap = { photo: null, prod: null, format: null, qty: 1 };
   dtmSearchTermD = '';
   renderDtm();
-  toast('Capture enregistrée 🛂');
+  toast('Au panier 🛒');
   dtmFlushQueue().catch(function () {});
 }
 
@@ -11918,7 +12024,7 @@ function dtmStampShow(label) {
   var ov = document.createElement('div');
   ov.id = 'dtmStampOv';
   ov.className = 'dtm-stamp-ov';
-  ov.innerHTML = '<div class="dtm-stamp-box"><div class="dtm-stamp">🛂</div><div class="dtm-stamp-txt">' + escape(label || 'CLÔTURÉ') + '</div></div>';
+  ov.innerHTML = '<div class="dtm-stamp-box"><div class="dtm-stamp">🧾</div><div class="dtm-stamp-txt">' + escape(label || 'CLÔTURÉ') + '</div></div>';
   document.body.appendChild(ov);
 }
 function dtmStampHide() {
@@ -11932,10 +12038,10 @@ async function dtmClose() {
   if (q.length) { toast('⏳ ' + q.length + ' capture(s) pas encore envoyée(s) — attends le réseau'); return; }
   var lines = dtmLinesCache || [];
   var nonLie = lines.filter(function (l) { return !l.y; }).length;
-  var msg = 'Clôturer le service ? Le récap (numéro DTM) part par mail à Victor.';
+  var msg = 'Passer en caisse ? Le récap (numéro ETM) part par mail à Victor.';
   if (nonLie) msg = '⚠ ' + nonLie + ' ligne(s) pas encore liée(s) à un produit — Victor devra identifier via la photo.\n\n' + msg;
   if (!confirm(msg)) return;
-  dtmStampShow('CLÔTURÉ');
+  dtmStampShow('ENCAISSÉ');
   try {
     var r = await fetch(BACKEND_URL + '/dtm/close', {
       method: 'POST',
@@ -11955,7 +12061,7 @@ async function dtmClose() {
 }
 async function dtmCloseEmpty() {
   if (!confirm('Confirmer « rien à transférer » pour ce service ?\nUn mail minimal part quand même à Victor (il saura que c\'est traité).')) return;
-  dtmStampShow('RIEN À DÉCLARER');
+  dtmStampShow('PANIER VIDE');
   try {
     var r = await fetch(BACKEND_URL + '/dtm/close-empty', {
       method: 'POST',
@@ -12001,6 +12107,8 @@ function renderDtm() {
   var root = document.getElementById('dtmRoot');
   if (!root) return;
   if (!dtmCanAccess()) { root.innerHTML = '<div class="ttm-wrap"><div class="ttm-card">Réservé à Pablo SBH, Cream SBH et à l\'admin.</div></div>'; return; }
+  // Choix du profil obligatoire pour les chefs (admin : Victor par défaut, changeable via 👤)
+  if (dtmView === 'who' || (!dtmProfile && (!currentAuth || currentAuth.role !== 'admin'))) { dtmRenderWho(root); return; }
   if (dtmView === 'rev') { dtmRenderReview(root); return; }
   if (dtmView === 'adm') { dtmRenderAdmin(root); return; }
   dtmRenderCapture(root);
@@ -12009,11 +12117,13 @@ function renderDtm() {
 function dtmHeadHtml() {
   var isAdmin = currentAuth && currentAuth.role === 'admin';
   var nOpen = dtmStateCache ? dtmStateCache.openCount : (dtmLinesCache ? dtmLinesCache.length : 0);
-  var h = '<div class="ttm-head"><h2>🛂 La Douane</h2><span class="ttm-sub">Pablo ↔ Cream</span>';
-  h += '<button type="button" id="dtmHome" style="margin-left:auto; background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; color:var(--ink-2);">🏠 Menu</button></div>';
+  var whoLbl = dtmProfile || ((currentAuth && currentAuth.role === 'admin') ? 'Victor' : '—');
+  var h = '<div class="ttm-head"><h2>🛒 L\'Épicerie</h2><span class="ttm-sub">Pablo ↔ Cream</span>';
+  h += '<button type="button" id="dtmWho" style="margin-left:auto; background:var(--accent-soft, var(--surface)); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; font-weight:600; color:var(--ink);">👤 ' + escape(whoLbl) + '</button>';
+  h += '<button type="button" id="dtmHome" style="background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; color:var(--ink-2);">🏠 Menu</button></div>';
   h += '<div class="ttm-tabs">';
   h += '<button type="button" id="dtmTabCap" class="' + (dtmView === 'cap' ? 'on' : '') + '">📸 Capture</button>';
-  h += '<button type="button" id="dtmTabRev" class="' + (dtmView === 'rev' ? 'on' : '') + '">🛂 Clôture' + (nOpen ? ' <span style="background:#C08A14; color:#fff; border-radius:100px; padding:1px 7px; font-size:11px;">' + nOpen + '</span>' : '') + '</button>';
+  h += '<button type="button" id="dtmTabRev" class="' + (dtmView === 'rev' ? 'on' : '') + '">🧾 Caisse' + (nOpen ? ' <span style="background:#C08A14; color:#fff; border-radius:100px; padding:1px 7px; font-size:11px;">' + nOpen + '</span>' : '') + '</button>';
   if (isAdmin) h += '<button type="button" id="dtmTabAdm" class="' + (dtmView === 'adm' ? 'on' : '') + '">🗂</button>';
   h += '</div>';
   return h;
@@ -12021,6 +12131,8 @@ function dtmHeadHtml() {
 function dtmBindHead(root) {
   var home = document.getElementById('dtmHome');
   if (home) home.addEventListener('click', showModeScreen);
+  var who = document.getElementById('dtmWho');
+  if (who) who.addEventListener('click', function () { dtmView = 'who'; renderDtm(); });
   var tc = document.getElementById('dtmTabCap');
   if (tc) tc.addEventListener('click', function () { dtmView = 'cap'; renderDtm(); });
   var tr = document.getElementById('dtmTabRev');
@@ -12030,135 +12142,244 @@ function dtmBindHead(root) {
 }
 function dtmBannerHtml() {
   if (dtmStateCache && dtmStateCache.yesterdayClosed === false) {
-    return '<div class="dtm-banner">⚠️ Le service d\'hier (' + dtmFrDay(dtmStateCache.yesterday) + ') n\'est <b>pas clôturé</b>. Passe dans l\'onglet <b>🛂 Clôture</b> — ou « Rien à transférer » si aucune bouteille n\'a bougé.</div>';
+    return '<div class="dtm-banner">⚠️ Le service d\'hier (' + dtmFrDay(dtmStateCache.yesterday) + ') n\'est <b>pas passé en caisse</b>. Passe dans l\'onglet <b>🧾 Caisse</b> — ou « Rien à transférer » si aucune bouteille n\'a bougé.</div>';
   }
   return '';
 }
 
-/* ---- Vue CAPTURE ---- */
+/* ---- Vue PROFIL « Qui fait les courses ? » ---- */
+function dtmRenderWho(root) {
+  root.innerHTML = '<div class="ttm-wrap">' + dtmHeadHtml() + '<div class="ttm-card"><div class="ttm-label">Qui fait les courses ?</div><div id="dtmWhoList" style="color:var(--ink-3);">Chargement…</div></div></div>';
+  dtmBindHead(root);
+  dtmFetchProfiles().then(function (names) {
+    var el = document.getElementById('dtmWhoList');
+    if (!el) return;
+    var isAdmin = currentAuth && currentAuth.role === 'admin';
+    var h = '';
+    names.forEach(function (n) {
+      h += '<div class="dtm-who-row"><button type="button" class="dtm-who' + (dtmProfile === n ? ' on' : '') + '" data-who="' + escape(n) + '">👤 ' + escape(n) + '</button>'
+         + (isAdmin ? '<button type="button" class="ttm-del" data-whodel="' + escape(n) + '" aria-label="Retirer">✕</button>' : '') + '</div>';
+    });
+    if (isAdmin) {
+      h += '<div class="dtm-who-row"><button type="button" class="dtm-who' + (dtmProfile === 'Victor (admin)' ? ' on' : '') + '" data-who="Victor (admin)">👤 Victor (admin)</button></div>';
+      h += '<button type="button" class="dtm-link-btn" id="dtmWhoAdd" style="margin-top:8px;">➕ Ajouter un profil</button>';
+    }
+    el.outerHTML = '<div>' + h + '</div>';
+    root.querySelectorAll('[data-who]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        dtmProfile = b.dataset.who;
+        try { localStorage.setItem('itm_dtm_profile_v1', dtmProfile); } catch (e) {}
+        dtmView = 'cap';
+        renderDtm();
+        toast('Salut ' + dtmProfile.replace(' (admin)', '') + ' 👋');
+      });
+    });
+    root.querySelectorAll('[data-whodel]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var n = b.dataset.whodel;
+        if (!confirm('Retirer le profil « ' + n + ' » ?')) return;
+        dtmFetchProfiles().then(function (cur) {
+          return dtmSaveProfiles(cur.filter(function (x) { return x !== n; }));
+        }).then(function () {
+          if (dtmProfile === n) { dtmProfile = null; try { localStorage.removeItem('itm_dtm_profile_v1'); } catch (e) {} }
+          renderDtm();
+        }).catch(function (e) { toast('Erreur : ' + e.message); });
+      });
+    });
+    var add = document.getElementById('dtmWhoAdd');
+    if (add) add.addEventListener('click', function () {
+      var n = prompt('Prénom du nouveau profil :');
+      if (!n || !n.trim()) return;
+      n = n.trim();
+      dtmFetchProfiles().then(function (cur) {
+        if (cur.indexOf(n) >= 0) return;
+        return dtmSaveProfiles(cur.concat([n]));
+      }).then(function () { renderDtm(); toast('Profil « ' + n + ' » ajouté ✓'); })
+        .catch(function (e) { toast('Erreur : ' + e.message); });
+    });
+  });
+}
+
+/* ---- Vue CAPTURE : photo d'abord, puis pop-up Format → Quantité (tac-au-tac, zéro scroll).
+   La recherche produit est optionnelle (lien dans le pop-up) — sinon le lien se fait à la caisse. ---- */
+var dtmCapStep = null;   // null | 'format' | 'search' | 'qty'
+
 function dtmRenderCapture(root) {
   var ft = dtmFromTo();
   var html = '<div class="ttm-wrap">';
   html += dtmHeadHtml();
   html += dtmBannerHtml();
 
-  // 1 · Sens
-  html += '<div class="ttm-card"><div class="ttm-label">1 · Sens du prélèvement</div>';
+  // Sens du prélèvement (discret)
+  html += '<div class="ttm-card"><div class="ttm-label">Sens du prélèvement</div>';
   html += '<div class="ttm-route"><span class="ttm-from">' + escape(ft.from) + '</span><span class="ttm-arrow">→</span><span class="ttm-from" style="background:var(--surface-2); color:var(--ink);">' + escape(ft.to) + '</span>';
   html += '<button type="button" id="dtmSwap" class="dtm-swap" aria-label="Inverser le sens">⇄</button></div></div>';
 
-  // 2 · Photo obligatoire
-  html += '<div class="ttm-card"><div class="ttm-label">2 · Photo de la bouteille — OBLIGATOIRE</div>';
-  if (dtmCap.photo) {
-    html += '<div class="ttm-photo-thumb"><img src="' + dtmCap.photo + '" alt="photo prélèvement">';
-    html += '<button type="button" class="ttm-photo-redo" id="dtmPhotoRedo">📷 Reprendre</button></div>';
-  } else {
-    html += '<button type="button" class="ttm-photo-btn" id="dtmPhotoBtn">📷 Prendre la bouteille en photo</button>';
-  }
+  // LE bouton : photo → le reste suit en pop-up
+  html += '<div class="ttm-card" style="padding:12px;">';
+  html += '<button type="button" class="dtm-bigshot" id="dtmPhotoBtn">📷<span>Prendre la bouteille en photo</span><small>le format puis la quantité s\'affichent juste après — 2 taps</small></button>';
   html += '<input type="file" id="dtmPhotoInput" accept="image/*" capture="environment" style="display:none;">';
   html += '</div>';
-
-  // 3 · Produit (optionnel)
-  html += '<div class="ttm-card"><div class="ttm-label">3 · Produit <span style="text-transform:none; font-weight:500;">(optionnel — pas le temps ? la photo suffit, le lien se fera à la clôture)</span></div>';
-  if (dtmCap.prod) {
-    var wcS = (typeof wineColor === 'function') ? wineColor(dtmCap.prod.c) : null;
-    html += '<div class="ttm-line' + (wcS ? ' prod-wine-' + wcS : '') + '" style="margin:0;"><div class="l-name">' + escape(dtmCap.prod.s || dtmCap.prod.y) + '</div>';
-    html += '<button type="button" class="ttm-del" id="dtmProdClear">✕</button></div>';
-  } else {
-    html += '<div class="search-wrap" style="position:relative;"><span class="search-ico">⌕</span>';
-    html += '<input class="search" id="dtmSearch" type="search" placeholder="Rechercher (catalogue Pablo + Cream)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" value="' + escape(dtmSearchTermD) + '"></div>';
-    html += '<div class="ttm-results" id="dtmResults" style="display:none;"></div>';
-  }
-  html += '</div>';
-
-  // 4 · Format
-  html += '<div class="ttm-card"><div class="ttm-label">4 · Format <span style="text-transform:none; font-weight:500;">(optionnel si le produit est lié — les noms Yokitup portent déjà B./M./MAG.)</span></div>';
-  html += '<div class="ttm-dest-grid">';
-  DTM_FORMATS.forEach(function (f) {
-    html += '<button type="button" class="dtm-chip' + (dtmCap.format === f ? ' on' : '') + '" data-fmt="' + escape(f) + '">' + escape(f) + '</button>';
-  });
-  html += '</div></div>';
-
-  // 5 · Quantité
-  html += '<div class="ttm-card"><div class="ttm-label">5 · Quantité</div>';
-  html += '<div class="ttm-qty" style="justify-content:flex-start;">';
-  html += '<button type="button" id="dtmQtyM">−</button>';
-  html += '<input type="text" inputmode="decimal" id="dtmQtyI" value="' + fmtQty(dtmCap.qty) + '" style="width:64px; text-align:center;">';
-  html += '<button type="button" id="dtmQtyP">+</button>';
-  html += '<span style="margin-left:8px; color:var(--ink-3); font-size:13px;">bouteille(s)</span></div></div>';
-
-  html += '<button type="button" class="ttm-cta" id="dtmSave"' + (dtmCap.photo ? '' : ' disabled') + '>Enregistrer la capture 🛂</button>';
-  if (!dtmCap.photo) html += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Il manque : la photo</div>';
 
   html += '<div id="dtmQueueInfo"></div>';
   html += '</div>';
   root.innerHTML = html;
 
-  /* listeners */
   dtmBindHead(root);
   var swap = document.getElementById('dtmSwap');
   if (swap) swap.addEventListener('click', function () { dtmDir = dtmDir === 'PC' ? 'CP' : 'PC'; renderDtm(); });
   var photoInput = document.getElementById('dtmPhotoInput');
-  var openCam = function () { if (photoInput) photoInput.click(); };
-  var pb = document.getElementById('dtmPhotoBtn'); if (pb) pb.addEventListener('click', openCam);
-  var pr = document.getElementById('dtmPhotoRedo'); if (pr) pr.addEventListener('click', openCam);
+  var pb = document.getElementById('dtmPhotoBtn');
+  if (pb) pb.addEventListener('click', function () { if (photoInput) photoInput.click(); });
   if (photoInput) photoInput.addEventListener('change', function () { dtmHandlePhoto(photoInput.files && photoInput.files[0]); });
-  var pc = document.getElementById('dtmProdClear');
-  if (pc) pc.addEventListener('click', function () { dtmCap.prod = null; renderDtm(); });
-  var inp = document.getElementById('dtmSearch');
-  if (inp) {
-    inp.addEventListener('input', function () { dtmSearchTermD = inp.value; dtmRenderResults(); });
-    if (dtmSearchTermD) dtmRenderResults();
-  }
-  root.querySelectorAll('[data-fmt]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      dtmCap.format = (dtmCap.format === b.dataset.fmt) ? null : b.dataset.fmt;
-      renderDtm();
-    });
-  });
-  var qm = document.getElementById('dtmQtyM');
-  var qp = document.getElementById('dtmQtyP');
-  var qi = document.getElementById('dtmQtyI');
-  if (qm) qm.addEventListener('click', function () { dtmCap.qty = Math.max(1, Math.floor(dtmCap.qty) - 1); renderDtm(); });
-  if (qp) qp.addEventListener('click', function () { dtmCap.qty = Math.floor(dtmCap.qty) + 1; renderDtm(); });
-  if (qi) qi.addEventListener('change', function () {
-    var v = parseFloat(String(qi.value).replace(',', '.'));
-    if (!isNaN(v) && v > 0) dtmCap.qty = Math.round(v * 100) / 100;
-    renderDtm();
-  });
-  var save = document.getElementById('dtmSave');
-  if (save) save.addEventListener('click', function () { dtmSaveCapture().catch(function (e) { toast('Erreur : ' + e.message); }); });
 
   dtmQueueAll().then(function (q) {
     var el = document.getElementById('dtmQueueInfo');
     if (el && q.length) {
-      el.innerHTML = '<div class="ttm-card" style="margin-top:14px;"><div class="ttm-label">⏳ En attente de réseau (' + q.length + ')</div><div style="font-size:13px; color:var(--ink-2);">Ces captures partiront automatiquement dès que le téléphone retrouve du réseau (cave = réseau pourri, c\'est prévu).</div></div>';
+      el.innerHTML = '<div class="ttm-card" style="margin-top:2px;"><div class="ttm-label">⏳ En attente de réseau (' + q.length + ')</div><div style="font-size:13px; color:var(--ink-2);">Ces captures partiront automatiquement dès que le téléphone retrouve du réseau (cave = réseau pourri, c\'est prévu).</div></div>';
     }
   });
   dtmFetchState().then(function () {
-    // rafraîchit badge onglet clôture + bandeau si l'état vient d'arriver
     var b = document.getElementById('dtmTabRev');
     if (b && dtmStateCache && dtmStateCache.openCount && b.textContent.indexOf(String(dtmStateCache.openCount)) < 0) renderDtm();
   });
 }
-function dtmRenderResults() {
-  var box = document.getElementById('dtmResults');
+
+/* ---- Pop-up de capture : Format → (produit optionnel) → Quantité ---- */
+function dtmCaptureModalClose(cancel) {
+  var m = document.getElementById('dtmCapModal');
+  if (m) m.remove();
+  dtmCapStep = null;
+  if (cancel) { dtmCap = { photo: null, prod: null, format: null, qty: 1 }; renderDtm(); }
+}
+function dtmOpenCaptureModal(step) {
+  dtmCapStep = step;
+  var m = document.getElementById('dtmCapModal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'dtmCapModal';
+    m.className = 'v-modal';
+    document.body.appendChild(m);
+  }
+  var h = '<div class="v-modal-card dtm-pop">';
+  h += '<div class="dtm-pop-head">';
+  h += dtmCap.photo ? '<img src="' + dtmCap.photo + '" class="dtm-pop-thumb" alt="">' : '<span></span>';
+  h += '<button type="button" class="dtm-pop-x" id="dtmPopX" aria-label="Annuler la capture">✕</button></div>';
+  if (step === 'format') {
+    h += '<div class="dtm-pop-title">Quel format ?</div>';
+    h += '<div class="dtm-pop-grid">';
+    ['Bouteille', 'Magnum', 'Jéroboam', 'Mathusalem', 'Demie', ''].forEach(function (v) {
+      h += '<button type="button" class="dtm-pop-chip" data-pfmt="' + escape(v) + '">' + (v || 'Autre') + '</button>';
+    });
+    h += '</div>';
+    h += '<button type="button" class="dtm-pop-link" id="dtmPopSearch">🔎 Je connais le produit exact (le format se remplit tout seul)</button>';
+  } else if (step === 'search') {
+    h += '<div class="dtm-pop-title">Quel produit ?</div>';
+    h += '<div style="position:relative;"><span class="search-ico" style="left:14px;">⌕</span>';
+    h += '<input class="search" id="dtmPopSearchIn" type="search" placeholder="Rechercher (Pablo + Cream)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" value="' + escape(dtmSearchTermD) + '" style="font-size:17px; padding:15px 14px 15px 44px;"></div>';
+    h += '<div class="ttm-results" id="dtmPopResults" style="display:none; max-height:38vh; margin-top:8px;"></div>';
+    h += '<button type="button" class="dtm-pop-link" id="dtmPopBackFmt">↩︎ Revenir aux formats</button>';
+  } else if (step === 'cl') {
+    h += '<div class="dtm-pop-title">Combien de centilitres ?</div>';
+    h += '<div style="display:flex; gap:10px; align-items:center;">';
+    h += '<input class="search" id="dtmPopClIn" type="text" inputmode="decimal" placeholder="ex. 70" autocomplete="off" style="font-size:19px; padding:14px; flex:1; text-align:center;">';
+    h += '<span style="font-size:18px; font-weight:800;">cl</span>';
+    h += '<button type="button" class="dtm-pop-ok" id="dtmPopClOk" style="margin-left:0;">OK</button></div>';
+    h += '<button type="button" class="dtm-pop-link" id="dtmPopClSkip">Sans format → quantité</button>';
+    h += '<button type="button" class="dtm-pop-link" id="dtmPopBackFmt2" style="margin-top:2px;">↩︎ Revenir aux contenants</button>';
+  } else {
+    h += '<div class="dtm-pop-title">Combien ?</div>';
+    if (dtmCap.prod) h += '<div class="dtm-pop-prod">' + escape(dtmCap.prod.s || dtmCap.prod.y) + (dtmCap.prod.fmt ? ' <span class="dtm-fmt">' + escape(dtmCap.prod.fmt) + '</span>' : '') + '</div>';
+    else if (dtmCap.format) h += '<div class="dtm-pop-prod"><span class="dtm-fmt">' + escape(dtmCap.format) + '</span> — produit à lier à la caisse</div>';
+    h += '<div class="dtm-pop-grid dtm-pop-qty">';
+    [1, 2, 3, 4, 5, 6].forEach(function (n) { h += '<button type="button" class="dtm-pop-chip" data-pqty="' + n + '">' + n + '</button>'; });
+    h += '</div>';
+    h += '<div class="ttm-qty" style="justify-content:center; margin-top:12px;">';
+    h += '<button type="button" id="dtmPopQm">−</button>';
+    h += '<input type="text" inputmode="decimal" id="dtmPopQi" value="' + fmtQty(dtmCap.qty) + '" style="width:72px; text-align:center; font-size:18px;">';
+    h += '<button type="button" id="dtmPopQp">+</button>';
+    h += '<button type="button" class="dtm-pop-ok" id="dtmPopOk">OK</button></div>';
+    h += '<button type="button" class="dtm-pop-link" id="dtmPopBack2">↩︎ Format</button>';
+  }
+  h += '</div>';
+  m.innerHTML = h;
+
+  var x = document.getElementById('dtmPopX');
+  if (x) x.addEventListener('click', function () {
+    if (confirm('Annuler cette capture ? (la photo sera jetée)')) dtmCaptureModalClose(true);
+  });
+  m.querySelectorAll('[data-pfmt]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (!b.dataset.pfmt) { dtmOpenCaptureModal('cl'); return; }   // Autre → saisie des cl
+      dtmCap.format = b.dataset.pfmt;
+      dtmOpenCaptureModal('qty');
+    });
+  });
+  var ps = document.getElementById('dtmPopSearch');
+  if (ps) ps.addEventListener('click', function () { dtmSearchTermD = ''; dtmOpenCaptureModal('search'); });
+  var bi = document.getElementById('dtmPopSearchIn');
+  if (bi) {
+    bi.addEventListener('input', function () { dtmSearchTermD = bi.value; dtmPopRenderResults(); });
+    setTimeout(function () { try { bi.focus(); } catch (e) {} }, 60);
+    if (dtmSearchTermD) dtmPopRenderResults();
+  }
+  var bf = document.getElementById('dtmPopBackFmt');
+  if (bf) bf.addEventListener('click', function () { dtmOpenCaptureModal('format'); });
+  var ci = document.getElementById('dtmPopClIn');
+  if (ci) setTimeout(function () { try { ci.focus(); } catch (e) {} }, 60);
+  var co = document.getElementById('dtmPopClOk');
+  if (co) co.addEventListener('click', function () {
+    var f = dtmClStr((document.getElementById('dtmPopClIn') || {}).value);
+    if (!f) { toast('Indique un nombre de cl (ex. 70)'); return; }
+    dtmCap.format = f;
+    dtmOpenCaptureModal('qty');
+  });
+  var cs = document.getElementById('dtmPopClSkip');
+  if (cs) cs.addEventListener('click', function () { dtmCap.format = null; dtmOpenCaptureModal('qty'); });
+  var bf2 = document.getElementById('dtmPopBackFmt2');
+  if (bf2) bf2.addEventListener('click', function () { dtmOpenCaptureModal('format'); });
+  m.querySelectorAll('[data-pqty]').forEach(function (b) {
+    b.addEventListener('click', function () { dtmCap.qty = +b.dataset.pqty; dtmPopFinish(); });
+  });
+  var qm = document.getElementById('dtmPopQm'), qp = document.getElementById('dtmPopQp'), qi = document.getElementById('dtmPopQi');
+  if (qm) qm.addEventListener('click', function () { dtmCap.qty = Math.max(1, Math.floor(dtmCap.qty) - 1); if (qi) qi.value = fmtQty(dtmCap.qty); });
+  if (qp) qp.addEventListener('click', function () { dtmCap.qty = Math.floor(dtmCap.qty) + 1; if (qi) qi.value = fmtQty(dtmCap.qty); });
+  if (qi) qi.addEventListener('change', function () {
+    var v = parseFloat(String(qi.value).replace(',', '.'));
+    if (!isNaN(v) && v > 0) dtmCap.qty = Math.round(v * 100) / 100;
+    qi.value = fmtQty(dtmCap.qty);
+  });
+  var ok = document.getElementById('dtmPopOk');
+  if (ok) ok.addEventListener('click', dtmPopFinish);
+  var b2 = document.getElementById('dtmPopBack2');
+  if (b2) b2.addEventListener('click', function () { dtmOpenCaptureModal('format'); });
+}
+function dtmPopRenderResults() {
+  var box = document.getElementById('dtmPopResults');
   if (!box) return;
   var res = dtmSearchProducts(dtmSearchTermD);
   if (!dtmSearchTermD.trim() || !res.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
   var h = '';
   res.forEach(function (p, i) {
     var wc = (typeof wineColor === 'function') ? wineColor(p.c) : null;
-    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-pick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + '</div></div>';
+    var fmt = dtmProdFormat(p);
+    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-ppick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + (fmt ? ' <span class="dtm-fmt">' + escape(fmt) + '</span>' : '') + '</div></div>';
   });
   box.innerHTML = h;
   box.style.display = '';
-  box.querySelectorAll('[data-pick]').forEach(function (el) {
+  box.querySelectorAll('[data-ppick]').forEach(function (el) {
     el.addEventListener('click', function () {
-      var p = res[+el.dataset.pick];
-      if (p) { dtmCap.prod = { y: p.y, s: p.s, c: p.c }; dtmSearchTermD = ''; renderDtm(); }
+      var p = res[+el.dataset.ppick];
+      if (!p) return;
+      dtmCap.prod = { y: p.y, s: p.s, c: p.c, fmt: dtmProdFormat(p) };
+      dtmSearchTermD = '';
+      dtmOpenCaptureModal('qty');
     });
   });
+}
+function dtmPopFinish() {
+  dtmCaptureModalClose(false);
+  dtmSaveCapture().catch(function (e) { toast('Erreur : ' + e.message); });
 }
 
 /* ---- Vue CLÔTURE (review) ---- */
@@ -12190,15 +12411,16 @@ function dtmRenderReview(root) {
     }
 
     if (lines.length) {
-      h += '<div class="ttm-label">' + lines.length + ' prélèvement(s) du service — vérifie, lie les photos seules, puis tamponne</div>';
+      h += '<div class="ttm-label">' + lines.length + ' prélèvement(s) du service — vérifie, lie les photos seules, puis passe en caisse</div>';
       lines.forEach(function (l) {
         var prodRef = l.y ? (CATALOGUE_BY_Y && CATALOGUE_BY_Y[l.y]) : null;
         var wc = (typeof wineColor === 'function') ? wineColor((prodRef && prodRef.c) || null) : null;
         var name = l.y ? (l.s || l.y) : '⚠ Pas encore lié — photo seule';
+        var fmtLbl = l.format || dtmProdFormat(prodRef);
         h += '<div class="dtm-line' + (wc ? ' prod-wine-' + wc : '') + '" data-lid="' + escape(l.id) + '">';
         h += l.photoUrl ? '<img src="' + escape(l.photoUrl) + '" alt="" loading="lazy">' : '<div class="dtm-nophoto">📷</div>';
-        h += '<div class="dtm-line-main"><div class="l-name' + (l.y ? '' : ' dtm-unlinked') + '">' + escape(name) + '</div>';
-        h += '<div class="dtm-line-sub">' + escape(l.from) + ' → ' + escape(l.to) + (l.format ? ' · ' + escape(l.format) : '') + ' · ' + escape(l.personne || '') + '</div>';
+        h += '<div class="dtm-line-main"><div class="l-name' + (l.y ? '' : ' dtm-unlinked') + '">' + escape(name) + ' <button type="button" class="dtm-fmt dtm-fmt-btn" data-fchg="' + escape(l.id) + '">' + escape(fmtLbl || 'format ?') + '</button></div>';
+        h += '<div class="dtm-line-sub">' + escape(l.from) + ' → ' + escape(l.to) + ' · ' + escape(l.personne || '') + '</div>';
         if (!l.y) h += '<button type="button" class="dtm-link-btn" data-link="' + escape(l.id) + '">🔗 Lier à un produit</button>';
         if (dtmLinkTarget === l.id) {
           h += '<div class="search-wrap" style="position:relative; margin-top:8px;"><span class="search-ico">⌕</span>';
@@ -12213,8 +12435,8 @@ function dtmRenderReview(root) {
         h += '<button type="button" class="ttm-del" data-ldel="' + escape(l.id) + '">✕</button>';
         h += '</div>';
       });
-      h += '<button type="button" class="ttm-cta" id="dtmCloseBtn"' + (queue.length ? ' disabled' : '') + '>🛂 Clôturer le service (' + lines.length + ')</button>';
-      h += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Un numéro DTM par sens · le récap part par mail à Victor</div>';
+      h += '<button type="button" class="ttm-cta" id="dtmCloseBtn"' + (queue.length ? ' disabled' : '') + '>🧾 Passer en caisse (' + lines.length + ')</button>';
+      h += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Un numéro ETM par sens · le récap part par mail à Victor</div>';
     } else {
       h += '<div style="font-size:14px; color:var(--ink-2); padding:6px 0 12px;">Aucun prélèvement capturé pour ce service.</div>';
       h += '<button type="button" class="ttm-cta" id="dtmEmptyBtn" style="background:var(--surface-2); color:var(--ink); border:1.5px solid var(--border-strong);"' + (queue.length ? ' disabled' : '') + '>Rien à transférer aujourd\'hui ∅</button>';
@@ -12236,6 +12458,9 @@ function dtmRenderReview(root) {
     var eb = document.getElementById('dtmEmptyBtn');
     if (eb) eb.addEventListener('click', function () { dtmCloseEmpty().catch(function (e) { toast('Erreur : ' + e.message); }); });
 
+    wrap.querySelectorAll('[data-fchg]').forEach(function (b) {
+      b.addEventListener('click', function () { dtmFormatPicker(b.dataset.fchg); });
+    });
     wrap.querySelectorAll('[data-link]').forEach(function (b) {
       b.addEventListener('click', function () { dtmLinkTarget = b.dataset.link; dtmLinkTerm = ''; renderDtm(); });
     });
@@ -12272,6 +12497,52 @@ function dtmRenderReview(root) {
     });
   });
 }
+/* Changer le contenant d'une ligne depuis la caisse */
+function dtmFormatPicker(lineId) {
+  var old = document.getElementById('dtmFmtModal');
+  if (old) old.remove();
+  var m = document.createElement('div');
+  m.className = 'v-modal';
+  m.id = 'dtmFmtModal';
+  var h = '<div class="v-modal-card dtm-pop"><div class="dtm-pop-head"><span></span><button type="button" class="dtm-pop-x" id="dtmFmtX" aria-label="Fermer">✕</button></div>';
+  h += '<div class="dtm-pop-title">Quel contenant ?</div><div class="dtm-pop-grid">';
+  ['Bouteille', 'Magnum', 'Jéroboam', 'Mathusalem', 'Demie', ''].forEach(function (v) {
+    h += '<button type="button" class="dtm-pop-chip" data-ffix="' + escape(v) + '">' + (v || 'Autre') + '</button>';
+  });
+  h += '</div></div>';
+  m.innerHTML = h;
+  document.body.appendChild(m);
+  document.getElementById('dtmFmtX').addEventListener('click', function () { m.remove(); });
+  function apply(fmt) {
+    m.remove();
+    dtmPutLine(lineId, { format: fmt }).then(function () { toast('Contenant modifié ✓'); renderDtm(); })
+      .catch(function (e) { toast('Erreur : ' + e.message); });
+  }
+  m.querySelectorAll('[data-ffix]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (b.dataset.ffix) { apply(b.dataset.ffix); return; }
+      // Autre → saisie des centilitres
+      var card = m.querySelector('.v-modal-card');
+      card.innerHTML = '<div class="dtm-pop-head"><span></span><button type="button" class="dtm-pop-x" id="dtmFmtX2" aria-label="Fermer">✕</button></div>'
+        + '<div class="dtm-pop-title">Combien de centilitres ?</div>'
+        + '<div style="display:flex; gap:10px; align-items:center;">'
+        + '<input class="search" id="dtmFmtClIn" type="text" inputmode="decimal" placeholder="ex. 70" autocomplete="off" style="font-size:19px; padding:14px; flex:1; text-align:center;">'
+        + '<span style="font-size:18px; font-weight:800;">cl</span>'
+        + '<button type="button" class="dtm-pop-ok" id="dtmFmtClOk" style="margin-left:0;">OK</button></div>'
+        + '<button type="button" class="dtm-pop-link" id="dtmFmtClNone">Sans format</button>';
+      document.getElementById('dtmFmtX2').addEventListener('click', function () { m.remove(); });
+      var inp = document.getElementById('dtmFmtClIn');
+      setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+      document.getElementById('dtmFmtClOk').addEventListener('click', function () {
+        var f = dtmClStr(inp.value);
+        if (!f) { toast('Indique un nombre de cl (ex. 70)'); return; }
+        apply(f);
+      });
+      document.getElementById('dtmFmtClNone').addEventListener('click', function () { apply(null); });
+    });
+  });
+}
+
 function dtmRenderLinkResults() {
   var box = document.getElementById('dtmLinkResults');
   if (!box) return;
@@ -12280,7 +12551,8 @@ function dtmRenderLinkResults() {
   var h = '';
   res.forEach(function (p, i) {
     var wc = (typeof wineColor === 'function') ? wineColor(p.c) : null;
-    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-lpick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + '</div></div>';
+    var fmt = dtmProdFormat(p);
+    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-lpick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + (fmt ? ' <span class="dtm-fmt">' + escape(fmt) + '</span>' : '') + '</div></div>';
   });
   box.innerHTML = h;
   box.style.display = '';
@@ -12290,7 +12562,8 @@ function dtmRenderLinkResults() {
       if (!p) return;
       var id = dtmLinkTarget;
       dtmLinkTarget = null; dtmLinkTerm = '';
-      dtmPutLine(id, { y: p.y, s: p.s }).then(function () { toast('Lié ✓'); renderDtm(); })
+      var cur = (dtmLinesCache || []).find(function (x) { return x.id === id; });
+      dtmPutLine(id, { y: p.y, s: p.s, format: (cur && cur.format) || dtmProdFormat(p) }).then(function () { toast('Lié ✓'); renderDtm(); })
         .catch(function (e) { toast('Erreur : ' + e.message); renderDtm(); });
     });
   });
@@ -12301,12 +12574,12 @@ function dtmRenderDone() {
   if (!root) return;
   var h = '<div class="ttm-wrap">' + dtmHeadHtml();
   h += '<div class="ttm-card" style="text-align:center;">';
-  h += '<div style="font-size:54px; margin:6px 0;">🛂</div>';
+  h += '<div style="font-size:54px; margin:6px 0;">🧾</div>';
   if (dtmDone.empty) {
     h += '<div style="font-size:17px; font-weight:700;">Rien à transférer — service clôturé ✓</div>';
     h += '<div style="color:var(--ink-2); font-size:13.5px; margin-top:6px;">Victor est prévenu par mail.</div>';
   } else {
-    h += '<div style="font-size:17px; font-weight:700;">Service clôturé ✓</div>';
+    h += '<div style="font-size:17px; font-weight:700;">Service encaissé ✓</div>';
     (dtmDone.closures || []).forEach(function (c) {
       h += '<div style="margin-top:10px; background:var(--surface-2); border-radius:12px; padding:10px;">';
       h += '<div style="font-family:monospace; font-weight:700; font-size:16px;">' + escape(c.number) + '</div>';
@@ -12372,7 +12645,7 @@ function dtmRenderAdmin(root) {
             ? '<span class="dtm-badge" style="background:var(--surface-2); color:var(--ink-3);">∅ rien à transférer</span>'
             : (c.done
               ? '<span class="dtm-badge" style="background:#DCEFE3; color:#1D6E45;">✓ transfert fait</span>'
-              : '<span class="dtm-badge" style="background:#FBF3CE; color:#7a5a0e;">🛂 à saisir dans Yokitup</span>');
+              : '<span class="dtm-badge" style="background:#FBF3CE; color:#7a5a0e;">🧾 à saisir dans Yokitup</span>');
           h += '<div class="dtm-closure">';
           h += '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">';
           h += c.number ? '<b style="font-family:monospace;">' + escape(c.number) + '</b>' : '<b>∅</b>';
@@ -12383,7 +12656,7 @@ function dtmRenderAdmin(root) {
           if (!c.empty && c.lines && c.lines.length) {
             h += '<details style="margin-top:6px;"><summary style="font-size:12.5px; color:var(--ink-3); cursor:pointer;">Voir les lignes</summary>';
             c.lines.forEach(function (l) {
-              h += '<div class="dtm-adm-line">' + fmtQty(l.qty) + '× ' + escape(l.y || ((l.s || 'non lié') + ' ⚠')) + (l.format ? ' · ' + escape(l.format) : '');
+              h += '<div class="dtm-adm-line">' + fmtQty(l.qty) + '× ' + escape(l.y || ((l.s || 'non lié') + ' ⚠')) + (l.format ? ' · ' + escape(l.format) : '') + (l.personne ? ' · 👤 ' + escape(l.personne) : '');
               if (l.photoUrl) h += ' · <a href="' + escape(l.photoUrl) + '" target="_blank" rel="noopener" style="color:var(--accent-dark, #1D9E75);">photo</a>';
               h += '</div>';
             });
