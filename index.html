@@ -1599,8 +1599,13 @@
   .dtm-swap { margin-left:6px; width:40px; height:40px; border-radius:50%; border:1px solid var(--border-strong); background:var(--surface-2); font-size:18px; color:var(--ink-2); flex:0 0 auto; }
   .dtm-chip { padding:12px 18px; border:1px solid var(--border-strong); border-radius:100px; background:var(--surface-2); font-size:15.5px; color:var(--ink-2); }
   .dtm-chip.on { background:var(--ink); color:#fff; border-color:var(--ink); font-weight:600; }
-  .dtm-line { display:flex; gap:10px; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:10px; }
-  .dtm-line img, .dtm-nophoto { width:66px; height:66px; object-fit:cover; border-radius:10px; flex:0 0 auto; background:var(--surface-2); }
+  .dtm-line { display:flex; flex-direction:column; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 10px; margin-bottom:10px; }
+  .dtm-line-top { display:flex; gap:12px; align-items:center; min-width:0; }
+  .dtm-line-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; border-top:1px dashed var(--border); padding-top:10px; }
+  .dtm-line-pending { opacity:.75; border-style:dashed; }
+  .dtm-line-pending .dtm-line-top { align-items:center; }
+  .dtm-line img, .dtm-nophoto { width:66px; height:66px; object-fit:cover; border-radius:10px; flex:0 0 auto; background:var(--surface-2); display:block; }
+  .dtm-line-top a { flex:0 0 auto; line-height:0; }
   .dtm-nophoto { display:flex; align-items:center; justify-content:center; font-size:22px; color:var(--ink-3); }
   .dtm-line-main { flex:1; min-width:0; }
   .dtm-line .l-name { font-size:15.5px; line-height:1.3; }
@@ -2117,7 +2122,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v183';
+const APP_VERSION = 'v184';
 
 /* === ITM APP === */
 (function(){
@@ -11720,7 +11725,7 @@ var DTM_FORMATS = ['75cl', '50cl', 'Magnum', 'Jéroboam', 'Autre'];
 
 var dtmView = 'cap';            // 'cap' | 'rev' | 'adm'
 var dtmDir = 'PC';              // 'PC' = Pablo → Cream (défaut) | 'CP'
-var dtmCap = { photo: null, prod: null, format: null, qty: 1 };
+var dtmCap = { photo: null, prod: null, format: null, qty: 1, thumb: null };
 var dtmSearchTermD = '';
 var dtmCatCache = null;
 var dtmStateCache = null;
@@ -11986,6 +11991,13 @@ function dtmHandlePhoto(file) {
     cv.width = w; cv.height = h;
     cv.getContext('2d').drawImage(img, 0, 0, w, h);
     dtmCap.photo = cv.toDataURL('image/jpeg', DTM_JPEG_Q);
+    // Miniature ~10 Ko stockée AVEC la ligne : la caisse s'affiche sans télécharger
+    // les photos pleines (lentes au téléphone) — la pleine s'ouvre au tap.
+    var tm = Math.max(w, h), tk = tm > 180 ? 180 / tm : 1;
+    var tc = document.createElement('canvas');
+    tc.width = Math.max(1, Math.round(w * tk)); tc.height = Math.max(1, Math.round(h * tk));
+    tc.getContext('2d').drawImage(img, 0, 0, tc.width, tc.height);
+    dtmCap.thumb = tc.toDataURL('image/jpeg', 0.6);
     URL.revokeObjectURL(url);
     renderDtm();
     dtmOpenCaptureModal('format');   // tac-au-tac : format puis quantité en pop-up
@@ -12008,10 +12020,11 @@ async function dtmSaveCapture() {
     qty: dtmCap.qty || 1,
     unit: null,
     personne: dtmPersonne(),
-    photo: dtmCap.photo
+    photo: dtmCap.photo,
+    thumb: dtmCap.thumb || null
   };
   await dtmQueuePut(rec);
-  dtmCap = { photo: null, prod: null, format: null, qty: 1 };
+  dtmCap = { photo: null, prod: null, format: null, qty: 1, thumb: null };
   dtmSearchTermD = '';
   renderDtm();
   toast('Au panier 🛒');
@@ -12250,7 +12263,7 @@ function dtmCaptureModalClose(cancel) {
   var m = document.getElementById('dtmCapModal');
   if (m) m.remove();
   dtmCapStep = null;
-  if (cancel) { dtmCap = { photo: null, prod: null, format: null, qty: 1 }; renderDtm(); }
+  if (cancel) { dtmCap = { photo: null, prod: null, format: null, qty: 1, thumb: null }; renderDtm(); }
 }
 function dtmOpenCaptureModal(step) {
   dtmCapStep = step;
@@ -12402,7 +12415,17 @@ function dtmRenderReview(root) {
     h += dtmBannerHtml();
 
     if (queue.length) {
-      h += '<div class="dtm-banner" style="background:var(--surface-2); border-color:var(--border-strong); color:var(--ink-2);">⏳ <b>' + queue.length + ' capture(s)</b> pas encore envoyée(s) au serveur — la clôture attendra qu\'elles partent (retour réseau).</div>';
+      h += '<div class="dtm-banner" style="background:var(--surface-2); border-color:var(--border-strong); color:var(--ink-2);">⏳ <b>' + queue.length + ' capture(s)</b> en cours d\'envoi — elles partiront toutes seules, la caisse attendra qu\'elles soient au serveur.</div>';
+      queue.forEach(function (r2) {
+        var nm = r2.y ? (r2.s || r2.y) : 'Photo seule';
+        h += '<div class="dtm-line dtm-line-pending">';
+        h += '<div class="dtm-line-top">';
+        h += (r2.thumb || r2.photo) ? '<img src="' + (r2.thumb || r2.photo) + '" alt="">' : '<div class="dtm-nophoto">📷</div>';
+        h += '<div class="dtm-line-main"><div class="l-name">⏳ ' + escape(nm) + (r2.format ? ' <span class="dtm-fmt">' + escape(r2.format) + '</span>' : '') + ' · ×' + fmtQty(r2.qty) + '</div>';
+        h += '<div class="dtm-line-sub">' + escape(r2.from) + ' → ' + escape(r2.to) + ' · ' + escape(r2.personne || '') + ' · envoi en cours…</div></div>';
+        h += '<button type="button" class="ttm-del" data-qdel="' + escape(r2.clientId) + '">✕</button>';
+        h += '</div></div>';
+      });
     }
     if (!lines) {
       h += '<div style="color:var(--danger); font-size:13.5px;">Impossible de charger les lignes (' + escape(r[1]._err || '') + '). Vérifie le réseau puis ré-ouvre cet onglet.</div>';
@@ -12418,7 +12441,13 @@ function dtmRenderReview(root) {
         var name = l.y ? (l.s || l.y) : '⚠ Pas encore lié — photo seule';
         var fmtLbl = l.format || dtmProdFormat(prodRef);
         h += '<div class="dtm-line' + (wc ? ' prod-wine-' + wc : '') + '" data-lid="' + escape(l.id) + '">';
-        h += l.photoUrl ? '<img src="' + escape(l.photoUrl) + '" alt="" loading="lazy">' : '<div class="dtm-nophoto">📷</div>';
+        h += '<div class="dtm-line-top">';
+        var imgSrc = l.thumb || l.photoUrl;
+        if (imgSrc) {
+          h += l.photoUrl
+            ? '<a href="' + escape(l.photoUrl) + '" target="_blank" rel="noopener"><img src="' + (l.thumb ? l.thumb : escape(l.photoUrl)) + '" alt="" loading="lazy"></a>'
+            : '<img src="' + imgSrc + '" alt="" loading="lazy">';
+        } else h += '<div class="dtm-nophoto">📷</div>';
         h += '<div class="dtm-line-main"><div class="l-name' + (l.y ? '' : ' dtm-unlinked') + '">' + escape(name) + ' <button type="button" class="dtm-fmt dtm-fmt-btn" data-fchg="' + escape(l.id) + '">' + escape(fmtLbl || 'format ?') + '</button></div>';
         h += '<div class="dtm-line-sub">' + escape(l.from) + ' → ' + escape(l.to) + ' · ' + escape(l.personne || '') + '</div>';
         if (!l.y) h += '<button type="button" class="dtm-link-btn" data-link="' + escape(l.id) + '">🔗 Lier à un produit</button>';
@@ -12427,13 +12456,14 @@ function dtmRenderReview(root) {
           h += '<input class="search" id="dtmLinkSearch" type="search" placeholder="Rechercher…" autocomplete="off" value="' + escape(dtmLinkTerm) + '"></div>';
           h += '<div class="ttm-results" id="dtmLinkResults" style="display:none;"></div>';
         }
-        h += '</div>';
+        h += '</div></div>';
+        h += '<div class="dtm-line-actions">';
         h += '<div class="ttm-qty dtm-line-qty">';
         h += '<button type="button" data-lqm="' + escape(l.id) + '">−</button>';
         h += '<input type="text" inputmode="decimal" value="' + fmtQty(l.qty) + '" data-lqi="' + escape(l.id) + '">';
         h += '<button type="button" data-lqp="' + escape(l.id) + '">+</button></div>';
         h += '<button type="button" class="ttm-del" data-ldel="' + escape(l.id) + '">✕</button>';
-        h += '</div>';
+        h += '</div></div>';
       });
       h += '<button type="button" class="ttm-cta" id="dtmCloseBtn"' + (queue.length ? ' disabled' : '') + '>🧾 Passer en caisse (' + lines.length + ')</button>';
       h += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Un numéro ETM par sens · le récap part par mail à Victor</div>';
@@ -12458,6 +12488,12 @@ function dtmRenderReview(root) {
     var eb = document.getElementById('dtmEmptyBtn');
     if (eb) eb.addEventListener('click', function () { dtmCloseEmpty().catch(function (e) { toast('Erreur : ' + e.message); }); });
 
+    wrap.querySelectorAll('[data-qdel]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!confirm('Supprimer cette capture pas encore envoyée ?')) return;
+        dtmQueueDel(b.dataset.qdel).then(function () { renderDtm(); });
+      });
+    });
     wrap.querySelectorAll('[data-fchg]').forEach(function (b) {
       b.addEventListener('click', function () { dtmFormatPicker(b.dataset.fchg); });
     });
