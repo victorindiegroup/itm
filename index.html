@@ -413,6 +413,15 @@
     opacity: 0.6;
   }
   .logout-btn:active { opacity: 1; }
+  /* Déconnexion depuis l'écran d'accueil (sous les tuiles) */
+  .mode-logout-btn {
+    display: block;
+    margin: 18px auto 0;
+    min-height: 44px;
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+  .mode-logout-btn:active { background: var(--accent-soft); }
 
   /* Palette pills par conditionnement */
   .pill-BTL    { background: #FAEEDA; color: #854F0B; }
@@ -1684,6 +1693,7 @@
         <div class="m-desc"><b>Déclarer un prélèvement</b> — une bouteille passe entre Pablo et Cream, photo en 10 s</div>
       </span>
     </button>
+    <button type="button" class="sess-logout-btn mode-logout-btn" id="modeBtnLogout">👋 Se déconnecter</button>
   </div>
 </div>
 
@@ -2122,7 +2132,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v185';
+const APP_VERSION = 'v186';
 
 /* === ITM APP === */
 (function(){
@@ -2297,6 +2307,9 @@ function chooseMode(mode) {
 }
 document.getElementById('modeBtnItm').addEventListener('click', () => chooseMode('itm'));
 document.getElementById('modeBtnTtm').addEventListener('click', () => chooseMode('ttm'));
+document.getElementById('modeBtnLogout').addEventListener('click', () => {
+  if (confirm('Se déconnecter ? Les saisies en cours seront conservées.')) logout();
+});
 document.querySelector('header .logo').addEventListener('click', showModeScreen);
 document.getElementById('btnHomeMenu').addEventListener('click', showModeScreen);
 
