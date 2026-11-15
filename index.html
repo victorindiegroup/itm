@@ -2122,7 +2122,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v184';
+const APP_VERSION = 'v185';
 
 /* === ITM APP === */
 (function(){
@@ -12051,9 +12051,11 @@ async function dtmClose() {
   if (q.length) { toast('⏳ ' + q.length + ' capture(s) pas encore envoyée(s) — attends le réseau'); return; }
   var lines = dtmLinesCache || [];
   var nonLie = lines.filter(function (l) { return !l.y; }).length;
-  var msg = 'Passer en caisse ? Le récap (numéro ETM) part par mail à Victor.';
-  if (nonLie) msg = '⚠ ' + nonLie + ' ligne(s) pas encore liée(s) à un produit — Victor devra identifier via la photo.\n\n' + msg;
-  if (!confirm(msg)) return;
+  if (nonLie) {
+    toast('🔗 Lie d\'abord ' + nonLie + ' photo(s) à un produit — obligatoire pour passer en caisse');
+    return;
+  }
+  if (!confirm('Passer en caisse ? Le récap (numéro ETM) part par mail à Victor.')) return;
   dtmStampShow('ENCAISSÉ');
   try {
     var r = await fetch(BACKEND_URL + '/dtm/close', {
@@ -12465,8 +12467,10 @@ function dtmRenderReview(root) {
         h += '<button type="button" class="ttm-del" data-ldel="' + escape(l.id) + '">✕</button>';
         h += '</div></div>';
       });
-      h += '<button type="button" class="ttm-cta" id="dtmCloseBtn"' + (queue.length ? ' disabled' : '') + '>🧾 Passer en caisse (' + lines.length + ')</button>';
-      h += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Un numéro ETM par sens · le récap part par mail à Victor</div>';
+      var nbNonLie = lines.filter(function (l) { return !l.y; }).length;
+      h += '<button type="button" class="ttm-cta" id="dtmCloseBtn"' + ((queue.length || nbNonLie) ? ' disabled' : '') + '>🧾 Passer en caisse (' + lines.length + ')</button>';
+      if (nbNonLie) h += '<div style="text-align:center; color:#C04343; font-size:13px; font-weight:600; margin-top:8px;">🔗 Lie d\'abord ' + nbNonLie + ' photo(s) à un produit — obligatoire pour la caisse</div>';
+      else h += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Un numéro ETM par sens · le récap part par mail à Victor</div>';
     } else {
       h += '<div style="font-size:14px; color:var(--ink-2); padding:6px 0 12px;">Aucun prélèvement capturé pour ce service.</div>';
       h += '<button type="button" class="ttm-cta" id="dtmEmptyBtn" style="background:var(--surface-2); color:var(--ink); border:1.5px solid var(--border-strong);"' + (queue.length ? ' disabled' : '') + '>Rien à transférer aujourd\'hui ∅</button>';
