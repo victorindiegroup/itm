@@ -1562,6 +1562,34 @@
   .ttm-hist-item .h-status.pending { background:#FDF3E3; color:#9A6B14; }
   .ttm-done { text-align:center; padding: 30px 10px; }
   .ttm-done .d-ico { font-size: 44px; }
+  /* ---------- DTM « La Douane » (v181) ---------- */
+  body.dtm-mode .tabs { display: none !important; }
+  body.dtm-mode .logo { background: var(--ink); }
+  body.dtm-mode .zone-pill { display: none !important; }
+  body.dtm-mode .h-sub { visibility: hidden; }
+  .dtm-banner { background:#FBF3CE; border:1.5px solid #C08A14; color:#7a5a0e; border-radius:12px; padding:10px 12px; font-size:13px; line-height:1.45; margin:0 0 12px; }
+  .dtm-swap { margin-left:6px; width:40px; height:40px; border-radius:50%; border:1px solid var(--border-strong); background:var(--surface-2); font-size:18px; color:var(--ink-2); flex:0 0 auto; }
+  .dtm-chip { padding:8px 13px; border:1px solid var(--border-strong); border-radius:100px; background:var(--surface-2); font-size:13px; color:var(--ink-2); }
+  .dtm-chip.on { background:var(--ink); color:#fff; border-color:var(--ink); font-weight:600; }
+  .dtm-line { display:flex; gap:10px; align-items:center; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px; margin-bottom:10px; }
+  .dtm-line img, .dtm-nophoto { width:54px; height:54px; object-fit:cover; border-radius:8px; flex:0 0 auto; background:var(--surface-2); }
+  .dtm-nophoto { display:flex; align-items:center; justify-content:center; font-size:22px; color:var(--ink-3); }
+  .dtm-line-main { flex:1; min-width:0; }
+  .dtm-line .l-name { font-size:14px; }
+  .dtm-line .l-name.dtm-unlinked { color:#C04343; font-weight:600; }
+  .dtm-line-sub { color:var(--ink-3); font-size:11.5px; margin-top:2px; }
+  .dtm-line-qty { flex:0 0 auto; }
+  .dtm-link-btn { margin-top:6px; padding:7px 12px; border-radius:100px; border:1px solid var(--border-strong); background:var(--surface-2); font-size:12.5px; color:var(--ink-2); }
+  .dtm-closure { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
+  .dtm-closure-mini { font-size:12.5px; color:var(--ink-2); padding:4px 0; border-bottom:1px dashed var(--border); }
+  .dtm-badge { border-radius:100px; padding:3px 9px; font-size:11px; font-weight:600; }
+  .dtm-adm-line { font-size:12.5px; color:var(--ink-2); padding:3px 0; font-family:monospace; }
+  .dtm-purge { display:block; width:100%; margin-bottom:8px; padding:11px; border-radius:12px; border:1.5px solid var(--danger); background:var(--surface); color:var(--danger); font-size:13.5px; font-weight:600; }
+  .dtm-stamp-ov { position:fixed; inset:0; z-index:960; background:rgba(27,27,24,.38); display:flex; align-items:center; justify-content:center; }
+  .dtm-stamp-box { text-align:center; animation:dtmStampIn .55s cubic-bezier(.2,2.0,.4,1) both; }
+  .dtm-stamp { font-size:110px; line-height:1; filter:drop-shadow(0 8px 18px rgba(0,0,0,.4)); }
+  .dtm-stamp-txt { margin-top:6px; display:inline-block; border:4px solid #C0392B; color:#C0392B; border-radius:10px; padding:4px 14px; font-weight:800; font-size:22px; letter-spacing:2px; background:rgba(255,255,255,.88); transform:rotate(-7deg); }
+  @keyframes dtmStampIn { 0% { transform:scale(2.6) rotate(-16deg); opacity:0; } 60% { transform:scale(.94) rotate(4deg); opacity:1; } 100% { transform:scale(1) rotate(0); } }
 </style>
 <!-- PWA -->
 <link rel="manifest" href="./manifest.json">
@@ -1594,6 +1622,13 @@
       <span>
         <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">TTM <span style="font-size:13px; letter-spacing:0;">Transferts</span></div>
         <div class="m-desc"><b>Faire un transfert</b> — produits qui partent vers un autre établissement, photo obligatoire</div>
+      </span>
+    </button>
+    <button type="button" class="mode-card" id="modeBtnDtm" style="display:none;">
+      <span class="m-ico">🛂</span>
+      <span>
+        <div class="m-title" style="font-size:24px; letter-spacing:-.5px;">DTM <span style="font-size:13px; letter-spacing:0;">La Douane</span></div>
+        <div class="m-desc"><b>Déclarer un prélèvement</b> — bouteille qui passe entre Pablo et Cream, photo en 10 s</div>
       </span>
     </button>
   </div>
@@ -1694,6 +1729,10 @@
 
   <div class="view" id="vTtm">
     <div id="ttmRoot"></div>
+  </div>
+
+  <div class="view" id="vDtm">
+    <div id="dtmRoot"></div>
   </div>
 
   <div class="view" id="vDemandes">
@@ -2030,7 +2069,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v180';
+const APP_VERSION = 'v181';
 
 /* === ITM APP === */
 (function(){
@@ -2050,6 +2089,7 @@ const PINS = {
   '0719': { role: 'user',  etab: 'La Sauvageonne (Megève)',       label: 'Sauvageonne Megève' },
   '7696': { role: 'user',  etab: 'Cherry (Paris)',                label: 'Cherry Paris' },
   '2780': { role: 'user',  etab: 'Pablo (Saint-Barthélemy)',      label: 'Pablo SBH' },
+  '2732': { role: 'user',  etab: 'Cream (Saint-Barthélemy)',      label: 'Cream SBH' },
 };
 
 const AUTH_KEY = 'itm_auth_v1';
@@ -2155,7 +2195,13 @@ function showModeScreen() {
   const titleEl = document.querySelector('header .h-title');
   if (logoEl) logoEl.textContent = 'OTM';
   if (titleEl) titleEl.textContent = 'Indie Group';
-  ttmFetchAttention();   // pastille « X à valider » sur la carte TTM + toast
+  // Différé d'un tick : au boot (PIN mémorisé), showModeScreen tourne pendant
+  // l'évaluation du script, AVANT l'init de `state` et des modules TTM/DTM.
+  // (corrige le ReferenceError v180 « state before initialization » au lancement)
+  setTimeout(function(){
+    ttmFetchAttention();   // pastille « X à valider » sur la carte TTM + toast
+    dtmModeRefresh();      // tuile DTM : visibilité (Pablo/Cream/admin) + badge « veille non clôturée »
+  }, 0);
   const hello = document.getElementById('modeHello');
   if (hello && currentAuth) {
     hello.textContent = 'Salut ' + (currentAuth.role === 'admin' ? 'Victor' : currentAuth.label) + ' 👋';
@@ -2168,12 +2214,21 @@ function chooseMode(mode) {
   const titleEl = document.querySelector('header .h-title');
   if (mode === 'ttm') {
     document.body.classList.add('ttm-mode');   // TTM plein écran : onglets ITM masqués
+    document.body.classList.remove('dtm-mode');
     if (logoEl) logoEl.textContent = 'TTM';
     if (titleEl) titleEl.textContent = 'Transferts';
     ttmFetchAttention(true).then(() => renderTtm());
     switchTab('ttm');
+  } else if (mode === 'dtm') {
+    document.body.classList.add('dtm-mode');   // DTM plein écran, même principe que TTM
+    document.body.classList.remove('ttm-mode');
+    if (logoEl) logoEl.textContent = 'DTM';
+    if (titleEl) titleEl.textContent = 'La Douane';
+    dtmFetchState(true).then(() => { if (document.body.classList.contains('dtm-mode')) renderDtm(); });
+    switchTab('dtm');
   } else {
     document.body.classList.remove('ttm-mode');
+    document.body.classList.remove('dtm-mode');
     if (logoEl) logoEl.textContent = 'ITM';
     if (titleEl) titleEl.textContent = 'Inventaire';
     // ITM : comportement historique — catalogue si inventaire actif, sinon session
@@ -3215,6 +3270,7 @@ function switchTab(name){
   if (name === 'inventaires') renderInventaires();
   if (name === 'demandes') renderDemandes();
   if (name === 'ttm') renderTtm();
+  if (name === 'dtm') renderDtm();
   // scroll reset
   document.querySelector('main').scrollTop = 0;
 }
@@ -3261,6 +3317,7 @@ const ETAB_TO_TAG = {
   "La Sauvageonne (Megève)": "IMOUNTAIN",
   "Cherry (Paris)": "PARIS CHERRY",
   "Pablo (Saint-Barthélemy)": "PABLO SBH",
+  "Cream (Saint-Barthélemy)": "CREAM",
   // Établissement utilitaire admin uniquement (garage/centrale Fourmi).
   // Tag null = pas de filtre carte (tous les produits considérés à la carte).
   "Fourmi": null
@@ -11589,6 +11646,813 @@ function init(){
     updatePageOpenClass();
   });
 })();
+
+/* ==================================================================
+   DTM — « La Douane » (v181)
+   Prélèvements Pablo SBH ↔ Cream SBH (stock physique partagé).
+   Capture pendant le service : PHOTO OBLIGATOIRE (≈10 s), produit
+   optionnel (le lien se fait à la clôture), offline-first (IndexedDB,
+   idempotent par clientId). Clôture en fin de service → numéro
+   DTM-AAAAMMJJ-n + mail récap à Victor (backend /dtm/*). Tampon 🛂.
+   Visible uniquement : PINs Pablo SBH, Cream SBH et admin.
+   ================================================================== */
+
+var DTM_PABLO = 'Pablo (Saint-Barthélemy)';
+var DTM_CREAM = 'Cream (Saint-Barthélemy)';
+var DTM_MAX_PHOTO_PX = 1400;   // mêmes réglages que TTM
+var DTM_JPEG_Q = 0.72;
+var DTM_FORMATS = ['75cl', '50cl', 'Magnum', 'Jéroboam', 'Autre'];
+
+var dtmView = 'cap';            // 'cap' | 'rev' | 'adm'
+var dtmDir = 'PC';              // 'PC' = Pablo → Cream (défaut) | 'CP'
+var dtmCap = { photo: null, prod: null, format: null, qty: 1 };
+var dtmSearchTermD = '';
+var dtmCatCache = null;
+var dtmStateCache = null;
+var dtmStateAt = 0;
+var dtmLinesCache = null;       // dernières lignes ouvertes (serveur)
+var dtmLinkTarget = null;       // id de ligne en cours de liaison (review)
+var dtmLinkTerm = '';
+var dtmDone = null;             // résultat de la dernière clôture (écran done)
+var dtmMemQueue = [];           // fallback si IndexedDB indisponible
+var dtmFlushing = false;
+
+function dtmCanAccess() {
+  if (!currentAuth) return false;
+  if (currentAuth.role === 'admin') return true;
+  return currentAuth.etab === DTM_PABLO || currentAuth.etab === DTM_CREAM;
+}
+function dtmPersonne() {
+  if (!currentAuth) return '?';
+  return currentAuth.role === 'admin' ? 'Victor (admin)' : currentAuth.label;
+}
+function dtmFromTo() {
+  return dtmDir === 'CP' ? { from: 'Cream SBH', to: 'Pablo SBH' } : { from: 'Pablo SBH', to: 'Cream SBH' };
+}
+/* Jour de service, heure SBH (UTC-4, sans DST) : avant 6h du matin on est
+   encore sur le service de la veille. */
+function dtmServiceDay() {
+  try {
+    return new Date(Date.now() - 6 * 3600e3).toLocaleDateString('fr-CA', { timeZone: 'America/Guadeloupe' });
+  } catch (e) {
+    return new Date(Date.now() - 6 * 3600e3).toISOString().slice(0, 10);
+  }
+}
+function dtmFrDay(day) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day || '');
+  return m ? m[3] + '/' + m[2] : (day || '—');
+}
+
+/* ---- Catalogue DTM : union des tags PABLO SBH + CREAM, dédup par y
+   (stock partagé ; CREAM se remplira aux prochains exports catalogue) ---- */
+function dtmCat() {
+  if (dtmCatCache && dtmCatCache.length) return dtmCatCache;
+  var out = [], seen = {};
+  (CATALOGUE || []).forEach(function (p) {
+    if (!p || !p.t) return;
+    if (p.t.indexOf('PABLO SBH') < 0 && p.t.indexOf('CREAM') < 0) return;
+    if (seen[p.y]) return;
+    seen[p.y] = 1;
+    out.push(p);
+  });
+  dtmCatCache = out;
+  return out;
+}
+function dtmSearchProducts(term) {
+  var t = normalize((term || '').trim());
+  if (!t) return [];
+  var words = t.split(/\s+/).filter(Boolean);
+  var res = [];
+  var cat = dtmCat();
+  for (var i = 0; i < cat.length; i++) {
+    var p = cat[i];
+    var s = normalize(p._search || p.s || p.y || '');
+    var okAll = true;
+    for (var w = 0; w < words.length; w++) { if (!matchWord(words[w], s)) { okAll = false; break; } }
+    if (okAll) { res.push(p); if (res.length >= 60) break; }
+  }
+  res.sort(function (a, b) { return (a.s || '').length - (b.s || '').length; });
+  return res.slice(0, 40);
+}
+
+/* ---- File offline : IndexedDB (photos trop lourdes pour localStorage),
+   fallback mémoire si IDB indisponible. POST idempotent par clientId. ---- */
+var dtmDbP = null;
+function dtmDb() {
+  if (dtmDbP) return dtmDbP;
+  dtmDbP = new Promise(function (resolve, reject) {
+    if (!window.indexedDB) { reject(new Error('no idb')); return; }
+    var rq = indexedDB.open('itm_dtm_v1', 1);
+    rq.onupgradeneeded = function () { rq.result.createObjectStore('queue', { keyPath: 'clientId' }); };
+    rq.onsuccess = function () { resolve(rq.result); };
+    rq.onerror = function () { reject(rq.error || new Error('idb error')); };
+  });
+  dtmDbP.catch(function () {});   // évite l'unhandled rejection si pas d'IDB
+  return dtmDbP;
+}
+function dtmQueuePut(rec) {
+  return dtmDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction('queue', 'readwrite');
+      tx.objectStore('queue').put(rec);
+      tx.oncomplete = function () { resolve(); };
+      tx.onerror = function () { reject(tx.error); };
+    });
+  }).catch(function () { dtmMemQueue.push(rec); });
+}
+function dtmQueueAll() {
+  return dtmDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var rq = db.transaction('queue', 'readonly').objectStore('queue').getAll();
+      rq.onsuccess = function () { resolve(rq.result || []); };
+      rq.onerror = function () { reject(rq.error); };
+    });
+  }).catch(function () { return dtmMemQueue.slice(); });
+}
+function dtmQueueDel(clientId) {
+  return dtmDb().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction('queue', 'readwrite');
+      tx.objectStore('queue').delete(clientId);
+      tx.oncomplete = function () { resolve(); };
+      tx.onerror = function () { reject(tx.error); };
+    });
+  }).catch(function () { dtmMemQueue = dtmMemQueue.filter(function (r) { return r.clientId !== clientId; }); });
+}
+
+async function dtmPostLine(rec) {
+  var r = await fetch(BACKEND_URL + '/dtm/line', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(rec),
+    signal: AbortSignal.timeout(25000)
+  });
+  if (!r.ok) {
+    var msg = 'HTTP ' + r.status;
+    try { var d = await r.json(); if (d && d.error) msg = d.error; } catch (e) {}
+    var err = new Error(msg); err.status = r.status; throw err;
+  }
+  return true;
+}
+
+async function dtmFlushQueue() {
+  if (dtmFlushing) return;
+  dtmFlushing = true;
+  var sentAny = false;
+  try {
+    var q = await dtmQueueAll();
+    for (var i = 0; i < q.length; i++) {
+      var rec = q[i];
+      try {
+        await dtmPostLine(rec);
+        await dtmQueueDel(rec.clientId);
+        sentAny = true;
+      } catch (e) {
+        // 4xx (hors 408/429) = rejet définitif (ex. photo trop lourde) : on retire et on prévient
+        if (e && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429) {
+          await dtmQueueDel(rec.clientId);
+          toast('🛂 Capture refusée par le serveur : ' + e.message);
+        }
+        // sinon (réseau / 5xx) : on garde, on retentera
+      }
+    }
+  } finally { dtmFlushing = false; }
+  if (sentAny && document.body.classList.contains('dtm-mode')) renderDtm();
+}
+setInterval(function () { if (dtmCanAccess()) dtmFlushQueue().catch(function () {}); }, 120000);
+window.addEventListener('online', function () { if (dtmCanAccess()) dtmFlushQueue().catch(function () {}); });
+
+/* ---- État (badge carte menu + bandeau « veille non clôturée ») ---- */
+async function dtmFetchState(force) {
+  if (!dtmCanAccess()) return null;
+  if (!force && dtmStateCache && Date.now() - dtmStateAt < 30000) return dtmStateCache;
+  try {
+    var r = await fetch(BACKEND_URL + '/dtm/state', { signal: AbortSignal.timeout(15000) });
+    var d = await r.json();
+    if (d && d.ok) { dtmStateCache = d; dtmStateAt = Date.now(); dtmModeBadge(); }
+  } catch (e) { /* hors-ligne : on garde l'état précédent */ }
+  return dtmStateCache;
+}
+/* Appelé par showModeScreen : visibilité de la tuile + badge */
+function dtmModeRefresh() {
+  var card = document.getElementById('modeBtnDtm');
+  if (!card) return;
+  var ok = dtmCanAccess();
+  card.style.display = ok ? '' : 'none';
+  if (ok) { dtmModeBadge(); dtmFetchState().then(function () {}); }
+}
+function dtmModeBadge() {
+  var card = document.getElementById('modeBtnDtm');
+  if (!card) return;
+  var b = document.getElementById('dtmModeBadge');
+  var txt = '', bg = '';
+  if (dtmStateCache && dtmStateCache.yesterdayClosed === false) { txt = '⏳ hier'; bg = 'var(--danger)'; }
+  else if (dtmStateCache && dtmStateCache.openCount > 0) { txt = String(dtmStateCache.openCount); bg = '#C08A14'; }
+  if (txt) {
+    if (!b) {
+      b = document.createElement('span');
+      b.id = 'dtmModeBadge';
+      b.style.cssText = 'margin-left:auto; color:#fff; border-radius:100px; padding:4px 10px; font-size:13px; font-weight:700; flex:0 0 auto;';
+      card.appendChild(b);
+    }
+    b.textContent = txt;
+    b.style.background = bg;
+  } else if (b) b.remove();
+}
+
+async function dtmFetchLines() {
+  var r = await fetch(BACKEND_URL + '/dtm/lines?status=open', { signal: AbortSignal.timeout(20000) });
+  var d = await r.json();
+  if (!d || !d.ok) throw new Error((d && d.error) || 'lignes indisponibles');
+  dtmLinesCache = d.lines || [];
+  return dtmLinesCache;
+}
+
+/* ---- Photo (même compression que TTM) ---- */
+function dtmHandlePhoto(file) {
+  if (!file) return;
+  var img = new Image();
+  var url = URL.createObjectURL(file);
+  img.onload = function () {
+    var w = img.naturalWidth, h = img.naturalHeight;
+    var m = Math.max(w, h);
+    if (m > DTM_MAX_PHOTO_PX) { var k = DTM_MAX_PHOTO_PX / m; w = Math.round(w * k); h = Math.round(h * k); }
+    var cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    cv.getContext('2d').drawImage(img, 0, 0, w, h);
+    dtmCap.photo = cv.toDataURL('image/jpeg', DTM_JPEG_Q);
+    URL.revokeObjectURL(url);
+    renderDtm();
+  };
+  img.onerror = function () { URL.revokeObjectURL(url); toast('Photo illisible, réessaie'); };
+  img.src = url;
+}
+
+/* ---- Enregistrer une capture : local d'abord, envoi en arrière-plan ---- */
+async function dtmSaveCapture() {
+  if (!dtmCap.photo) { toast('La photo est obligatoire 📷'); return; }
+  var ft = dtmFromTo();
+  var rec = {
+    clientId: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    day: dtmServiceDay(),
+    from: ft.from, to: ft.to,
+    y: dtmCap.prod ? dtmCap.prod.y : null,
+    s: dtmCap.prod ? dtmCap.prod.s : null,
+    format: dtmCap.format || null,
+    qty: dtmCap.qty || 1,
+    unit: null,
+    personne: dtmPersonne(),
+    photo: dtmCap.photo
+  };
+  await dtmQueuePut(rec);
+  dtmCap = { photo: null, prod: null, format: null, qty: 1 };
+  dtmSearchTermD = '';
+  renderDtm();
+  toast('Capture enregistrée 🛂');
+  dtmFlushQueue().catch(function () {});
+}
+
+/* ---- Tampon du douanier (clôture) ---- */
+function dtmStampShow(label) {
+  dtmStampHide();
+  var ov = document.createElement('div');
+  ov.id = 'dtmStampOv';
+  ov.className = 'dtm-stamp-ov';
+  ov.innerHTML = '<div class="dtm-stamp-box"><div class="dtm-stamp">🛂</div><div class="dtm-stamp-txt">' + escape(label || 'CLÔTURÉ') + '</div></div>';
+  document.body.appendChild(ov);
+}
+function dtmStampHide() {
+  var ov = document.getElementById('dtmStampOv');
+  if (ov) ov.remove();
+}
+
+/* ---- Clôture / rien à transférer ---- */
+async function dtmClose() {
+  var q = await dtmQueueAll();
+  if (q.length) { toast('⏳ ' + q.length + ' capture(s) pas encore envoyée(s) — attends le réseau'); return; }
+  var lines = dtmLinesCache || [];
+  var nonLie = lines.filter(function (l) { return !l.y; }).length;
+  var msg = 'Clôturer le service ? Le récap (numéro DTM) part par mail à Victor.';
+  if (nonLie) msg = '⚠ ' + nonLie + ' ligne(s) pas encore liée(s) à un produit — Victor devra identifier via la photo.\n\n' + msg;
+  if (!confirm(msg)) return;
+  dtmStampShow('CLÔTURÉ');
+  try {
+    var r = await fetch(BACKEND_URL + '/dtm/close', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ day: dtmServiceDay(), personne: dtmPersonne() }),
+      signal: AbortSignal.timeout(25000)
+    });
+    var d = await r.json();
+    if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP ' + r.status);
+    dtmDone = d;
+    dtmFetchState(true);
+    setTimeout(function () { dtmStampHide(); renderDtm(); }, 1000);
+  } catch (e) {
+    dtmStampHide();
+    toast('Échec de la clôture : ' + e.message);
+  }
+}
+async function dtmCloseEmpty() {
+  if (!confirm('Confirmer « rien à transférer » pour ce service ?\nUn mail minimal part quand même à Victor (il saura que c\'est traité).')) return;
+  dtmStampShow('RIEN À DÉCLARER');
+  try {
+    var r = await fetch(BACKEND_URL + '/dtm/close-empty', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ day: dtmServiceDay(), personne: dtmPersonne(), etab: 'Cream SBH' }),
+      signal: AbortSignal.timeout(25000)
+    });
+    var d = await r.json();
+    if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP ' + r.status);
+    dtmDone = { ok: true, empty: true, day: d.day };
+    dtmFetchState(true);
+    setTimeout(function () { dtmStampHide(); renderDtm(); }, 1000);
+  } catch (e) {
+    dtmStampHide();
+    toast('Échec : ' + e.message);
+  }
+}
+
+/* ---- Review : éditer / lier / supprimer une ligne ---- */
+async function dtmPutLine(id, patch) {
+  var r = await fetch(BACKEND_URL + '/dtm/line/' + encodeURIComponent(id), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+    signal: AbortSignal.timeout(20000)
+  });
+  var d = await r.json();
+  if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP ' + r.status);
+  return d.line;
+}
+async function dtmDeleteLine(id) {
+  var r = await fetch(BACKEND_URL + '/dtm/line/' + encodeURIComponent(id), {
+    method: 'DELETE', signal: AbortSignal.timeout(20000)
+  });
+  var d = await r.json();
+  if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP ' + r.status);
+}
+
+/* ================================================================
+   RENDU
+   ================================================================ */
+function renderDtm() {
+  var root = document.getElementById('dtmRoot');
+  if (!root) return;
+  if (!dtmCanAccess()) { root.innerHTML = '<div class="ttm-wrap"><div class="ttm-card">Réservé à Pablo SBH, Cream SBH et à l\'admin.</div></div>'; return; }
+  if (dtmView === 'rev') { dtmRenderReview(root); return; }
+  if (dtmView === 'adm') { dtmRenderAdmin(root); return; }
+  dtmRenderCapture(root);
+}
+
+function dtmHeadHtml() {
+  var isAdmin = currentAuth && currentAuth.role === 'admin';
+  var nOpen = dtmStateCache ? dtmStateCache.openCount : (dtmLinesCache ? dtmLinesCache.length : 0);
+  var h = '<div class="ttm-head"><h2>🛂 La Douane</h2><span class="ttm-sub">Pablo ↔ Cream</span>';
+  h += '<button type="button" id="dtmHome" style="margin-left:auto; background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; color:var(--ink-2);">🏠 Menu</button></div>';
+  h += '<div class="ttm-tabs">';
+  h += '<button type="button" id="dtmTabCap" class="' + (dtmView === 'cap' ? 'on' : '') + '">📸 Capture</button>';
+  h += '<button type="button" id="dtmTabRev" class="' + (dtmView === 'rev' ? 'on' : '') + '">🛂 Clôture' + (nOpen ? ' <span style="background:#C08A14; color:#fff; border-radius:100px; padding:1px 7px; font-size:11px;">' + nOpen + '</span>' : '') + '</button>';
+  if (isAdmin) h += '<button type="button" id="dtmTabAdm" class="' + (dtmView === 'adm' ? 'on' : '') + '">🗂</button>';
+  h += '</div>';
+  return h;
+}
+function dtmBindHead(root) {
+  var home = document.getElementById('dtmHome');
+  if (home) home.addEventListener('click', showModeScreen);
+  var tc = document.getElementById('dtmTabCap');
+  if (tc) tc.addEventListener('click', function () { dtmView = 'cap'; renderDtm(); });
+  var tr = document.getElementById('dtmTabRev');
+  if (tr) tr.addEventListener('click', function () { dtmView = 'rev'; dtmDone = null; renderDtm(); });
+  var ta = document.getElementById('dtmTabAdm');
+  if (ta) ta.addEventListener('click', function () { dtmView = 'adm'; renderDtm(); });
+}
+function dtmBannerHtml() {
+  if (dtmStateCache && dtmStateCache.yesterdayClosed === false) {
+    return '<div class="dtm-banner">⚠️ Le service d\'hier (' + dtmFrDay(dtmStateCache.yesterday) + ') n\'est <b>pas clôturé</b>. Passe dans l\'onglet <b>🛂 Clôture</b> — ou « Rien à transférer » si aucune bouteille n\'a bougé.</div>';
+  }
+  return '';
+}
+
+/* ---- Vue CAPTURE ---- */
+function dtmRenderCapture(root) {
+  var ft = dtmFromTo();
+  var html = '<div class="ttm-wrap">';
+  html += dtmHeadHtml();
+  html += dtmBannerHtml();
+
+  // 1 · Sens
+  html += '<div class="ttm-card"><div class="ttm-label">1 · Sens du prélèvement</div>';
+  html += '<div class="ttm-route"><span class="ttm-from">' + escape(ft.from) + '</span><span class="ttm-arrow">→</span><span class="ttm-from" style="background:var(--surface-2); color:var(--ink);">' + escape(ft.to) + '</span>';
+  html += '<button type="button" id="dtmSwap" class="dtm-swap" aria-label="Inverser le sens">⇄</button></div></div>';
+
+  // 2 · Photo obligatoire
+  html += '<div class="ttm-card"><div class="ttm-label">2 · Photo de la bouteille — OBLIGATOIRE</div>';
+  if (dtmCap.photo) {
+    html += '<div class="ttm-photo-thumb"><img src="' + dtmCap.photo + '" alt="photo prélèvement">';
+    html += '<button type="button" class="ttm-photo-redo" id="dtmPhotoRedo">📷 Reprendre</button></div>';
+  } else {
+    html += '<button type="button" class="ttm-photo-btn" id="dtmPhotoBtn">📷 Prendre la bouteille en photo</button>';
+  }
+  html += '<input type="file" id="dtmPhotoInput" accept="image/*" capture="environment" style="display:none;">';
+  html += '</div>';
+
+  // 3 · Produit (optionnel)
+  html += '<div class="ttm-card"><div class="ttm-label">3 · Produit <span style="text-transform:none; font-weight:500;">(optionnel — pas le temps ? la photo suffit, le lien se fera à la clôture)</span></div>';
+  if (dtmCap.prod) {
+    var wcS = (typeof wineColor === 'function') ? wineColor(dtmCap.prod.c) : null;
+    html += '<div class="ttm-line' + (wcS ? ' prod-wine-' + wcS : '') + '" style="margin:0;"><div class="l-name">' + escape(dtmCap.prod.s || dtmCap.prod.y) + '</div>';
+    html += '<button type="button" class="ttm-del" id="dtmProdClear">✕</button></div>';
+  } else {
+    html += '<div class="search-wrap" style="position:relative;"><span class="search-ico">⌕</span>';
+    html += '<input class="search" id="dtmSearch" type="search" placeholder="Rechercher (catalogue Pablo + Cream)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" value="' + escape(dtmSearchTermD) + '"></div>';
+    html += '<div class="ttm-results" id="dtmResults" style="display:none;"></div>';
+  }
+  html += '</div>';
+
+  // 4 · Format
+  html += '<div class="ttm-card"><div class="ttm-label">4 · Format <span style="text-transform:none; font-weight:500;">(optionnel si le produit est lié — les noms Yokitup portent déjà B./M./MAG.)</span></div>';
+  html += '<div class="ttm-dest-grid">';
+  DTM_FORMATS.forEach(function (f) {
+    html += '<button type="button" class="dtm-chip' + (dtmCap.format === f ? ' on' : '') + '" data-fmt="' + escape(f) + '">' + escape(f) + '</button>';
+  });
+  html += '</div></div>';
+
+  // 5 · Quantité
+  html += '<div class="ttm-card"><div class="ttm-label">5 · Quantité</div>';
+  html += '<div class="ttm-qty" style="justify-content:flex-start;">';
+  html += '<button type="button" id="dtmQtyM">−</button>';
+  html += '<input type="text" inputmode="decimal" id="dtmQtyI" value="' + fmtQty(dtmCap.qty) + '" style="width:64px; text-align:center;">';
+  html += '<button type="button" id="dtmQtyP">+</button>';
+  html += '<span style="margin-left:8px; color:var(--ink-3); font-size:13px;">bouteille(s)</span></div></div>';
+
+  html += '<button type="button" class="ttm-cta" id="dtmSave"' + (dtmCap.photo ? '' : ' disabled') + '>Enregistrer la capture 🛂</button>';
+  if (!dtmCap.photo) html += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Il manque : la photo</div>';
+
+  html += '<div id="dtmQueueInfo"></div>';
+  html += '</div>';
+  root.innerHTML = html;
+
+  /* listeners */
+  dtmBindHead(root);
+  var swap = document.getElementById('dtmSwap');
+  if (swap) swap.addEventListener('click', function () { dtmDir = dtmDir === 'PC' ? 'CP' : 'PC'; renderDtm(); });
+  var photoInput = document.getElementById('dtmPhotoInput');
+  var openCam = function () { if (photoInput) photoInput.click(); };
+  var pb = document.getElementById('dtmPhotoBtn'); if (pb) pb.addEventListener('click', openCam);
+  var pr = document.getElementById('dtmPhotoRedo'); if (pr) pr.addEventListener('click', openCam);
+  if (photoInput) photoInput.addEventListener('change', function () { dtmHandlePhoto(photoInput.files && photoInput.files[0]); });
+  var pc = document.getElementById('dtmProdClear');
+  if (pc) pc.addEventListener('click', function () { dtmCap.prod = null; renderDtm(); });
+  var inp = document.getElementById('dtmSearch');
+  if (inp) {
+    inp.addEventListener('input', function () { dtmSearchTermD = inp.value; dtmRenderResults(); });
+    if (dtmSearchTermD) dtmRenderResults();
+  }
+  root.querySelectorAll('[data-fmt]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      dtmCap.format = (dtmCap.format === b.dataset.fmt) ? null : b.dataset.fmt;
+      renderDtm();
+    });
+  });
+  var qm = document.getElementById('dtmQtyM');
+  var qp = document.getElementById('dtmQtyP');
+  var qi = document.getElementById('dtmQtyI');
+  if (qm) qm.addEventListener('click', function () { dtmCap.qty = Math.max(1, Math.floor(dtmCap.qty) - 1); renderDtm(); });
+  if (qp) qp.addEventListener('click', function () { dtmCap.qty = Math.floor(dtmCap.qty) + 1; renderDtm(); });
+  if (qi) qi.addEventListener('change', function () {
+    var v = parseFloat(String(qi.value).replace(',', '.'));
+    if (!isNaN(v) && v > 0) dtmCap.qty = Math.round(v * 100) / 100;
+    renderDtm();
+  });
+  var save = document.getElementById('dtmSave');
+  if (save) save.addEventListener('click', function () { dtmSaveCapture().catch(function (e) { toast('Erreur : ' + e.message); }); });
+
+  dtmQueueAll().then(function (q) {
+    var el = document.getElementById('dtmQueueInfo');
+    if (el && q.length) {
+      el.innerHTML = '<div class="ttm-card" style="margin-top:14px;"><div class="ttm-label">⏳ En attente de réseau (' + q.length + ')</div><div style="font-size:13px; color:var(--ink-2);">Ces captures partiront automatiquement dès que le téléphone retrouve du réseau (cave = réseau pourri, c\'est prévu).</div></div>';
+    }
+  });
+  dtmFetchState().then(function () {
+    // rafraîchit badge onglet clôture + bandeau si l'état vient d'arriver
+    var b = document.getElementById('dtmTabRev');
+    if (b && dtmStateCache && dtmStateCache.openCount && b.textContent.indexOf(String(dtmStateCache.openCount)) < 0) renderDtm();
+  });
+}
+function dtmRenderResults() {
+  var box = document.getElementById('dtmResults');
+  if (!box) return;
+  var res = dtmSearchProducts(dtmSearchTermD);
+  if (!dtmSearchTermD.trim() || !res.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  var h = '';
+  res.forEach(function (p, i) {
+    var wc = (typeof wineColor === 'function') ? wineColor(p.c) : null;
+    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-pick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + '</div></div>';
+  });
+  box.innerHTML = h;
+  box.style.display = '';
+  box.querySelectorAll('[data-pick]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var p = res[+el.dataset.pick];
+      if (p) { dtmCap.prod = { y: p.y, s: p.s, c: p.c }; dtmSearchTermD = ''; renderDtm(); }
+    });
+  });
+}
+
+/* ---- Vue CLÔTURE (review) ---- */
+function dtmRenderReview(root) {
+  root.innerHTML = '<div class="ttm-wrap">' + dtmHeadHtml() + '<div class="ttm-card" id="dtmRevBody" style="color:var(--ink-3);">Chargement…</div></div>';
+  dtmBindHead(root);
+
+  if (dtmDone) { dtmRenderDone(); return; }
+
+  Promise.all([
+    dtmFetchState(true),
+    dtmFetchLines().catch(function (e) { return { _err: e.message }; }),
+    dtmQueueAll()
+  ]).then(function (r) {
+    var lines = Array.isArray(r[1]) ? r[1] : null;
+    var queue = r[2] || [];
+    var body = document.getElementById('dtmRevBody');
+    if (!body) return;
+    var h = '';
+    h += dtmBannerHtml();
+
+    if (queue.length) {
+      h += '<div class="dtm-banner" style="background:var(--surface-2); border-color:var(--border-strong); color:var(--ink-2);">⏳ <b>' + queue.length + ' capture(s)</b> pas encore envoyée(s) au serveur — la clôture attendra qu\'elles partent (retour réseau).</div>';
+    }
+    if (!lines) {
+      h += '<div style="color:var(--danger); font-size:13.5px;">Impossible de charger les lignes (' + escape(r[1]._err || '') + '). Vérifie le réseau puis ré-ouvre cet onglet.</div>';
+      body.outerHTML = '<div class="ttm-card">' + h + '</div>';
+      return;
+    }
+
+    if (lines.length) {
+      h += '<div class="ttm-label">' + lines.length + ' prélèvement(s) du service — vérifie, lie les photos seules, puis tamponne</div>';
+      lines.forEach(function (l) {
+        var prodRef = l.y ? (CATALOGUE_BY_Y && CATALOGUE_BY_Y[l.y]) : null;
+        var wc = (typeof wineColor === 'function') ? wineColor((prodRef && prodRef.c) || null) : null;
+        var name = l.y ? (l.s || l.y) : '⚠ Pas encore lié — photo seule';
+        h += '<div class="dtm-line' + (wc ? ' prod-wine-' + wc : '') + '" data-lid="' + escape(l.id) + '">';
+        h += l.photoUrl ? '<img src="' + escape(l.photoUrl) + '" alt="" loading="lazy">' : '<div class="dtm-nophoto">📷</div>';
+        h += '<div class="dtm-line-main"><div class="l-name' + (l.y ? '' : ' dtm-unlinked') + '">' + escape(name) + '</div>';
+        h += '<div class="dtm-line-sub">' + escape(l.from) + ' → ' + escape(l.to) + (l.format ? ' · ' + escape(l.format) : '') + ' · ' + escape(l.personne || '') + '</div>';
+        if (!l.y) h += '<button type="button" class="dtm-link-btn" data-link="' + escape(l.id) + '">🔗 Lier à un produit</button>';
+        if (dtmLinkTarget === l.id) {
+          h += '<div class="search-wrap" style="position:relative; margin-top:8px;"><span class="search-ico">⌕</span>';
+          h += '<input class="search" id="dtmLinkSearch" type="search" placeholder="Rechercher…" autocomplete="off" value="' + escape(dtmLinkTerm) + '"></div>';
+          h += '<div class="ttm-results" id="dtmLinkResults" style="display:none;"></div>';
+        }
+        h += '</div>';
+        h += '<div class="ttm-qty dtm-line-qty">';
+        h += '<button type="button" data-lqm="' + escape(l.id) + '">−</button>';
+        h += '<input type="text" inputmode="decimal" value="' + fmtQty(l.qty) + '" data-lqi="' + escape(l.id) + '">';
+        h += '<button type="button" data-lqp="' + escape(l.id) + '">+</button></div>';
+        h += '<button type="button" class="ttm-del" data-ldel="' + escape(l.id) + '">✕</button>';
+        h += '</div>';
+      });
+      h += '<button type="button" class="ttm-cta" id="dtmCloseBtn"' + (queue.length ? ' disabled' : '') + '>🛂 Clôturer le service (' + lines.length + ')</button>';
+      h += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Un numéro DTM par sens · le récap part par mail à Victor</div>';
+    } else {
+      h += '<div style="font-size:14px; color:var(--ink-2); padding:6px 0 12px;">Aucun prélèvement capturé pour ce service.</div>';
+      h += '<button type="button" class="ttm-cta" id="dtmEmptyBtn" style="background:var(--surface-2); color:var(--ink); border:1.5px solid var(--border-strong);"' + (queue.length ? ' disabled' : '') + '>Rien à transférer aujourd\'hui ∅</button>';
+    }
+
+    // Dernières clôtures (info)
+    if (dtmStateCache && dtmStateCache.closures && dtmStateCache.closures.length) {
+      h += '<div class="ttm-label" style="margin-top:18px;">Dernières clôtures</div>';
+      dtmStateCache.closures.slice(0, 5).forEach(function (c) {
+        h += '<div class="dtm-closure-mini">' + dtmFrDay(c.day) + ' · ' + (c.empty ? '∅ rien à transférer' : escape(c.number || '') + ' · ' + c.nbLines + ' ligne(s)') + (c.done ? ' · <span style="color:var(--accent-dark, green);">✓ fait</span>' : '') + '</div>';
+      });
+    }
+
+    body.outerHTML = '<div class="ttm-card">' + h + '</div>';
+    var wrap = root;
+
+    var cb = document.getElementById('dtmCloseBtn');
+    if (cb) cb.addEventListener('click', function () { dtmClose().catch(function (e) { toast('Erreur : ' + e.message); }); });
+    var eb = document.getElementById('dtmEmptyBtn');
+    if (eb) eb.addEventListener('click', function () { dtmCloseEmpty().catch(function (e) { toast('Erreur : ' + e.message); }); });
+
+    wrap.querySelectorAll('[data-link]').forEach(function (b) {
+      b.addEventListener('click', function () { dtmLinkTarget = b.dataset.link; dtmLinkTerm = ''; renderDtm(); });
+    });
+    var ls = document.getElementById('dtmLinkSearch');
+    if (ls) {
+      ls.addEventListener('input', function () { dtmLinkTerm = ls.value; dtmRenderLinkResults(); });
+      ls.focus();
+      if (dtmLinkTerm) dtmRenderLinkResults();
+    }
+    wrap.querySelectorAll('[data-ldel]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!confirm('Supprimer cette ligne (et sa photo) ?')) return;
+        dtmDeleteLine(b.dataset.ldel).then(function () { renderDtm(); })
+          .catch(function (e) { toast('Erreur : ' + e.message); });
+      });
+    });
+    function bumpLine(id, delta) {
+      var l = (dtmLinesCache || []).find(function (x) { return x.id === id; });
+      if (!l) return;
+      var q = Number(l.qty) || 0;
+      var v = Number.isInteger(q) ? q + delta : (delta > 0 ? Math.ceil(q) : Math.floor(q));
+      if (v < 1) v = 1;
+      dtmPutLine(id, { qty: v }).then(function () { renderDtm(); }).catch(function (e) { toast('Erreur : ' + e.message); });
+    }
+    wrap.querySelectorAll('[data-lqm]').forEach(function (b) { b.addEventListener('click', function () { bumpLine(b.dataset.lqm, -1); }); });
+    wrap.querySelectorAll('[data-lqp]').forEach(function (b) { b.addEventListener('click', function () { bumpLine(b.dataset.lqp, +1); }); });
+    wrap.querySelectorAll('[data-lqi]').forEach(function (el) {
+      el.addEventListener('change', function () {
+        var v = parseFloat(String(el.value).replace(',', '.'));
+        if (isNaN(v) || v <= 0) { renderDtm(); return; }
+        dtmPutLine(el.dataset.lqi, { qty: Math.round(v * 100) / 100 }).then(function () { renderDtm(); })
+          .catch(function (e) { toast('Erreur : ' + e.message); });
+      });
+    });
+  });
+}
+function dtmRenderLinkResults() {
+  var box = document.getElementById('dtmLinkResults');
+  if (!box) return;
+  var res = dtmSearchProducts(dtmLinkTerm);
+  if (!dtmLinkTerm.trim() || !res.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  var h = '';
+  res.forEach(function (p, i) {
+    var wc = (typeof wineColor === 'function') ? wineColor(p.c) : null;
+    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-lpick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + '</div></div>';
+  });
+  box.innerHTML = h;
+  box.style.display = '';
+  box.querySelectorAll('[data-lpick]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var p = res[+el.dataset.lpick];
+      if (!p) return;
+      var id = dtmLinkTarget;
+      dtmLinkTarget = null; dtmLinkTerm = '';
+      dtmPutLine(id, { y: p.y, s: p.s }).then(function () { toast('Lié ✓'); renderDtm(); })
+        .catch(function (e) { toast('Erreur : ' + e.message); renderDtm(); });
+    });
+  });
+}
+/* Écran après clôture */
+function dtmRenderDone() {
+  var root = document.getElementById('dtmRoot');
+  if (!root) return;
+  var h = '<div class="ttm-wrap">' + dtmHeadHtml();
+  h += '<div class="ttm-card" style="text-align:center;">';
+  h += '<div style="font-size:54px; margin:6px 0;">🛂</div>';
+  if (dtmDone.empty) {
+    h += '<div style="font-size:17px; font-weight:700;">Rien à transférer — service clôturé ✓</div>';
+    h += '<div style="color:var(--ink-2); font-size:13.5px; margin-top:6px;">Victor est prévenu par mail.</div>';
+  } else {
+    h += '<div style="font-size:17px; font-weight:700;">Service clôturé ✓</div>';
+    (dtmDone.closures || []).forEach(function (c) {
+      h += '<div style="margin-top:10px; background:var(--surface-2); border-radius:12px; padding:10px;">';
+      h += '<div style="font-family:monospace; font-weight:700; font-size:16px;">' + escape(c.number) + '</div>';
+      h += '<div style="color:var(--ink-2); font-size:13px;">' + escape(c.from) + ' → ' + escape(c.to) + ' · ' + c.count + ' ligne(s)</div></div>';
+    });
+    h += '<div style="color:var(--ink-2); font-size:13.5px; margin-top:10px;">Le récap est parti par mail à Victor (bloc WhatsApp inclus).</div>';
+  }
+  h += '<button type="button" class="ttm-cta" id="dtmDoneOk" style="margin-top:14px;">OK</button>';
+  h += '</div></div>';
+  root.innerHTML = h;
+  dtmBindHead(root);
+  var ok = document.getElementById('dtmDoneOk');
+  if (ok) ok.addEventListener('click', function () { dtmDone = null; dtmView = 'cap'; renderDtm(); });
+}
+
+/* ---- Vue ADMIN « Douane » (Victor) ---- */
+function dtmRenderAdmin(root) {
+  var token = loadAdminToken();
+  var head = '<div class="ttm-wrap">' + dtmHeadHtml();
+  if (!token) {
+    root.innerHTML = head + '<div class="ttm-card"><div class="ttm-label">Token admin requis</div>'
+      + '<input class="search" id="dtmTokIn" type="password" placeholder="X-Admin-Token…" style="margin-bottom:10px;">'
+      + '<button type="button" class="ttm-cta" id="dtmTokSave">Enregistrer</button></div></div>';
+    dtmBindHead(root);
+    var ts = document.getElementById('dtmTokSave');
+    if (ts) ts.addEventListener('click', function () {
+      var v = (document.getElementById('dtmTokIn') || {}).value || '';
+      if (v) { saveAdminToken(v.trim()); renderDtm(); }
+    });
+    return;
+  }
+  root.innerHTML = head + '<div class="ttm-card" id="dtmAdmBody" style="color:var(--ink-3);">Chargement…</div></div>';
+  dtmBindHead(root);
+
+  fetch(BACKEND_URL + '/dtm/admin', { headers: { 'X-Admin-Token': token }, signal: AbortSignal.timeout(20000) })
+    .then(function (r) {
+      if (r.status === 401) throw new Error('Token admin invalide — re-saisis-le (onglet 🗂 après avoir vidé le champ)');
+      return r.json();
+    })
+    .then(function (d) {
+      if (!d || !d.ok) throw new Error((d && d.error) || 'réponse invalide');
+      var body = document.getElementById('dtmAdmBody');
+      if (!body) return;
+      var h = '';
+      var yesterday = dtmStateCache ? dtmStateCache.yesterday : null;
+      var yClosed = dtmStateCache ? dtmStateCache.yesterdayClosed : null;
+      if (yesterday !== null && yClosed !== null) {
+        h += '<div style="font-size:13.5px; margin-bottom:10px;">Hier (' + dtmFrDay(yesterday) + ') : ' + (yClosed ? '<b style="color:green;">✓ clôturé</b>' : '<b style="color:var(--danger);">⏳ non clôturé</b>') + '</div>';
+      }
+      if (d.openLines && d.openLines.length) {
+        h += '<div class="dtm-banner" style="background:var(--surface-2); border-color:var(--border-strong); color:var(--ink-2);">' + d.openLines.length + ' ligne(s) ouverte(s) (service en cours ou oubli).</div>';
+      }
+      if (!d.closures.length) {
+        h += '<div style="color:var(--ink-3);">Aucune clôture pour l\'instant.</div>';
+      }
+      // Groupement par jour (desc)
+      var byDay = {};
+      d.closures.forEach(function (c) { (byDay[c.day] = byDay[c.day] || []).push(c); });
+      Object.keys(byDay).sort().reverse().forEach(function (day) {
+        h += '<div class="ttm-label" style="margin-top:14px;">' + dtmFrDay(day) + '</div>';
+        byDay[day].forEach(function (c) {
+          var badge = c.empty
+            ? '<span class="dtm-badge" style="background:var(--surface-2); color:var(--ink-3);">∅ rien à transférer</span>'
+            : (c.done
+              ? '<span class="dtm-badge" style="background:#DCEFE3; color:#1D6E45;">✓ transfert fait</span>'
+              : '<span class="dtm-badge" style="background:#FBF3CE; color:#7a5a0e;">🛂 à saisir dans Yokitup</span>');
+          h += '<div class="dtm-closure">';
+          h += '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">';
+          h += c.number ? '<b style="font-family:monospace;">' + escape(c.number) + '</b>' : '<b>∅</b>';
+          h += badge;
+          if (!c.empty) h += '<label style="margin-left:auto; display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-2);"><input type="checkbox" data-done="' + escape(c.id) + '"' + (c.done ? ' checked' : '') + ' style="width:18px; height:18px; accent-color:var(--accent);"> fait</label>';
+          h += '</div>';
+          h += '<div style="color:var(--ink-2); font-size:12.5px; margin-top:3px;">' + (c.empty ? escape(c.to || '') : escape(c.from) + ' → ' + escape(c.to) + ' · ' + (c.lines || []).length + ' ligne(s)') + ' · par ' + escape(c.personne || '?') + '</div>';
+          if (!c.empty && c.lines && c.lines.length) {
+            h += '<details style="margin-top:6px;"><summary style="font-size:12.5px; color:var(--ink-3); cursor:pointer;">Voir les lignes</summary>';
+            c.lines.forEach(function (l) {
+              h += '<div class="dtm-adm-line">' + fmtQty(l.qty) + '× ' + escape(l.y || ((l.s || 'non lié') + ' ⚠')) + (l.format ? ' · ' + escape(l.format) : '');
+              if (l.photoUrl) h += ' · <a href="' + escape(l.photoUrl) + '" target="_blank" rel="noopener" style="color:var(--accent-dark, #1D9E75);">photo</a>';
+              h += '</div>';
+            });
+            h += '</details>';
+          }
+          h += '</div>';
+        });
+      });
+      // Purge par mois (mois passés uniquement)
+      var months = {};
+      d.closures.forEach(function (c) { if (c.day) months[c.day.slice(0, 7)] = 1; });
+      var cur = dtmServiceDay().slice(0, 7);
+      var purgeable = Object.keys(months).filter(function (m) { return m < cur; }).sort().reverse();
+      if (purgeable.length) {
+        h += '<div class="ttm-label" style="margin-top:18px;">Ménage</div>';
+        purgeable.forEach(function (m) {
+          h += '<button type="button" class="dtm-purge" data-purge="' + m + '">🗑 Supprimer ' + m + ' (données + photos)</button>';
+        });
+      }
+      body.innerHTML = h;
+      body.style.color = '';
+
+      body.querySelectorAll('[data-done]').forEach(function (cbx) {
+        cbx.addEventListener('change', function () {
+          fetch(BACKEND_URL + '/dtm/done', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Admin-Token': token },
+            body: JSON.stringify({ id: cbx.dataset.done, done: cbx.checked }),
+            signal: AbortSignal.timeout(15000)
+          }).then(function (r) { return r.json(); }).then(function (res) {
+            if (!res.ok) throw new Error(res.error || '?');
+            toast(cbx.checked ? '✓ marqué fait' : 'décoché');
+            renderDtm();
+          }).catch(function (e) { toast('Erreur : ' + e.message); cbx.checked = !cbx.checked; });
+        });
+      });
+      body.querySelectorAll('[data-purge]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var m = b.dataset.purge;
+          if (!confirm('Supprimer TOUT ' + m + ' (lignes, clôtures, photos) ?\nIrréversible.')) return;
+          fetch(BACKEND_URL + '/dtm/month/' + m, {
+            method: 'DELETE', headers: { 'X-Admin-Token': token }, signal: AbortSignal.timeout(30000)
+          }).then(function (r) { return r.json(); }).then(function (res) {
+            if (!res.ok) throw new Error(res.error || '?');
+            toast('Mois ' + m + ' supprimé (' + res.deletedKv + ' enregistrements, ' + res.deletedPhotos + ' photos)');
+            renderDtm();
+          }).catch(function (e) { toast('Erreur : ' + e.message); });
+        });
+      });
+    })
+    .catch(function (e) {
+      var body = document.getElementById('dtmAdmBody');
+      if (body) body.innerHTML = '<div style="color:var(--danger); font-size:13.5px;">' + escape(e.message) + '</div>'
+        + '<button type="button" class="ttm-cta" id="dtmTokReset" style="margin-top:10px;">Changer le token</button>';
+      var tr = document.getElementById('dtmTokReset');
+      if (tr) tr.addEventListener('click', function () { saveAdminToken(''); renderDtm(); });
+    });
+}
+
+/* ---- Tuile du menu d'accueil ---- */
+(function () {
+  var btn = document.getElementById('modeBtnDtm');
+  if (btn) btn.addEventListener('click', function () { chooseMode('dtm'); });
+})();
+
+/* Boot : si une session est déjà ouverte (PIN mémorisé), showModeScreen() a tourné
+   pendant l'évaluation du script, AVANT ce module (vars DTM pas encore initialisées)
+   → on rafraîchit la tuile maintenant que tout est en place. */
+dtmModeRefresh();
 
 document.addEventListener('DOMContentLoaded', init);
 })();

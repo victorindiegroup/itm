@@ -22,6 +22,7 @@
 | La Sauvageonne (Megève) | **0719** |
 | Cherry (Paris) | **7696** |
 | Pablo (Saint-Barthélemy) | **2780** |
+| Cream (Saint-Barthélemy) | **2732** |
 
 ## Fonctionnement
 
