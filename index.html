@@ -446,6 +446,12 @@
   @keyframes bubblePop { 0% { transform:scale(.6); opacity:0; } 100% { transform:scale(1); opacity:1; } }
   #dtmTourBubble .tour-t { font-size:17px; font-weight:800; line-height:1.25; }
   #dtmTourBubble .tour-d { font-size:15px; color:var(--ink); line-height:1.4; margin-top:4px; }
+  @media (max-width:520px) {
+    #dtmTourV { width:62px; left:6px; }
+    #dtmTourBubble { left:72px; right:8px; padding:8px 10px; border-radius:14px; }
+    #dtmTourBubble .tour-t { font-size:15px; }
+    #dtmTourBubble .tour-d { font-size:13.5px; }
+  }
   #dtmTourBubble .tour-foot { display:flex; align-items:center; justify-content:space-between; margin-top:6px; gap:8px; }
   .tour-dots { display:inline-flex; gap:4px; }
   .tour-dot { width:7px; height:7px; border-radius:50%; background:var(--border-strong); display:inline-block; }
@@ -460,11 +466,14 @@
   #dtmTourFinale img { width:min(210px, 48vw); height:auto; transform-origin:50% 95%; animation:vPop .5s cubic-bezier(.34,1.56,.64,1), vGesticule 2.4s ease-in-out .5s infinite; filter:drop-shadow(0 8px 20px rgba(0,0,0,.25)); }
   #dtmTourFinale .finale-t { font-size:24px; font-weight:800; letter-spacing:-.4px; }
   #dtmTourFinale .finale-d { font-size:15.5px; color:var(--ink-2); line-height:1.5; max-width:420px; }
-  .tour-flash { animation: tourFlashK .65s ease-in-out infinite alternate; }
+  .tour-flash { animation: tourFlashK .65s ease-in-out infinite alternate; color:#3d3000 !important; }
   @keyframes tourFlashK { from { background: var(--accent-soft); box-shadow: 0 0 0 0 rgba(255,179,0,0); } to { background: #FFE9A8; box-shadow: 0 0 0 7px rgba(255,179,0,.4); } }
   #dtmTourArrow { position:fixed; z-index:9996; font-size:30px; pointer-events:none; transition:left .3s ease, top .3s ease; animation:arrowBounce .7s ease-in-out infinite alternate; filter:drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
   @keyframes arrowBounce { from { transform:translateY(0); } to { transform:translateY(9px); } }
-  body.dtm-demo #dtmRoot { padding-bottom:150px; }
+  body.dtm-demo #dtmRoot { padding-bottom:240px; }
+  /* En démo, la bande du bas est réservée au V : les popups se compriment et scrollent */
+  body.dtm-demo .v-modal { align-items:flex-start; padding-top:56px; }
+  body.dtm-demo .v-modal-card { max-height:calc(100vh - 290px); max-height:calc(100dvh - 290px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
   body.dtm-demo .mascot-btn, body.dtm-demo .mascot-bubble { display:none !important; }
   /* Mode démo (v198) : ruban fixe cliquable + carte discrète */
   #dtmDemoRibbon { position:fixed; top:0; left:0; right:0; z-index:9998; border:none; background:#C0392B; color:#fff; font:700 12px/1.3 inherit; padding:8px 10px; text-align:center; cursor:pointer; }
@@ -2216,7 +2225,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v199';
+const APP_VERSION = 'v201';
 
 /* === ITM APP === */
 (function(){
@@ -12142,6 +12151,45 @@ async function dtmFetchLines() {
 }
 
 /* ---- Photo (même compression que TTM) ---- */
+/* En mode démo, pas d'appareil photo (bloqué dans la visionneuse, et inutile en salle) :
+   on dessine une bouteille de démonstration et on enchaîne comme après une vraie photo. */
+function dtmDemoFakePhoto() {
+  var W = 480, H = 640;
+  var cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  var c = cv.getContext('2d');
+  // fond "table de service"
+  var g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#efe9dd'); g.addColorStop(1, '#d8cfbe');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = 'rgba(90,75,55,.25)'; c.fillRect(0, H - 110, W, 110);
+  // bouteille
+  var hues = ['#2f4a33', '#3a4a2f', '#27413a'];
+  var col = hues[Math.floor(Math.random() * hues.length)];
+  c.fillStyle = col;
+  c.beginPath();
+  c.moveTo(W/2 - 16, 70); c.lineTo(W/2 + 16, 70);            // goulot
+  c.lineTo(W/2 + 16, 200);
+  c.quadraticCurveTo(W/2 + 78, 240, W/2 + 78, 320);           // épaule
+  c.lineTo(W/2 + 78, 560); c.lineTo(W/2 - 78, 560);
+  c.lineTo(W/2 - 78, 320);
+  c.quadraticCurveTo(W/2 - 78, 240, W/2 - 16, 200);
+  c.closePath(); c.fill();
+  c.fillStyle = '#b9922f'; c.fillRect(W/2 - 18, 48, 36, 40);  // capsule
+  c.fillStyle = '#f6f1e4'; c.fillRect(W/2 - 62, 370, 124, 110); // étiquette
+  c.strokeStyle = '#8a7a5a'; c.lineWidth = 3; c.strokeRect(W/2 - 62, 370, 124, 110);
+  c.fillStyle = '#3d3528'; c.font = 'bold 26px sans-serif'; c.textAlign = 'center';
+  c.fillText('DÉMO', W/2, 416);
+  c.font = '16px sans-serif'; c.fillText('L\'Épicerie · ITM', W/2, 448);
+  c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(W/2 - 58, 230, 22, 320); // reflet
+  dtmCap.photo = cv.toDataURL('image/jpeg', 0.8);
+  var tc = document.createElement('canvas');
+  tc.width = 135; tc.height = 180;
+  tc.getContext('2d').drawImage(cv, 0, 0, 135, 180);
+  dtmCap.thumb = tc.toDataURL('image/jpeg', 0.6);
+  renderDtm();
+  dtmOpenCaptureModal('format');
+}
 function dtmHandlePhoto(file) {
   if (!file) return;
   var img = new Image();
@@ -12753,7 +12801,8 @@ function dtmTourSpot() {
   var el = qs(sel) || qs(dtmTour.fbSel);
   var r = el ? el.getBoundingClientRect() : null;
   if (!el || !r || !r.width) { els.h.style.display = 'none'; els.a.style.display = 'none'; dtmTour.lastTg = null; dtmTourPlace(null); return; }
-  if (dtmTour.lastTg !== sel) {
+  var vh0 = window.innerHeight || 700;
+  if (dtmTour.lastTg !== sel || r.top < 40 || r.bottom > vh0 - 4) {   // cible hors champ → on la ramène
     dtmTour.lastTg = sel;
     try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { try { el.scrollIntoView(); } catch (e2) {} }
   }
@@ -12767,26 +12816,24 @@ function dtmTourSpot() {
   els.a.textContent = above ? '👇' : '👆';
   els.a.style.left = (r.left + r.width / 2 - 16) + 'px';
   els.a.style.top = (above ? (r.top - 44) : (r.bottom + 8)) + 'px';
-  dtmTourPlace(dtmTour.pinBottom ? null : r);
+  dtmTourPlace(r);   // la bulle évite toujours la cible, même sur les étapes « pin » (popups)
 }
 
-/* Le V et sa bulle VIENNENT se placer près de la cible (sous elle si elle est en haut,
-   au-dessus sinon), avec une glisse animée — et rentrent en bas à gauche sans cible. */
+/* Le V et sa bulle restent ancrés EN BAS (barre de dialogue façon jeu vidéo) pour ne
+   jamais cacher le contenu — la cible est centrée au scroll et pointée par le spotlight
+   et la flèche. Si la cible est elle-même dans la zone du bas, le bloc glisse en haut. */
 function dtmTourPlace(r) {
   var els = dtmTourEls();
   var vh = window.innerHeight || 700;
   var vH = els.v.offsetHeight || 110;
   var bH = els.b.offsetHeight || 120;
   var needH = Math.max(vH, bH);
-  var top;
-  if (!r) {
-    top = vh - needH - 10;
-  } else {
-    var mid = (r.top + r.bottom) / 2;
-    if (mid < vh * 0.55) top = Math.min(r.bottom + 16, vh - needH - 8);   // cible en haut → le V dessous
-    else top = Math.max(r.top - needH - 16, 8);                            // cible en bas → le V au-dessus
-  }
-  top = Math.max(8, Math.min(top, vh - needH - 8));
+  var rb = document.getElementById('dtmDemoRibbon');
+  var minTop = rb ? (rb.getBoundingClientRect().bottom + 6) : 8;       // sous le ruban démo
+  var botTop = vh - needH - 10;
+  var top = botTop;                                   // par défaut : en bas
+  if (r && r.bottom > botTop - 16 && r.top > minTop + needH + 16) top = minTop;  // cible en bas → le V en haut
+  top = Math.max(minTop, Math.min(top, botTop));
   els.v.style.top = top + 'px';
   els.b.style.top = top + 'px';
 }
@@ -12815,7 +12862,7 @@ function dtmTourStart() {
         }, 1200);
       }
     } catch (e) {}
-  }, 600);
+  }, 350);
 }
 function dtmTourStop() {
   dtmTour.active = false;
@@ -12997,7 +13044,7 @@ function dtmRenderCapture(root) {
   if (swap) swap.addEventListener('click', function () { dtmDir = dtmDir === 'PC' ? 'CP' : 'PC'; renderDtm(); });
   var photoInput = document.getElementById('dtmPhotoInput');
   var pb = document.getElementById('dtmPhotoBtn');
-  if (pb) pb.addEventListener('click', function () { if (photoInput) photoInput.click(); });
+  if (pb) pb.addEventListener('click', function () { if (dtmDemoOn) { dtmDemoFakePhoto(); return; } if (photoInput) photoInput.click(); });
   if (photoInput) photoInput.addEventListener('change', function () { dtmHandlePhoto(photoInput.files && photoInput.files[0]); });
 
   dtmQueueAll().then(function (q) {
