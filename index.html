@@ -422,6 +422,18 @@
     font-size: 13px;
   }
   .mode-logout-btn:active { background: var(--accent-soft); }
+  /* Alerte cohérence contenant photo ↔ réf liée (caisse ETM, v187) */
+  .dtm-fmt-warn {
+    margin-top: 6px;
+    padding: 7px 10px;
+    background: #FDEEEE;
+    border: 1px solid #F3C8C8;
+    border-radius: 9px;
+    color: var(--danger, #C0392B);
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
 
   /* Palette pills par conditionnement */
   .pill-BTL    { background: #FAEEDA; color: #854F0B; }
@@ -2132,7 +2144,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v186';
+const APP_VERSION = 'v187';
 
 /* === ITM APP === */
 (function(){
@@ -11744,8 +11756,7 @@ var dtmCatCache = null;
 var dtmStateCache = null;
 var dtmStateAt = 0;
 var dtmLinesCache = null;       // dernières lignes ouvertes (serveur)
-var dtmLinkTarget = null;       // id de ligne en cours de liaison (review)
-var dtmLinkTerm = '';
+/* (v187) la liaison passe par une pop-up — plus d'état inline dtmLinkTarget/dtmLinkTerm */
 var dtmDone = null;             // résultat de la dernière clôture (écran done)
 var dtmMemQueue = [];           // fallback si IndexedDB indisponible
 var dtmFlushing = false;
@@ -11856,6 +11867,28 @@ function dtmProdFormat(p) {
   if (p.n) return p.n;
   var size = (p.q && String(p.u || '').toLowerCase() === 'cl') ? (String(p.q).replace('.', ',') + 'cl') : (p.q ? p.q + (p.u || '') : '');
   return size || null;
+}
+
+/* Cohérence contenant photo ↔ réf liée (v187) : dans Yokitup le Magnum et la
+   75cl sont des PRODUITS différents — lier une photo « Magnum » à la réf
+   Bouteille fausserait le transfert. Retourne {cap, prod} si ça ne colle pas,
+   null si ok ou incomparable. Un format capturé en cl (« Autre ») est comparé
+   NUMÉRIQUEMENT à la contenance catalogue (70cl ↔ Bouteille q=70 : ok). */
+function dtmFmtMismatch(capFmt, p) {
+  if (!capFmt || !p) return null;
+  var prodFmt = dtmProdFormat(p);
+  if (!prodFmt) return null;
+  function norm(s) {
+    s = String(s).toLowerCase().replace(/\s+/g, '');
+    try { s = s.normalize('NFD').replace(/[̀-ͯ]/g, ''); } catch (e) {}
+    return s;
+  }
+  if (norm(capFmt) === norm(prodFmt)) return null;
+  var capCl = /^([\d.,]+)cl$/.exec(norm(capFmt));
+  if (capCl && p.q && String(p.u || '').toLowerCase() === 'cl') {
+    if (Math.abs(parseFloat(capCl[1].replace(',', '.')) - parseFloat(p.q)) < 0.01) return null;
+  }
+  return { cap: capFmt, prod: prodFmt };
 }
 
 /* ---- File offline : IndexedDB (photos trop lourdes pour localStorage),
@@ -12466,10 +12499,10 @@ function dtmRenderReview(root) {
         h += '<div class="dtm-line-main"><div class="l-name' + (l.y ? '' : ' dtm-unlinked') + '">' + escape(name) + ' <button type="button" class="dtm-fmt dtm-fmt-btn" data-fchg="' + escape(l.id) + '">' + escape(fmtLbl || 'format ?') + '</button></div>';
         h += '<div class="dtm-line-sub">' + escape(l.from) + ' → ' + escape(l.to) + ' · ' + escape(l.personne || '') + '</div>';
         if (!l.y) h += '<button type="button" class="dtm-link-btn" data-link="' + escape(l.id) + '">🔗 Lier à un produit</button>';
-        if (dtmLinkTarget === l.id) {
-          h += '<div class="search-wrap" style="position:relative; margin-top:8px;"><span class="search-ico">⌕</span>';
-          h += '<input class="search" id="dtmLinkSearch" type="search" placeholder="Rechercher…" autocomplete="off" value="' + escape(dtmLinkTerm) + '"></div>';
-          h += '<div class="ttm-results" id="dtmLinkResults" style="display:none;"></div>';
+        var mm = (l.y && prodRef) ? dtmFmtMismatch(l.format, prodRef) : null;
+        if (mm) {
+          h += '<div class="dtm-fmt-warn">⚠ Photo capturée en <b>' + escape(mm.cap) + '</b> mais la réf liée est en <b>' + escape(mm.prod) + '</b> — corrige la réf ou le contenant (pastille)</div>';
+          h += '<button type="button" class="dtm-link-btn" data-link="' + escape(l.id) + '">🔗 Changer la réf</button>';
         }
         h += '</div></div>';
         h += '<div class="dtm-line-actions">';
@@ -12515,14 +12548,8 @@ function dtmRenderReview(root) {
       b.addEventListener('click', function () { dtmFormatPicker(b.dataset.fchg); });
     });
     wrap.querySelectorAll('[data-link]').forEach(function (b) {
-      b.addEventListener('click', function () { dtmLinkTarget = b.dataset.link; dtmLinkTerm = ''; renderDtm(); });
+      b.addEventListener('click', function () { dtmOpenLinkModal(b.dataset.link); });
     });
-    var ls = document.getElementById('dtmLinkSearch');
-    if (ls) {
-      ls.addEventListener('input', function () { dtmLinkTerm = ls.value; dtmRenderLinkResults(); });
-      ls.focus();
-      if (dtmLinkTerm) dtmRenderLinkResults();
-    }
     wrap.querySelectorAll('[data-ldel]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!confirm('Supprimer cette ligne (et sa photo) ?')) return;
@@ -12567,6 +12594,11 @@ function dtmFormatPicker(lineId) {
   document.body.appendChild(m);
   document.getElementById('dtmFmtX').addEventListener('click', function () { m.remove(); });
   function apply(fmt) {
+    // v187 : si la ligne est déjà liée, vérifier la cohérence avec la réf
+    var cur = (dtmLinesCache || []).find(function (x) { return x.id === lineId; });
+    var prodRef = (cur && cur.y && typeof CATALOGUE_BY_Y !== 'undefined') ? CATALOGUE_BY_Y[cur.y] : null;
+    var mm = prodRef ? dtmFmtMismatch(fmt, prodRef) : null;
+    if (mm && !confirm('⚠ La réf liée (' + ((cur && cur.s) || cur.y) + ') est en ' + mm.prod + ', pas en ' + mm.cap + '.\n\nSi la photo est bien un(e) ' + mm.cap + ', c\'est plutôt la réf qu\'il faut changer.\n\nGarder ' + mm.cap + ' quand même ?')) return;
     m.remove();
     dtmPutLine(lineId, { format: fmt }).then(function () { toast('Contenant modifié ✓'); renderDtm(); })
       .catch(function (e) { toast('Erreur : ' + e.message); });
@@ -12596,11 +12628,42 @@ function dtmFormatPicker(lineId) {
   });
 }
 
-function dtmRenderLinkResults() {
+/* Pop-up de liaison (v187) : plein cadre, bien plus lisible que la recherche
+   inline dans la ligne de caisse. Affiche la photo + le contenant capturé,
+   et VÉRIFIE la cohérence contenant photo ↔ réf choisie avant de lier. */
+function dtmOpenLinkModal(lineId) {
+  var cur = (dtmLinesCache || []).find(function (x) { return x.id === lineId; });
+  var old = document.getElementById('dtmLinkModal');
+  if (old) old.remove();
+  var m = document.createElement('div');
+  m.id = 'dtmLinkModal';
+  m.className = 'v-modal';
+  var h = '<div class="v-modal-card dtm-pop">';
+  h += '<div class="dtm-pop-head">';
+  var im = cur && (cur.thumb || cur.photoUrl);
+  h += im ? '<img src="' + (cur.thumb ? cur.thumb : escape(cur.photoUrl)) + '" class="dtm-pop-thumb" alt="">' : '<span></span>';
+  h += '<button type="button" class="dtm-pop-x" id="dtmLinkX" aria-label="Fermer">✕</button></div>';
+  h += '<div class="dtm-pop-title">Lier à quel produit ?</div>';
+  if (cur && cur.format) h += '<div class="dtm-pop-prod">Photo capturée en <span class="dtm-fmt">' + escape(cur.format) + '</span></div>';
+  h += '<div style="position:relative;"><span class="search-ico" style="left:14px;">⌕</span>';
+  h += '<input class="search" id="dtmLinkSearch" type="search" placeholder="Rechercher (Pablo + Cream)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="font-size:17px; padding:15px 14px 15px 44px;"></div>';
+  h += '<div class="ttm-results" id="dtmLinkResults" style="display:none; max-height:46vh; margin-top:8px;"></div>';
+  h += '</div>';
+  m.innerHTML = h;
+  document.body.appendChild(m);
+  document.getElementById('dtmLinkX').addEventListener('click', function () { m.remove(); });
+  var inp = document.getElementById('dtmLinkSearch');
+  inp.addEventListener('input', function () { dtmRenderLinkResults(lineId); });
+  setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+}
+
+function dtmRenderLinkResults(lineId) {
   var box = document.getElementById('dtmLinkResults');
-  if (!box) return;
-  var res = dtmSearchProducts(dtmLinkTerm);
-  if (!dtmLinkTerm.trim() || !res.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  var inp = document.getElementById('dtmLinkSearch');
+  if (!box || !inp) return;
+  var term = inp.value;
+  var res = dtmSearchProducts(term);
+  if (!term.trim() || !res.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
   var h = '';
   res.forEach(function (p, i) {
     var wc = (typeof wineColor === 'function') ? wineColor(p.c) : null;
@@ -12613,10 +12676,12 @@ function dtmRenderLinkResults() {
     el.addEventListener('click', function () {
       var p = res[+el.dataset.lpick];
       if (!p) return;
-      var id = dtmLinkTarget;
-      dtmLinkTarget = null; dtmLinkTerm = '';
-      var cur = (dtmLinesCache || []).find(function (x) { return x.id === id; });
-      dtmPutLine(id, { y: p.y, s: p.s, format: (cur && cur.format) || dtmProdFormat(p) }).then(function () { toast('Lié ✓'); renderDtm(); })
+      var cur = (dtmLinesCache || []).find(function (x) { return x.id === lineId; });
+      var mm = dtmFmtMismatch(cur && cur.format, p);
+      if (mm && !confirm('⚠ Le contenant ne colle pas !\n\nPhoto capturée : ' + mm.cap + '\nRéf choisie : ' + (p.s || p.y) + ' — ' + mm.prod + '\n\nDans Yokitup chaque contenant est une réf à part (un Magnum n\'est pas une 75cl). Cherche plutôt la réf en ' + mm.cap + ' si elle existe.\n\nLier quand même ?')) return;
+      var mod = document.getElementById('dtmLinkModal');
+      if (mod) mod.remove();
+      dtmPutLine(lineId, { y: p.y, s: p.s, format: (cur && cur.format) || dtmProdFormat(p) }).then(function () { toast('Lié ✓'); renderDtm(); })
         .catch(function (e) { toast('Erreur : ' + e.message); renderDtm(); });
     });
   });
