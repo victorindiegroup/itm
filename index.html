@@ -435,9 +435,51 @@
   /* Unités Courses en grille uniforme (v196) : 3 colonnes, pastilles de même taille */
   .crs-units { display:grid; grid-template-columns:repeat(3, 1fr); gap:7px; margin-top:10px; }
   .crs-units .dtm-chip { margin:0; width:100%; min-height:42px; font-size:14.5px; text-align:center; white-space:nowrap; }
+  /* Parcours guidé (v199) : Le V qui gesticule + bulle BD + spotlight + flèche */
+  #dtmTourV { position:fixed; left:8px; top:60vh; width:88px; height:auto; z-index:9997; pointer-events:none; transform-origin:50% 95%; animation:vGesticule 2.4s ease-in-out infinite; filter:drop-shadow(0 4px 8px rgba(0,0,0,.25)); transition:top .45s cubic-bezier(.4,1.3,.5,1); }
+  #dtmTourV.pose-pop { animation:vPop .45s cubic-bezier(.34,1.56,.64,1), vGesticule 2.4s ease-in-out .45s infinite; }
+  @keyframes vGesticule { 0%,100% { transform:translateY(0) rotate(-2deg); } 25% { transform:translateY(-5px) rotate(2.5deg); } 50% { transform:translateY(0) rotate(-1deg); } 75% { transform:translateY(-7px) rotate(3deg); } }
+  @keyframes vPop { 0% { transform:scale(.6) rotate(-8deg); } 60% { transform:scale(1.12) rotate(3deg); } 100% { transform:scale(1) rotate(0); } }
+  #dtmTourBubble { position:fixed; left:100px; right:10px; top:60vh; z-index:9997; background:#fff; border:2px solid var(--ink); border-radius:16px; padding:10px 12px; box-shadow:0 6px 18px rgba(0,0,0,.25); transform-origin:0% 50%; transition:top .45s cubic-bezier(.4,1.3,.5,1); }
+  #dtmTourBubble::after { content:''; position:absolute; left:-12px; top:22px; border:8px solid transparent; border-right-color:var(--ink); }
+  #dtmTourBubble.pop { animation:bubblePop .35s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes bubblePop { 0% { transform:scale(.6); opacity:0; } 100% { transform:scale(1); opacity:1; } }
+  #dtmTourBubble .tour-t { font-size:17px; font-weight:800; line-height:1.25; }
+  #dtmTourBubble .tour-d { font-size:15px; color:var(--ink); line-height:1.4; margin-top:4px; }
+  #dtmTourBubble .tour-foot { display:flex; align-items:center; justify-content:space-between; margin-top:6px; gap:8px; }
+  .tour-dots { display:inline-flex; gap:4px; }
+  .tour-dot { width:7px; height:7px; border-radius:50%; background:var(--border-strong); display:inline-block; }
+  .tour-dot.done { background:var(--accent); }
+  .tour-dot.now { background:#FFB300; animation:dotNow 1s infinite alternate; }
+  @keyframes dotNow { from { transform:scale(1); } to { transform:scale(1.5); } }
+  .tour-btn { border:none; background:var(--accent); color:#fff; border-radius:100px; padding:8px 16px; font-size:13px; font-weight:700; margin-top:6px; }
+  .tour-btn.ghost { background:var(--surface-2); color:var(--ink-3); border:1px solid var(--border); padding:5px 10px; font-size:11.5px; margin:0; }
+  #dtmTourHole { position:fixed; z-index:9995; pointer-events:none; border:3px solid #FFD24D; border-radius:14px; transition:left .3s ease, top .3s ease, width .3s ease, height .3s ease; box-shadow:0 0 0 9999px rgba(20,20,18,.42); animation:holePulse 1.3s infinite; }
+  @keyframes holePulse { 0%,100% { outline:0 solid rgba(255,210,77,.75); outline-offset:0; } 50% { outline:9px solid rgba(255,210,77,0); outline-offset:9px; } }
+  #dtmTourFinale { position:fixed; inset:0; z-index:10000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; background:rgba(247,246,242,.55); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px); padding:28px; text-align:center; animation:bubblePop .4s cubic-bezier(.34,1.56,.64,1); }
+  #dtmTourFinale img { width:min(210px, 48vw); height:auto; transform-origin:50% 95%; animation:vPop .5s cubic-bezier(.34,1.56,.64,1), vGesticule 2.4s ease-in-out .5s infinite; filter:drop-shadow(0 8px 20px rgba(0,0,0,.25)); }
+  #dtmTourFinale .finale-t { font-size:24px; font-weight:800; letter-spacing:-.4px; }
+  #dtmTourFinale .finale-d { font-size:15.5px; color:var(--ink-2); line-height:1.5; max-width:420px; }
+  .tour-flash { animation: tourFlashK .65s ease-in-out infinite alternate; }
+  @keyframes tourFlashK { from { background: var(--accent-soft); box-shadow: 0 0 0 0 rgba(255,179,0,0); } to { background: #FFE9A8; box-shadow: 0 0 0 7px rgba(255,179,0,.4); } }
+  #dtmTourArrow { position:fixed; z-index:9996; font-size:30px; pointer-events:none; transition:left .3s ease, top .3s ease; animation:arrowBounce .7s ease-in-out infinite alternate; filter:drop-shadow(0 2px 3px rgba(0,0,0,.45)); }
+  @keyframes arrowBounce { from { transform:translateY(0); } to { transform:translateY(9px); } }
+  body.dtm-demo #dtmRoot { padding-bottom:150px; }
+  body.dtm-demo .mascot-btn, body.dtm-demo .mascot-bubble { display:none !important; }
+  /* Mode démo (v198) : ruban fixe cliquable + carte discrète */
+  #dtmDemoRibbon { position:fixed; top:0; left:0; right:0; z-index:9998; border:none; background:#C0392B; color:#fff; font:700 12px/1.3 inherit; padding:8px 10px; text-align:center; cursor:pointer; }
+  body.dtm-demo #dtmRoot .ttm-wrap { padding-top:34px; }
+  .dtm-demo-card { opacity:.85; }
+  .dtm-demo-card .m-ico { font-size:24px; }
+  body.dtm-demo .dtm-demo-card { opacity:1; border-color:#C0392B; }
   /* Menu d'entrée ETM (v193) */
   .dtm-menu-card .m-title { font-size:21px; letter-spacing:-.4px; }
   .dtm-menu-card .m-ico { font-size:30px; }
+  .dtm-hist-item.openable { cursor:pointer; }
+  .dtm-hist-item.openable:active { background:var(--accent-soft); }
+  .dtm-hist-hint { color:var(--accent); font-weight:600; }
+  .dtm-hist-thumb { width:40px; height:40px; object-fit:cover; border-radius:8px; border:1px solid var(--border); display:block; }
+  .dtm-hist-lines { margin-top:6px; border-top:1px dashed var(--border); padding-top:4px; }
   .crs-adm-sec { font-size:15px; font-weight:800; border-bottom:2px solid var(--border-strong); padding-bottom:4px; margin:10px 0 8px; }
   .crs-adm-table { width:100%; border-collapse:collapse; font-size:13.5px; }
   .crs-adm-table th { text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-3); padding:4px 2px; border-bottom:1px solid var(--border-strong); }
@@ -2174,7 +2216,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v197';
+const APP_VERSION = 'v199';
 
 /* === ITM APP === */
 (function(){
@@ -11864,8 +11906,10 @@ function dtmCat() {
   dtmCatCache = out;
   return out;
 }
+var dtmSearchVia = {};   // y → mot-clé de liaison ayant trouvé le produit (pastille « 🔎 via … »)
 function dtmSearchProducts(term) {
   var t = normalize((term || '').trim());
+  dtmSearchVia = {};
   if (!t) return [];
   var words = t.split(/\s+/).filter(Boolean);
   var res = [];
@@ -11878,7 +11922,42 @@ function dtmSearchProducts(term) {
     if (okAll) { res.push(p); if (res.length >= 60) break; }
   }
   res.sort(function (a, b) { return (a.s || '').length - (b.s || '').length; });
-  return res.slice(0, 40);
+  res = res.slice(0, 40);
+  // v199 : LIAISONS MANUELLES d'ITM — le « langage du bar » (ex. « belvedere » → la vodka versée).
+  // Même règle de match que la recherche d'inventaire ; produits via liaison EN PREMIER.
+  var via = [];
+  try {
+    var seenY = {};
+    res.forEach(function (p) { seenY[p.y] = 1; });
+    var ls = (typeof getAllLiaisons === 'function') ? getAllLiaisons() : [];
+    for (var j = 0; j < ls.length; j++) {
+      var l = ls[j];
+      if (l.etabs && l.etabs.length && l.etabs.indexOf('*') < 0 && l.etabs.indexOf('PABLO SBH') < 0 && l.etabs.indexOf('CREAM') < 0) continue;
+      var kwNorm = normalize(l.keyword || '');
+      if (!kwNorm) continue;
+      var kwWords = kwNorm.split(/\s+/).filter(Boolean);
+      var allQueryInKw = words.every(function (w) { return matchWord(w, kwNorm); });
+      var allKwInQuery = kwWords.every(function (w) { return matchWord(w, t); });
+      if (!allQueryInKw && !allKwInQuery) continue;
+      if (seenY[l.productYokitup]) { dtmSearchVia[l.productYokitup] = l.keyword; continue; }
+      var prod = null;
+      for (var k = 0; k < cat.length; k++) { if (cat[k].y === l.productYokitup) { prod = cat[k]; break; } }
+      if (!prod) continue;
+      seenY[prod.y] = 1;
+      dtmSearchVia[prod.y] = l.keyword;
+      via.push(prod);
+    }
+  } catch (e) {}
+  return via.concat(res).slice(0, 40);
+}
+/* v199 : le contenant n'est MODIFIABLE que pour les produits VERSÉS (softs & spiritueux,
+   e === 'litre' au catalogue). Un produit à la pièce (btl/unit) a un contenant FIXE :
+   c'est sa réf même — pour changer de contenant, on change de réf. */
+function dtmFmtLocked(e) { return String(e || '').toLowerCase() !== 'litre'; }
+/* Pastille « trouvé via le mot-clé ITM » à accoler au nom dans les résultats ETM */
+function dtmViaBadge(p) {
+  var kw = p && dtmSearchVia[p.y];
+  return kw ? ' <span class="dtm-fmt" style="background:#FFF3D6; border-color:#E8C878;">🔎 ' + escape(kw) + '</span>' : '';
 }
 
 /* Pastille format : le nom court `s` ne distingue PAS 75cl / Magnum / Jéroboam
@@ -11907,6 +11986,10 @@ function dtmProdFormat(p) {
    NUMÉRIQUEMENT à la contenance catalogue (70cl ↔ Bouteille q=70 : ok). */
 function dtmFmtMismatch(capFmt, p) {
   if (!capFmt || !p) return null;
+  // v199 : un produit VERSÉ (e litre) a un contenant LIBRE — 75cl de vodka versée face aux
+  // 100cl de référence du catalogue n'est PAS une incohérence (sinon la pastille modifiable
+  // des versés déclencherait de faux bandeaux rouges).
+  if (typeof dtmFmtLocked === 'function' && !dtmFmtLocked(p.e)) return null;
   var prodFmt = dtmProdFormat(p);
   if (!prodFmt) return null;
   function norm(s) {
@@ -11938,6 +12021,7 @@ function dtmDb() {
   return dtmDbP;
 }
 function dtmQueuePut(rec) {
+  if (dtmDemoOn) { dtmDemoQueue.push(rec); return Promise.resolve(); }   // démo : jamais IndexedDB
   return dtmDb().then(function (db) {
     return new Promise(function (resolve, reject) {
       var tx = db.transaction('queue', 'readwrite');
@@ -11948,6 +12032,7 @@ function dtmQueuePut(rec) {
   }).catch(function () { dtmMemQueue.push(rec); });
 }
 function dtmQueueAll() {
+  if (dtmDemoOn) return Promise.resolve(dtmDemoQueue.slice());
   return dtmDb().then(function (db) {
     return new Promise(function (resolve, reject) {
       var rq = db.transaction('queue', 'readonly').objectStore('queue').getAll();
@@ -11957,6 +12042,7 @@ function dtmQueueAll() {
   }).catch(function () { return dtmMemQueue.slice(); });
 }
 function dtmQueueDel(clientId) {
+  if (dtmDemoOn) { dtmDemoQueue = dtmDemoQueue.filter(function (r) { return r.clientId !== clientId; }); return Promise.resolve(); }
   return dtmDb().then(function (db) {
     return new Promise(function (resolve, reject) {
       var tx = db.transaction('queue', 'readwrite');
@@ -12236,7 +12322,7 @@ function dtmBindHead(root) {
   // v197 (Victor) : « Menu » est HIÉRARCHIQUE — dans une section (Transferts/Courses/admin) il
   // ramène d'abord au choix des deux ; sur ce choix, il ramène à l'accueil OTM (ITM/ETM).
   if (home) home.addEventListener('click', function () {
-    if (dtmView === 'menu' || dtmView === 'who') { showModeScreen(); return; }
+    if (dtmView === 'menu' || dtmView === 'who') { if (dtmDemoOn) dtmDemoStop(true); showModeScreen(); return; }
     dtmView = 'menu';
     dtmDone = null;
     renderDtm();
@@ -12318,6 +12404,476 @@ function dtmRenderWho(root) {
    La recherche produit est optionnelle (lien dans le pop-up) — sinon le lien se fait à la caisse. ---- */
 var dtmCapStep = null;   // null | 'format' | 'search' | 'qty'
 
+/* ============ MODE DÉMO ETM (v198) — pour s'entraîner et présenter aux équipes ============
+   Un faux backend EN MÉMOIRE embarqué dans l'app : tout ETM fonctionne (capture réelle avec
+   l'appareil photo, caisse, liaison sur le vrai catalogue, passage en caisse avec numéros,
+   courses, WhatsApp, historiques, admin) mais RIEN ne part sur le serveur et AUCUN mail.
+   Isolation totale : file offline en mémoire (jamais IndexedDB), listes/dico en localStorage
+   suffixé _demo, caches remis à zéro à l'entrée/sortie. Quitter l'Épicerie quitte la démo. */
+var dtmDemoOn = false;
+var dtmDemoQueue = [];
+var dtmDemo = null;        // état du faux backend (recréé à chaque entrée en démo)
+
+function crsKey(k) { return dtmDemoOn ? k + '_demo' : k; }
+
+function dtmDemoSvg(label, color) {
+  var s = '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240"><rect width="240" height="240" fill="#2b2b28"/><rect x="95" y="40" width="50" height="160" rx="14" fill="' + color + '"/><rect x="108" y="14" width="24" height="36" rx="6" fill="' + color + '"/><rect x="86" y="112" width="68" height="52" rx="4" fill="#f5f3ee"/><text x="120" y="143" font-family="Arial" font-size="13" font-weight="bold" text-anchor="middle" fill="#333">' + label + '</text></svg>';
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(s)));
+}
+
+function dtmDemoReset() {
+  var today = dtmServiceDay();
+  var d = new Date(today + 'T12:00:00Z');
+  function off(n) { var x = new Date(d.getTime() + n * 86400e3); return x.toISOString().slice(0, 10); }
+  var yesterday = off(-1), avant = off(-2);
+  dtmDemo = {
+    today: today, yesterday: yesterday, nextId: 10, seqByDay: {},
+    profils: [], crsDico: [{ d: 'Orange à jus', u: 'kg' }, { d: 'Citron vert', u: 'pièce' }, { d: 'Menthe fraîche', u: 'pièce' }, { d: 'Fraises', u: 'barquette' }, { d: 'Lait', u: 'L' }],
+    crsSaves: [{ id: 'crs_demo_1', day: today, personne: 'Nathan', at: new Date(Date.now() - 3 * 3600e3).toISOString(), items: [{ d: 'Orange à jus', q: 5, u: 'kg' }, { d: 'Menthe fraîche', q: 2, u: 'pièce' }] }],
+    crsOrders: [{ id: 'crso_demo_1', day: yesterday, personne: 'Fabien', at: new Date(Date.now() - 30 * 3600e3).toISOString(), note: 'Pour vendredi matin', items: [{ d: 'Orange à jus', q: 10, u: 'kg' }, { d: 'Citron vert', q: 24, u: 'pièce', n: 'bien verts' }] }],
+    lines: [
+      { id: 'demo1', day: today, from: 'Pablo SBH', to: 'Cream SBH', y: 'B.DEMO RUINART BLANC DE BLANCS 75CL', s: 'Ruinart, "Blanc de Blancs" 75CL', format: 'Bouteille', qty: 2, personne: 'Julie', photoUrl: dtmDemoSvg('RUINART', '#C9B45E'), thumb: dtmDemoSvg('RUINART', '#C9B45E'), status: 'open', createdAt: new Date().toISOString() },
+      { id: 'demo2', day: today, from: 'Pablo SBH', to: 'Cream SBH', y: null, s: null, format: 'Magnum', qty: 1, personne: 'Alessandro', photoUrl: dtmDemoSvg('???', '#7B1826'), thumb: dtmDemoSvg('???', '#7B1826'), status: 'open', createdAt: new Date().toISOString() },
+    ],
+    closures: [
+      { id: 'dc1', number: 'ETM-' + avant.replace(/-/g, '') + '-1', day: avant, from: 'Pablo SBH', to: 'Cream SBH', empty: false, done: true, personne: 'Julie', closedAt: avant + 'T23:30:00Z', lines: [{ y: 'B.DEMO GIN HENDRICKS 70CL', s: 'Hendricks', format: 'Bouteille', qty: 1, photoUrl: dtmDemoSvg('GIN', '#2E5E4E'), thumb: dtmDemoSvg('GIN', '#2E5E4E') }] },
+      { id: 'dc2', number: null, day: yesterday, from: null, to: 'Cream SBH', empty: true, done: true, personne: 'Nathan', closedAt: yesterday + 'T22:40:00Z', lines: [] },
+    ],
+  };
+}
+
+/* Le wrapper fetch de la démo : N'INTERCEPTE QUE les routes ETM (/dtm, /crs, batches ETM),
+   et UNIQUEMENT quand la démo est active — tout le reste (inventaires ITM…) passe au vrai réseau. */
+(function dtmDemoInstallFetch() {
+  var realFetch = window.fetch.bind(window);
+  function jr(obj, status) {
+    var txt = JSON.stringify(obj);
+    return { ok: (status || 200) < 400, status: status || 200, json: function () { return Promise.resolve(obj); }, text: function () { return Promise.resolve(txt); } };
+  }
+  window.fetch = function (url, opts) {
+    url = String(url);
+    var isEtm = url.indexOf(BACKEND_URL) === 0 && (/\/(dtm|crs)\//.test(url.slice(BACKEND_URL.length)) || url.indexOf('/batches/dtm-profils') >= 0 || url.indexOf('/batches/dtm-crs-dico') >= 0 || url.indexOf('/dtm/state') >= 0);
+    if (!dtmDemoOn || !isEtm || !dtmDemo) return realFetch(url, opts);
+    var D = dtmDemo;
+    var path = url.slice(BACKEND_URL.length).split('?')[0];
+    var method = (opts && opts.method) || 'GET';
+    var body = {};
+    try { body = opts && opts.body ? JSON.parse(opts.body) : {}; } catch (e) {}
+    return new Promise(function (res) { setTimeout(function () { res(route()); }, 150 + Math.random() * 250); });
+    function route() {
+      if (path === '/dtm/state') {
+        return jr({ ok: true, today: D.today, yesterday: D.yesterday,
+          yesterdayClosed: D.closures.some(function (c) { return c.day === D.yesterday; }),
+          todayClosed: D.closures.some(function (c) { return c.day === D.today; }),
+          openCount: D.lines.filter(function (l) { return l.status === 'open'; }).length,
+          closures: D.closures.map(function (c) { return { id: c.id, number: c.number, day: c.day, from: c.from, to: c.to, empty: c.empty, done: c.done, closedAt: c.closedAt, personne: c.personne || null, nbLines: (c.lines || []).length }; }) });
+      }
+      if (path === '/dtm/lines') return jr({ ok: true, lines: D.lines.filter(function (l) { return l.status === 'open'; }) });
+      if (path === '/dtm/line' && method === 'POST') {
+        if (body.clientId) { var ex = D.lines.find(function (l) { return l.clientId === body.clientId; }); if (ex) return jr({ ok: true, id: ex.id, dedup: true }); }
+        var id = 'dm' + (D.nextId++);
+        D.lines.push({ id: id, clientId: body.clientId, day: body.day || D.today, from: body.from || 'Pablo SBH', to: body.to || 'Cream SBH', y: body.y || null, s: body.s || null, format: body.format || null, qty: Number(body.qty) || 1, personne: body.personne || '?', photoUrl: body.photo, thumb: body.thumb || null, status: 'open', createdAt: new Date().toISOString() });
+        return jr({ ok: true, id: id });
+      }
+      if (path.indexOf('/dtm/line/') === 0) {
+        var lid = decodeURIComponent(path.slice('/dtm/line/'.length));
+        var l = D.lines.find(function (x) { return x.id === lid; });
+        if (!l) return jr({ ok: false, error: 'ligne introuvable' }, 404);
+        if (method === 'PUT') { ['y', 's', 'format', 'from', 'to'].forEach(function (f) { if (f in body) l[f] = body[f]; }); if ('qty' in body) l.qty = Number(body.qty) || l.qty; return jr({ ok: true, line: l }); }
+        if (method === 'DELETE') { D.lines = D.lines.filter(function (x) { return x.id !== lid; }); return jr({ ok: true }); }
+      }
+      if (path === '/dtm/close' && method === 'POST') {
+        var open = D.lines.filter(function (l) { return l.status === 'open'; });
+        if (!open.length) return jr({ ok: false, error: 'aucune ligne ouverte' }, 400);
+        var nonLie = open.filter(function (l) { return !l.y; }).length;
+        if (nonLie) return jr({ ok: false, error: nonLie + ' ligne(s) sans produit lié — liaison obligatoire avant de passer en caisse' }, 400);
+        var day = body.day || D.today, cm = day.replace(/-/g, '');
+        var groups = {};
+        open.forEach(function (l) { var k = l.from + '>' + l.to; (groups[k] = groups[k] || []).push(l); });
+        var made = [];
+        Object.keys(groups).forEach(function (k) {
+          D.seqByDay[day] = (D.seqByDay[day] || 0) + 1;
+          var g = groups[k], num = 'ETM-' + cm + '-' + D.seqByDay[day];
+          var cl = { id: 'dc' + (D.nextId++), number: num, day: day, from: g[0].from, to: g[0].to, empty: false, done: false, personne: body.personne || '?', closedAt: new Date().toISOString(), lines: g.map(function (l) { return { y: l.y, s: l.s, format: l.format, qty: l.qty, photoUrl: l.photoUrl, thumb: l.thumb || null }; }) };
+          D.closures.unshift(cl);
+          g.forEach(function (l) { l.status = 'closed'; });
+          made.push({ id: cl.id, number: num, from: cl.from, to: cl.to, count: g.length });
+        });
+        return jr({ ok: true, day: day, closures: made });
+      }
+      if (path === '/dtm/close-empty' && method === 'POST') {
+        D.closures.unshift({ id: 'dc' + (D.nextId++), number: null, day: body.day || D.today, from: null, to: body.etab || 'Cream SBH', empty: true, done: true, personne: body.personne || '?', closedAt: new Date().toISOString(), lines: [] });
+        return jr({ ok: true, id: 'x', day: body.day || D.today });
+      }
+      if (path.indexOf('/dtm/closure/') === 0) {
+        var ccid = decodeURIComponent(path.slice('/dtm/closure/'.length));
+        var cc = D.closures.find(function (x) { return x.id === ccid; });
+        if (!cc) return jr({ ok: false, error: 'introuvable' }, 404);
+        return jr({ ok: true, closure: cc });
+      }
+      if (path === '/dtm/remind-state') return jr({ ok: true, paused: !!D.remindPaused });
+      if (path === '/dtm/remind-pause') { D.remindPaused = !!body.paused; return jr({ ok: true, paused: D.remindPaused }); }
+      if (path === '/dtm/admin') return jr({ ok: true, openLines: D.lines.filter(function (l) { return l.status === 'open'; }), closures: D.closures });
+      if (path === '/dtm/done' && method === 'POST') { var c = D.closures.find(function (x) { return x.id === body.id; }); if (c) c.done = !!body.done; return jr({ ok: true, done: c ? c.done : false }); }
+      if (path.indexOf('/dtm/month/') === 0 && method === 'DELETE') {
+        var m2 = path.slice('/dtm/month/'.length), before = D.closures.length;
+        D.closures = D.closures.filter(function (c) { return (c.day || '').slice(0, 7) !== m2; });
+        D.lines = D.lines.filter(function (l) { return (l.day || '').slice(0, 7) !== m2; });
+        return jr({ ok: true, month: m2, deletedKv: before - D.closures.length, deletedPhotos: 0 });
+      }
+      if (path === '/crs/save' && method === 'POST') {
+        var cs = { id: 'crs_dm_' + (D.nextId++), day: body.day || D.today, personne: body.personne || '?', at: new Date().toISOString(), items: body.items || [] };
+        D.crsSaves.push(cs);
+        return jr({ ok: true, id: cs.id, count: cs.items.length });
+      }
+      if (path === '/crs/order' && method === 'POST') {
+        var exi = D.crsOrders.findIndex(function (x) { return body.clientId && x.id === 'crso_dm_' + body.clientId; });
+        var co = { id: 'crso_dm_' + (body.clientId || D.nextId++), day: body.day || D.today, personne: body.personne || '?', note: body.note || null, at: new Date().toISOString(), items: body.items || [] };
+        if (exi >= 0) { co.updatedAt = co.at; co.at = D.crsOrders[exi].at; D.crsOrders[exi] = co; } else D.crsOrders.push(co);
+        return jr({ ok: true, id: co.id, count: co.items.length, updated: exi >= 0 });
+      }
+      if (path === '/crs/recent') return jr({ ok: true, since: '', saves: D.crsSaves.slice().reverse(), orders: D.crsOrders.slice().reverse() });
+      if (path === '/crs/lines') return jr({ ok: true, day: D.today, saves: D.crsSaves.filter(function (s) { return s.day === D.today; }) });
+      if (path.indexOf('/crs/month/') === 0 && method === 'GET') return jr({ ok: true, month: path.slice('/crs/month/'.length), saves: D.crsSaves, orders: D.crsOrders });
+      if (path.indexOf('/crs/month/') === 0 && method === 'DELETE') { var nb = D.crsSaves.length + D.crsOrders.length; D.crsSaves = []; D.crsOrders = []; return jr({ ok: true, deleted: nb }); }
+      if (path.indexOf('/crs/') === 0 && method === 'DELETE') {
+        var cid2 = decodeURIComponent(path.slice('/crs/'.length));
+        D.crsSaves = D.crsSaves.filter(function (x) { return x.id !== cid2; });
+        D.crsOrders = D.crsOrders.filter(function (x) { return x.id !== cid2; });
+        return jr({ ok: true });
+      }
+      if (path === '/batches/dtm-crs-dico') {
+        if (method === 'PUT') { D.crsDico = body.batches || []; return jr({ ok: true }); }
+        return jr({ ok: true, batches: D.crsDico, updatedAt: null });
+      }
+      if (path === '/batches/dtm-profils') {
+        if (method === 'PUT') { D.profils = body.batches || []; return jr({ ok: true, count: D.profils.length }); }
+        return jr({ ok: true, batches: D.profils, updatedAt: null });
+      }
+      return jr({ ok: true });
+    }
+  };
+})();
+
+/* ---- Parcours guidé (v199) : Le V guide l'utilisateur façon jeu vidéo.
+   La mascotte gesticule en bas à gauche (poses v_pointe / v_parle / v_question /
+   v_clipboard / v_pouce / v_merci), parle dans une bulle, et un SPOTLIGHT doré
+   + une flèche rebondissante indiquent l'élément à toucher. Passif : ne bloque
+   rien, un poll valide chaque mission d'après l'état du faux backend. ---- */
+var dtmTour = { active: false, step: 0, timer: null, lastTg: null, waiting: false };
+var DTM_TOUR_STEPS = [
+  { t: 'Salut, c\'est Le V ! 👋', d: 'Je te fais visiter l\'Épicerie. Commence par ouvrir « Transferts » !', pose: 'v_pointe',
+    tg: function () { return '#dtmMenuBtl'; },
+    ok: function (D) { return dtmView === 'cap' || dtmView === 'rev' || dtmView === 'hist'; } },
+  { t: 'Mission 2 — 📸 Déclare un prélèvement', d: 'Une bouteille part pour Cream ? Prends-la en photo !', pose: 'v_parle',
+    dyn: function () {
+      if (document.querySelector('#dtmPopResults [data-pick], #dtmPopResults [data-ppick]')) return { tg: '#dtmPopResults', pin: 'bottom', d: 'Tape sur le bon produit dans la liste 👇' };
+      if (document.getElementById('dtmPopSearchIn')) return { tg: '#dtmPopSearchIn', pin: 'bottom', d: 'C\'est la <b>bibliothèque d\'ITM</b>, avec son langage : cherche comme dans les inventaires — ex. tape <b>« Belvedere »</b> pour la vodka versée au bar. Rien trouvé ? <b>↩︎ Reviens aux formats</b>, on liera plus tard.' };
+      if (document.querySelector('.dtm-pop-ok')) return { tg: '.dtm-pop', pin: 'bottom', flash: '#dtmPopFmtBtn, #dtmPopFmtPill', d: 'Choisis la quantité (1-6) <b>ou tape-la toi-même</b> dans le champ vert, puis OK. 💡 Softs & spiritueux <b>versés</b> : la pastille du contenant <b>qui clignote</b> se change en la tapant. Produit <b>à la pièce</b> : contenant fixe — c\'est la réf qui compte.' };
+      if (document.querySelector('.dtm-pop-chip')) return { tg: '#dtmPopSearch', pin: 'bottom', d: 'Deux chemins ⚡ : <b>pressé en plein service ?</b> Tape juste le contenant — la photo (obligatoire) parle pour toi, on liera le produit à la caisse. <b>Un instant devant toi ?</b> 🔎 La loupe : tape le nom de la bouteille en champ libre, tout se remplit tout seul.' };
+      return { tg: '#dtmPhotoBtn', d: 'Une bouteille part pour Cream ? Prends-la en photo !' };
+    },
+    tg: function () { return '#dtmPhotoBtn'; },
+    ok: function (D) { return D.lines.length >= 3; } },
+  { t: 'Mission 3 — 🧾 File à la Caisse', d: 'C\'est là qu\'on vérifie tout avant de clôturer le service.', pose: 'v_pointe',
+    tg: function () { return '#dtmTabRev'; },
+    ok: function (D) { return dtmView === 'rev'; } },
+  { t: 'Mission 4 — 🔗 La photo mystère…', d: 'Une ligne n\'a pas de produit ! Tape « Lier à un produit » et retrouve-la dans le catalogue.', pose: 'v_question',
+    dyn: function () {
+      var inLesson = !!document.querySelector('.dtm-fmt-warn');
+      if (document.getElementById('dtmLinkModal')) {
+        if (document.querySelector('#dtmLinkResults [data-lpick]')) {
+          if (!inLesson) {
+            var li0 = document.getElementById('dtmLinkSearch');
+            if (li0 && normalize(li0.value).indexOf('perignon') >= 0) {
+              var rs = document.querySelectorAll('#dtmLinkResults [data-lpick]');
+              var hasBtl = false;
+              rs.forEach(function (x) { if (x.textContent.indexOf('Bouteille') >= 0) hasBtl = true; });
+              if (hasBtl) rs.forEach(function (x) { x.style.display = x.textContent.indexOf('Bouteille') >= 0 ? '' : 'none'; });
+            }
+            return { tg: '#dtmLinkResults', pin: 'bottom', d: 'Exemple : lie cette <b>bouteille de Dom Pérignon</b> 👇' };
+          }
+          return { tg: '#dtmLinkResults', pin: 'bottom', d: 'Cette fois, choisis la réf en <b>Magnum</b> 👇' };
+        }
+        if (document.getElementById('dtmLinkSearch')) {
+          var li = document.getElementById('dtmLinkSearch');
+          if (!li.value && !dtmTour.m4fill) {
+            dtmTour.m4fill = true;
+            li.value = 'dom perignon';
+            li.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          if (inLesson) return { tg: '#dtmLinkSearch', pin: 'bottom', d: 'Cherche « dom perignon » et prends la réf <b>Magnum</b> — ou ferme ✕ et tape la <b>pastille Magnum</b> de la ligne pour corriger le contenant.' };
+          return { tg: '#dtmLinkSearch', pin: 'bottom', d: 'Tu l\'avais enregistrée en <b>Magnum</b>… mais si tu te trompes, <b>aucune inquiétude</b> — l\'Épicerie veille 😉. Exemple : lie une <b>bouteille de Dom Pérignon</b> (je te l\'ai tapée).' };
+        }
+      }
+      if (document.querySelector('.dtm-fmt-warn')) {
+        // cibler la LIGNE entière (bandeau + 🔗 + pastille) pour que la bulle se pose DESSOUS,
+        // sans recouvrir les boutons de correction — sinon la démo semble bloquée
+        return { tg: '[data-lid]:has(.dtm-fmt-warn)', fb: '.dtm-fmt-warn', flash: '.dtm-fmt-warn', d: '👀 Tu as vu ? L\'Épicerie a <b>détecté</b> que le contenant de la photo ne colle pas avec la réf choisie (un Magnum n\'est pas une Bouteille !). Corrige : <b>🔗 change la réf</b> (il existe un vrai Magnum !), ou tape la <b>pastille Magnum</b> — elle est redevenue modifiable pour l\'occasion. La mission se valide quand tout colle.' };
+      }
+      dtmTour.m4fill = false;
+      return { tg: '.dtm-link-btn[data-link]', d: 'Cette photo mystère… disons que c\'est une <b>bouteille de Dom Pérignon</b> ! Tape « 🔗 Lier à un produit ».' };
+    },
+    tg: function () { return '.dtm-link-btn[data-link]'; },
+    ok: function (D) {
+      var o = D.lines.filter(function (l) { return l.status === 'open'; });
+      if (!o.length) return false;
+      return o.every(function (l) {
+        if (!l.y) return false;
+        var p = (typeof CATALOGUE_BY_Y !== 'undefined') ? CATALOGUE_BY_Y[l.y] : null;
+        return !dtmFmtMismatch(l.format, p);   // lier ne suffit pas : le contenant doit coller
+      });
+    } },
+  { t: 'Mission 5 — 🧾 Passe en caisse !', d: 'Tout est lié : appuie sur le gros bouton — tampon ENCAISSÉ, n° ETM, et un <b>mail récap part aussitôt à Victor</b>. C\'est comme ça qu\'il facture les transferts, chaque jour.', pose: 'v_pointe',
+    tg: function () { return '#dtmCloseBtn'; },
+    ok: function (D) { return D.closures.some(function (c) { return c.day === D.today && !c.empty; }); } },
+  { t: 'Mission 6 — 📜 L\'historique', d: 'Chaque passage en caisse reste visible par toute l\'équipe. Va voir !', pose: 'v_clipboard',
+    dyn: function () {
+      if (dtmView !== 'hist') return { tg: '#dtmTabHist', d: 'Chaque passage en caisse reste visible par toute l\'équipe. Va voir !' };
+      if (!document.querySelector('.dtm-hist-lines')) return { tg: '.dtm-hist-item.openable', flash: '.dtm-hist-item.openable', d: 'Tout l\'historique est là. <b>Tape un jour</b> : les bouteilles et <b>les photos</b> réapparaissent. Et note le <b>∅ Panier vide</b> : même sans rien à transférer, on passe en caisse — Victor reçoit son mail récap <b>tous les jours</b>.' };
+      return { tg: '.dtm-hist-lines', d: '👌 Et voilà le détail, photos comprises — rien ne se perd, jamais.' };
+    },
+    tg: function () { return '#dtmTabHist'; },
+    ok: function (D) { return dtmView === 'hist' && !!document.querySelector('.dtm-hist-lines'); } },
+  { t: 'Mission 7 — 🍊 Les Courses', d: 'Reviens au menu puis ouvre « Courses ».', pose: 'v_pointe',
+    dyn: function () {
+      if (dtmView === 'menu') return { tg: '#dtmMenuCrs', d: 'Maintenant, ouvre « <b>Courses</b> » : fruits & prépa, sans photo.' };
+      return { tg: '#dtmBack', flash: '#dtmBack, #dtmHome', d: 'Reviens au menu : la flèche <b>←</b> ou le bouton <b>🛒 Menu</b> — les deux clignotent !' };
+    },
+    tg: function () { return (dtmView === 'menu') ? '#dtmMenuCrs' : '#dtmBack'; },
+    ok: function (D) { return dtmView === 'crs'; } },
+  { t: 'Mission 8 — 🧺 Note une prise', d: 'Tape une désignation, la quantité, l\'unité → Ajouter → Enregistrer.', pose: 'v_parle',
+    dyn: function () {
+      if (document.getElementById('crsSave')) return { tg: '#crsSave', pin: 'bottom', d: 'Il ne reste qu\'à <b>💾 Enregistrer</b> — la prise devient visible par toute l\'équipe, et par Victor pour la facture du mois.' };
+      return { tg: '#crsEntry', pin: 'bottom', d: 'Écris le produit <b>librement</b> (Entrée = Ajouter) — et il entre dans la <b>bibliothèque</b> : tape « Orange à jus » aujourd\'hui, demain « oran… » suffira, il te sera <b>suggéré</b>. Quantité, unité → <b>Ajouter</b>.' };
+    },
+    tg: function () { return '#crsIn'; },
+    ok: function (D) { return D.crsSaves.length >= 2; } },
+  { t: 'Mission 9 — 📲 La commande WhatsApp', d: 'Segment « Commande » : fais ta liste puis copie le message prêt à coller.', pose: 'v_parle',
+    dyn: function () {
+      if (dtmCrsSeg !== 'order') return { tg: '#crsSegOrder', pin: 'bottom', d: 'Dernière mission ! Passe sur le segment « <b>📲 Commande</b> ».' };
+      if (document.getElementById('crsWa')) return { tg: '#crsWa', pin: 'bottom', d: 'Copie le <b>message WhatsApp</b> — prêt à coller dans la discussion, et Victor en garde la trace.' };
+      return { tg: '#crsEntry', pin: 'bottom', d: 'Fais ta liste de commande (désignation, quantité, unité) → <b>Ajouter</b>. Un commentaire ? Les champs 💬 et 📝 sont là pour ça.' };
+    },
+    tg: function () { return '#crsIn'; },
+    ok: function (D) { return D.crsOrders.length >= 2; } },
+];
+function dtmTourEls() {
+  var v = document.getElementById('dtmTourV');
+  if (!v) {
+    v = document.createElement('img');
+    v.id = 'dtmTourV';
+    v.alt = 'Le V';
+    document.body.appendChild(v);
+    var b = document.createElement('div');
+    b.id = 'dtmTourBubble';
+    document.body.appendChild(b);
+    var h = document.createElement('div');
+    h.id = 'dtmTourHole';
+    h.style.display = 'none';
+    document.body.appendChild(h);
+    var a = document.createElement('div');
+    a.id = 'dtmTourArrow';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+  }
+  return { v: document.getElementById('dtmTourV'), b: document.getElementById('dtmTourBubble'), h: document.getElementById('dtmTourHole'), a: document.getElementById('dtmTourArrow') };
+}
+function dtmTourSay(pose, html) {
+  var els = dtmTourEls();
+  if (els.v.getAttribute('src') !== pose + '.png') els.v.setAttribute('src', pose + '.png');
+  els.v.classList.remove('pose-pop'); void els.v.offsetWidth; els.v.classList.add('pose-pop');
+  els.b.innerHTML = html;
+  els.b.classList.remove('pop'); void els.b.offsetWidth; els.b.classList.add('pop');
+}
+function dtmTourRender() {
+  var n = DTM_TOUR_STEPS.length;
+  if (dtmTour.step >= n) {
+    // FINALE : le V en grand au centre, arrière-plan flouté — Terminer sort de la démo vers le menu
+    var els = dtmTourEls();
+    els.v.style.display = 'none';
+    els.b.style.display = 'none';
+    els.h.style.display = 'none';
+    els.a.style.display = 'none';
+    if (!document.getElementById('dtmTourFinale')) {
+      var f = document.createElement('div');
+      f.id = 'dtmTourFinale';
+      f.innerHTML = '<img src="v_merci.png" alt="Le V">'
+        + '<div class="finale-t">🎉 Bravo, tu maîtrises l\'Épicerie !</div>'
+        + '<div class="finale-d">Capture, caisse, liaison, courses, commande WhatsApp… tu as TOUT fait.<br>En vrai service, ça se joue en quelques secondes.</div>'
+        + '<button type="button" class="tour-btn" id="dtmTourEnd" style="font-size:16px; padding:13px 28px;">Terminer ✓</button>';
+      document.body.appendChild(f);
+      document.getElementById('dtmTourEnd').addEventListener('click', function () { dtmDemoStop(); });
+    }
+    return;
+  }
+  var s = DTM_TOUR_STEPS[dtmTour.step];
+  dtmTour.lastD = null;   // repart du texte de base de la mission (les phases dyn le raffineront)
+  var dots = DTM_TOUR_STEPS.map(function (_, i) {
+    return '<span class="tour-dot' + (i < dtmTour.step ? ' done' : (i === dtmTour.step ? ' now' : '')) + '"></span>';
+  }).join('');
+  dtmTourSay(s.pose, '<div class="tour-t">' + s.t + '</div><div class="tour-d">' + s.d + '</div><div class="tour-foot"><span class="tour-dots">' + dots + '</span><button type="button" class="tour-btn ghost" id="dtmTourSkip">✕ libre</button></div>');
+  var sk = document.getElementById('dtmTourSkip');
+  if (sk) sk.addEventListener('click', function () {
+    if (confirm('Arrêter le guide et explorer librement ? (la démo continue)')) dtmTourStop();
+  });
+}
+function dtmTourSpot() {
+  var els = dtmTourEls();
+  var s = (dtmTour.step < DTM_TOUR_STEPS.length) ? DTM_TOUR_STEPS[dtmTour.step] : null;
+  var sel = null;
+  var flashSel = null;
+  if (s && !dtmTour.waiting) {
+    if (s.dyn) {
+      var dy = s.dyn();
+      sel = dy.tg;
+      flashSel = dy.flash || null;
+      dtmTour.fbSel = dy.fb || null;
+      dtmTour.pinBottom = dy.pin === 'bottom';
+      // texte de la bulle adapté à la phase (photo → contenant → quantité)
+      if (dy.d && dy.d !== dtmTour.lastD) {
+        dtmTour.lastD = dy.d;
+        var dEl = els.b.querySelector('.tour-d');
+        if (dEl) dEl.innerHTML = dy.d;
+      }
+    } else {
+      sel = s.tg();
+      dtmTour.pinBottom = false;
+    }
+  }
+  // pastille qui clignote quand le V en parle (ex. contenant d'un produit versé)
+  var fEls = [];
+  if (flashSel) { try { document.querySelectorAll(flashSel).forEach(function (x) { fEls.push(x); }); } catch (e) {} }
+  (dtmTour.lastFlashEls || []).forEach(function (x) {
+    if (fEls.indexOf(x) < 0) { try { x.classList.remove('tour-flash'); } catch (e) {} }
+  });
+  fEls.forEach(function (x) { x.classList.add('tour-flash'); });
+  dtmTour.lastFlashEls = fEls;
+  function qs(x) { if (!x) return null; try { return document.querySelector(x); } catch (e) { return null; } }   // :has() absent sur vieux navigateurs
+  var el = qs(sel) || qs(dtmTour.fbSel);
+  var r = el ? el.getBoundingClientRect() : null;
+  if (!el || !r || !r.width) { els.h.style.display = 'none'; els.a.style.display = 'none'; dtmTour.lastTg = null; dtmTourPlace(null); return; }
+  if (dtmTour.lastTg !== sel) {
+    dtmTour.lastTg = sel;
+    try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { try { el.scrollIntoView(); } catch (e2) {} }
+  }
+  els.h.style.display = '';
+  els.h.style.left = (r.left - 6) + 'px';
+  els.h.style.top = (r.top - 6) + 'px';
+  els.h.style.width = (r.width + 12) + 'px';
+  els.h.style.height = (r.height + 12) + 'px';
+  els.a.style.display = '';
+  var above = r.top > 80;
+  els.a.textContent = above ? '👇' : '👆';
+  els.a.style.left = (r.left + r.width / 2 - 16) + 'px';
+  els.a.style.top = (above ? (r.top - 44) : (r.bottom + 8)) + 'px';
+  dtmTourPlace(dtmTour.pinBottom ? null : r);
+}
+
+/* Le V et sa bulle VIENNENT se placer près de la cible (sous elle si elle est en haut,
+   au-dessus sinon), avec une glisse animée — et rentrent en bas à gauche sans cible. */
+function dtmTourPlace(r) {
+  var els = dtmTourEls();
+  var vh = window.innerHeight || 700;
+  var vH = els.v.offsetHeight || 110;
+  var bH = els.b.offsetHeight || 120;
+  var needH = Math.max(vH, bH);
+  var top;
+  if (!r) {
+    top = vh - needH - 10;
+  } else {
+    var mid = (r.top + r.bottom) / 2;
+    if (mid < vh * 0.55) top = Math.min(r.bottom + 16, vh - needH - 8);   // cible en haut → le V dessous
+    else top = Math.max(r.top - needH - 16, 8);                            // cible en bas → le V au-dessus
+  }
+  top = Math.max(8, Math.min(top, vh - needH - 8));
+  els.v.style.top = top + 'px';
+  els.b.style.top = top + 'px';
+}
+function dtmTourStart() {
+  dtmTour.active = true;
+  dtmTour.step = 0;
+  dtmTour.waiting = false;
+  dtmTour.lastTg = null;
+  dtmTourEls();
+  dtmTourRender();
+  if (dtmTour.timer) clearInterval(dtmTour.timer);
+  dtmTour.timer = setInterval(function () {
+    if (!dtmTour.active || !dtmDemoOn || !dtmDemo) return;
+    dtmTourSpot();
+    if (dtmTour.waiting || dtmTour.step >= DTM_TOUR_STEPS.length) return;
+    try {
+      if (DTM_TOUR_STEPS[dtmTour.step].ok(dtmDemo)) {
+        dtmTour.waiting = true;
+        dtmTourSay('v_pouce', '<div class="tour-t">✅ Bien joué !</div>');
+        dtmTourSpot();
+        setTimeout(function () {
+          if (!dtmTour.active) return;
+          dtmTour.step++;
+          dtmTour.waiting = false;
+          dtmTourRender();
+        }, 1200);
+      }
+    } catch (e) {}
+  }, 600);
+}
+function dtmTourStop() {
+  dtmTour.active = false;
+  if (dtmTour.timer) { clearInterval(dtmTour.timer); dtmTour.timer = null; }
+  ['dtmTourV', 'dtmTourBubble', 'dtmTourHole', 'dtmTourArrow', 'dtmTourFinale'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.remove();
+  });
+}
+
+function dtmDemoClearLS() {
+  try {
+    ['itm_crs_pending_v1_demo', 'itm_crs_order_v1_demo', 'itm_crs_dico_v1_demo'].forEach(function (k) { localStorage.removeItem(k); });
+  } catch (e) {}
+}
+function dtmDemoResetCaches() {
+  dtmStateCache = null;
+  dtmLinesCache = null;
+  dtmCrsDico = null;
+  dtmDemoQueue = [];
+}
+function dtmDemoStart() {
+  dtmDemoOn = true;
+  dtmDemoReset();
+  dtmDemoClearLS();
+  dtmDemoResetCaches();
+  document.body.classList.add('dtm-demo');
+  var rb = document.getElementById('dtmDemoRibbon');
+  if (!rb) {
+    rb = document.createElement('button');
+    rb.id = 'dtmDemoRibbon';
+    rb.type = 'button';
+    rb.textContent = '🎓 DÉMO — rien n\'est enregistré · appuie ici pour quitter';
+    rb.addEventListener('click', function () { if (confirm('Quitter le mode démo ?')) dtmDemoStop(); });
+    document.body.appendChild(rb);
+  }
+  dtmView = 'menu';
+  dtmCrsSeg = 'take';
+  toast('🎓 Mode démo — rien n\'est enregistré');
+  renderDtm();
+  dtmTourStart();   // Le V prend la main (✕ libre pour explorer sans guide)
+}
+function dtmDemoStop(silent) {
+  dtmTourStop();
+  dtmDemoOn = false;
+  dtmDemo = null;
+  dtmDemoClearLS();
+  dtmDemoResetCaches();
+  document.body.classList.remove('dtm-demo');
+  var rb = document.getElementById('dtmDemoRibbon');
+  if (rb) rb.remove();
+  if (!silent) {
+    toast('Retour en réel 🛒');
+    dtmView = 'menu';
+    if (document.body.classList.contains('dtm-mode')) renderDtm();
+  }
+}
+
 /* ---- Vue MENU (v193) : point d'entrée de l'Épicerie — Transferts ou Courses ---- */
 function dtmRenderMenu(root) {
   var nOpen = dtmStateCache ? dtmStateCache.openCount : 0;
@@ -12335,9 +12891,14 @@ function dtmRenderMenu(root) {
     h += '<span class="m-ico">🗂</span><span><div class="m-title" style="font-size:18px;">Suivi admin</div>';
     h += '<div class="m-desc">Clôtures, transferts Yokitup, courses du mois, purges</div></span></button>';
   }
+  h += '<button type="button" class="mode-card dtm-menu-card dtm-demo-card" id="dtmMenuDemo">';
+  h += '<span class="m-ico">🎓</span><span><div class="m-title" style="font-size:16px;">' + (dtmDemoOn ? 'Quitter le mode démo' : 'Mode démo') + '</div>';
+  h += '<div class="m-desc">' + (dtmDemoOn ? 'Revenir en réel' : 'Pour s\'entraîner ou présenter — données fictives, rien n\'est enregistré') + '</div></span></button>';
   h += '</div>';
   root.innerHTML = h;
   dtmBindHead(root);
+  var md = document.getElementById('dtmMenuDemo');
+  if (md) md.addEventListener('click', function () { if (dtmDemoOn) dtmDemoStop(); else dtmDemoStart(); });
   var mb = document.getElementById('dtmMenuBtl');
   if (mb) mb.addEventListener('click', function () { dtmView = (dtmBtlView === 'hist' ? 'hist' : dtmBtlView) || 'cap'; renderDtm(); });
   var mc = document.getElementById('dtmMenuCrs');
@@ -12370,12 +12931,40 @@ function dtmRenderHist(root) {
       h += '<div style="font-size:13.5px; font-weight:800; margin-top:10px;">' + dtmFrDay(day) + '</div>';
       byDay[day].forEach(function (c) {
         var t = (c.closedAt || '').slice(11, 16);
-        h += '<div class="crs-save" style="margin:4px 0 6px 0;"><div class="crs-save-head"><span>' + (c.empty ? '∅ <b>Panier vide</b>' : '🧾 <b>' + escape(c.number || '—') + '</b>') + (c.from ? ' · ' + escape(c.from) + ' → ' + escape(c.to) : '') + '</span>' + (c.done ? '<span class="dtm-fmt" style="background:#DDF2E7; color:#157A5A; border-color:#9FD9C4;">✓ fait</span>' : '') + '</div>';
-        h += '<div style="font-size:12.5px; color:var(--ink-2);">' + (c.empty ? 'Rien à transférer' : c.nbLines + ' bouteille(s)') + (c.personne ? ' · 👤 ' + escape(c.personne) : '') + (t ? ' · ' + t : '') + '</div></div>';
+        h += '<div class="crs-save dtm-hist-item' + (c.empty ? '' : ' openable') + '"' + (c.empty ? '' : ' data-hid="' + escape(c.id) + '"') + ' style="margin:4px 0 6px 0;"><div class="crs-save-head"><span>' + (c.empty ? '∅ <b>Panier vide</b>' : '🧾 <b>' + escape(c.number || '—') + '</b>') + (c.from ? ' · ' + escape(c.from) + ' → ' + escape(c.to) : '') + '</span>' + (c.done ? '<span class="dtm-fmt" style="background:#DDF2E7; color:#157A5A; border-color:#9FD9C4;">✓ fait</span>' : '') + '</div>';
+        h += '<div style="font-size:12.5px; color:var(--ink-2);">' + (c.empty ? 'Rien à transférer' : c.nbLines + ' bouteille(s) · <span class="dtm-hist-hint">tape pour voir photos & détail ▾</span>') + (c.personne ? ' · 👤 ' + escape(c.personne) : '') + (t ? ' · ' + t : '') + '</div>';
+        h += '<div class="dtm-hist-detail" id="histDet_' + escape(c.id) + '" style="display:none;"></div></div>';
       });
     });
     body.innerHTML = h;
     body.style.color = '';
+    // v199 : historique DÉPLIABLE — tape un passage en caisse pour revoir lignes et photos
+    body.querySelectorAll('.dtm-hist-item.openable').forEach(function (card) {
+      card.addEventListener('click', function () {
+        var det = document.getElementById('histDet_' + card.dataset.hid);
+        if (!det) return;
+        if (det.style.display !== 'none') { det.style.display = 'none'; return; }
+        det.style.display = '';
+        if (det.innerHTML) return;   // déjà chargé
+        det.innerHTML = '<div style="color:var(--ink-3); font-size:12.5px;">Chargement…</div>';
+        fetch(BACKEND_URL + '/dtm/closure/' + encodeURIComponent(card.dataset.hid), { signal: AbortSignal.timeout(15000) })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
+            var hh = '<div class="dtm-hist-lines">';
+            (d.closure.lines || []).forEach(function (l) {
+              var im = l.thumb || l.photoUrl;
+              hh += '<div class="crs-item">';
+              hh += im ? '<a href="' + escape(l.photoUrl || im) + '" target="_blank" rel="noopener"><img src="' + (l.thumb ? l.thumb : escape(im)) + '" class="dtm-hist-thumb" alt=""></a>' : '';
+              hh += '<span class="crs-item-d">' + escape(l.s || l.y || 'Produit') + '</span>';
+              hh += '<span class="dtm-fmt">' + escape(l.format || '—') + (l.qty > 1 ? ' × ' + l.qty : '') + '</span></div>';
+            });
+            hh += '</div>';
+            det.innerHTML = hh;
+          })
+          .catch(function (e) { det.innerHTML = '<div style="color:var(--ink-3); font-size:12.5px;">Détail indisponible (' + escape(e.message) + ')</div>'; });
+      });
+    });
   }).catch(function () {
     var body = document.getElementById('dtmHistBody');
     if (body) body.innerHTML = '<div style="color:var(--ink-3);">Impossible de charger l\'historique (réseau ?).</div>';
@@ -12467,8 +13056,16 @@ function dtmOpenCaptureModal(step) {
     h += '<button type="button" class="dtm-pop-link" id="dtmPopBackFmt2" style="margin-top:2px;">↩︎ Revenir aux contenants</button>';
   } else {
     h += '<div class="dtm-pop-title">Combien ?</div>';
-    if (dtmCap.prod) h += '<div class="dtm-pop-prod">' + escape(dtmCap.prod.s || dtmCap.prod.y) + (dtmCap.prod.fmt ? ' <span class="dtm-fmt">' + escape(dtmCap.prod.fmt) + '</span>' : '') + '</div>';
-    else if (dtmCap.format) h += '<div class="dtm-pop-prod"><span class="dtm-fmt">' + escape(dtmCap.format) + '</span> — produit à lier à la caisse</div>';
+    if (dtmCap.prod) {
+      var qFmt = dtmCap.format || dtmCap.prod.fmt;
+      var qLock = dtmFmtLocked(dtmCap.prod.e);
+      h += '<div class="dtm-pop-prod">' + escape(dtmCap.prod.s || dtmCap.prod.y);
+      if (qFmt) h += qLock
+        ? ' <span class="dtm-fmt" id="dtmPopFmtPill">' + escape(qFmt) + '</span>'
+        : ' <button type="button" class="dtm-fmt dtm-fmt-btn" id="dtmPopFmtBtn" data-cl="1">' + escape(qFmt) + '</button>';
+      h += '</div>';
+    }
+    else if (dtmCap.format) h += '<div class="dtm-pop-prod"><button type="button" class="dtm-fmt dtm-fmt-btn" id="dtmPopFmtBtn">' + escape(dtmCap.format) + '</button> — produit à lier à la caisse</div>';
     h += '<div class="dtm-pop-grid dtm-pop-qty">';
     [1, 2, 3, 4, 5, 6].forEach(function (n) { h += '<button type="button" class="dtm-pop-chip" data-pqty="' + n + '">' + n + '</button>'; });
     h += '</div>';
@@ -12486,6 +13083,8 @@ function dtmOpenCaptureModal(step) {
   if (x) x.addEventListener('click', function () {
     if (confirm('Annuler cette capture ? (la photo sera jetée)')) dtmCaptureModalClose(true);
   });
+  var pfb = document.getElementById('dtmPopFmtBtn');
+  if (pfb) pfb.addEventListener('click', function () { dtmOpenCaptureModal(pfb.dataset.cl ? 'cl' : 'format'); });   // versé → cl direct
   m.querySelectorAll('[data-pfmt]').forEach(function (b) {
     b.addEventListener('click', function () {
       if (!b.dataset.pfmt) { dtmOpenCaptureModal('cl'); return; }   // Autre → saisie des cl
@@ -12541,7 +13140,7 @@ function dtmPopRenderResults() {
   res.forEach(function (p, i) {
     var wc = (typeof wineColor === 'function') ? wineColor(p.c) : null;
     var fmt = dtmProdFormat(p);
-    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-ppick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + (fmt ? ' <span class="dtm-fmt">' + escape(fmt) + '</span>' : '') + '</div></div>';
+    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-ppick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + (fmt ? ' <span class="dtm-fmt">' + escape(fmt) + '</span>' : '') + dtmViaBadge(p) + '</div></div>';
   });
   box.innerHTML = h;
   box.style.display = '';
@@ -12549,7 +13148,7 @@ function dtmPopRenderResults() {
     el.addEventListener('click', function () {
       var p = res[+el.dataset.ppick];
       if (!p) return;
-      dtmCap.prod = { y: p.y, s: p.s, c: p.c, fmt: dtmProdFormat(p) };
+      dtmCap.prod = { y: p.y, s: p.s, c: p.c, fmt: dtmProdFormat(p), e: p.e };
       dtmSearchTermD = '';
       dtmOpenCaptureModal('qty');
     });
@@ -12613,13 +13212,18 @@ function dtmRenderReview(root) {
             ? '<a href="' + escape(l.photoUrl) + '" target="_blank" rel="noopener"><img src="' + (l.thumb ? l.thumb : escape(l.photoUrl)) + '" alt="" loading="lazy"></a>'
             : '<img src="' + imgSrc + '" alt="" loading="lazy">';
         } else h += '<div class="dtm-nophoto">📷</div>';
-        h += '<div class="dtm-line-main"><div class="l-name' + (l.y ? '' : ' dtm-unlinked') + '">' + escape(name) + ' <button type="button" class="dtm-fmt dtm-fmt-btn" data-fchg="' + escape(l.id) + '">' + escape(fmtLbl || 'format ?') + '</button>';
+        var mm = (l.y && prodRef) ? dtmFmtMismatch(l.format, prodRef) : null;
+        // à la pièce = pastille fixe… SAUF incohérence : là, la pastille redevient tappable pour corriger
+        var fmtLock = prodRef && dtmFmtLocked(prodRef.e) && !mm;
+        h += '<div class="dtm-line-main"><div class="l-name' + (l.y ? '' : ' dtm-unlinked') + '">' + escape(name)
+          + (fmtLock
+            ? ' <span class="dtm-fmt">' + escape(fmtLbl || 'format ?') + '</span>'
+            : ' <button type="button" class="dtm-fmt dtm-fmt-btn" data-fchg="' + escape(l.id) + '">' + escape(fmtLbl || 'format ?') + '</button>');
         // v188 : la réf reste modifiable après liaison (on peut se tromper)
         if (l.y) h += ' <button type="button" class="dtm-relink-btn" data-link="' + escape(l.id) + '" aria-label="Changer la réf">🔗</button>';
         h += '</div>';
         h += '<div class="dtm-line-sub">' + escape(l.from) + ' → ' + escape(l.to) + ' · ' + escape(l.personne || '') + '</div>';
         if (!l.y) h += '<button type="button" class="dtm-link-btn" data-link="' + escape(l.id) + '">🔗 Lier à un produit</button>';
-        var mm = (l.y && prodRef) ? dtmFmtMismatch(l.format, prodRef) : null;
         if (mm) {
           h += '<div class="dtm-fmt-warn">⚠ Photo capturée en <b>' + escape(mm.cap) + '</b> mais la réf liée est en <b>' + escape(mm.prod) + '</b> — corrige la réf (🔗) ou le contenant (pastille)</div>';
           h += '<button type="button" class="dtm-link-btn" data-link="' + escape(l.id) + '">🔗 Changer la réf</button>';
@@ -12704,12 +13308,20 @@ function dtmFormatPicker(lineId, onDone) {
   var m = document.createElement('div');
   m.className = 'v-modal';
   m.id = 'dtmFmtModal';
+  // v199 : pour un produit VERSÉ (softs & spiritueux), on va DIRECT à la saisie libre des cl —
+  // les contenants nommés (Bouteille/Magnum…) n'ont pas de sens pour un versé.
+  var curL = (dtmLinesCache || []).find(function (x) { return x.id === lineId; });
+  var prodL = (curL && curL.y && typeof CATALOGUE_BY_Y !== 'undefined') ? CATALOGUE_BY_Y[curL.y] : null;
+  var isVerse = prodL && !dtmFmtLocked(prodL.e);
   var h = '<div class="v-modal-card dtm-pop"><div class="dtm-pop-head"><span></span><button type="button" class="dtm-pop-x" id="dtmFmtX" aria-label="Fermer">✕</button></div>';
-  h += '<div class="dtm-pop-title">Quel contenant ?</div><div class="dtm-pop-grid">';
-  ['Bouteille', 'Magnum', 'Jéroboam', 'Mathusalem', 'Demie', ''].forEach(function (v) {
-    h += '<button type="button" class="dtm-pop-chip" data-ffix="' + escape(v) + '">' + (v || 'Autre') + '</button>';
-  });
-  h += '</div></div>';
+  if (!isVerse) {
+    h += '<div class="dtm-pop-title">Quel contenant ?</div><div class="dtm-pop-grid">';
+    ['Bouteille', 'Magnum', 'Jéroboam', 'Mathusalem', 'Demie', ''].forEach(function (v) {
+      h += '<button type="button" class="dtm-pop-chip" data-ffix="' + escape(v) + '">' + (v || 'Autre') + '</button>';
+    });
+    h += '</div>';
+  }
+  h += '</div>';
   m.innerHTML = h;
   document.body.appendChild(m);
   document.getElementById('dtmFmtX').addEventListener('click', function () { m.remove(); });
@@ -12727,10 +13339,7 @@ function dtmFormatPicker(lineId, onDone) {
       if (onDone) onDone(fmt);
     }).catch(function (e) { toast('Erreur : ' + e.message); });
   }
-  m.querySelectorAll('[data-ffix]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      if (b.dataset.ffix) { apply(b.dataset.ffix); return; }
-      // Autre → saisie des centilitres
+  function showCl() {
       var card = m.querySelector('.v-modal-card');
       card.innerHTML = '<div class="dtm-pop-head"><span></span><button type="button" class="dtm-pop-x" id="dtmFmtX2" aria-label="Fermer">✕</button></div>'
         + '<div class="dtm-pop-title">Combien de centilitres ?</div>'
@@ -12748,8 +13357,14 @@ function dtmFormatPicker(lineId, onDone) {
         apply(f);
       });
       document.getElementById('dtmFmtClNone').addEventListener('click', function () { apply(null); });
+  }
+  m.querySelectorAll('[data-ffix]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (b.dataset.ffix) { apply(b.dataset.ffix); return; }
+      showCl();   // Autre → saisie des centilitres
     });
   });
+  if (isVerse) showCl();   // versé : saisie des cl directe, la pastille affichera « 70cl »
 }
 
 /* Pop-up de liaison (v187) : plein cadre, bien plus lisible que la recherche
@@ -12770,7 +13385,10 @@ function dtmOpenLinkModal(lineId) {
   h += '<div class="dtm-pop-title">' + (cur && cur.y ? 'Changer la réf' : 'Lier à quel produit ?') + '</div>';
   if (cur && cur.y) h += '<div class="dtm-pop-prod">Actuellement : <b>' + escape(cur.s || cur.y) + '</b></div>';
   // v188 : la pastille du contenant capturé est MODIFIABLE depuis la pop-up
-  if (cur) h += '<div class="dtm-pop-prod">Photo capturée en <button type="button" class="dtm-fmt dtm-fmt-btn" id="dtmLinkFmtBtn">' + escape(cur.format || 'format ?') + '</button></div>';
+  var curProd = (cur && cur.y && typeof CATALOGUE_BY_Y !== 'undefined') ? CATALOGUE_BY_Y[cur.y] : null;
+  if (cur) h += (curProd && dtmFmtLocked(curProd.e) && !dtmFmtMismatch(cur.format, curProd))
+    ? '<div class="dtm-pop-prod">Photo capturée en <span class="dtm-fmt">' + escape(cur.format || 'format ?') + '</span> <span style="color:var(--ink-3); font-size:11.5px;">(contenant fixe — produit à la pièce)</span></div>'
+    : '<div class="dtm-pop-prod">Photo capturée en <button type="button" class="dtm-fmt dtm-fmt-btn" id="dtmLinkFmtBtn">' + escape(cur.format || 'format ?') + '</button></div>';
   h += '<div style="position:relative;"><span class="search-ico" style="left:14px;">⌕</span>';
   h += '<input class="search" id="dtmLinkSearch" type="search" placeholder="Rechercher (Pablo + Cream)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="font-size:17px; padding:15px 14px 15px 44px;"></div>';
   h += '<div class="ttm-results" id="dtmLinkResults" style="display:none; max-height:46vh; margin-top:8px;"></div>';
@@ -12804,7 +13422,7 @@ function dtmRenderLinkResults(lineId) {
   res.forEach(function (p, i) {
     var wc = (typeof wineColor === 'function') ? wineColor(p.c) : null;
     var fmt = dtmProdFormat(p);
-    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-lpick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + (fmt ? ' <span class="dtm-fmt">' + escape(fmt) + '</span>' : '') + '</div></div>';
+    h += '<div class="ttm-result' + (wc ? ' prod-wine-' + wc : '') + '" data-lpick="' + i + '"><div class="r-name">' + escape(p.s || p.y) + (fmt ? ' <span class="dtm-fmt">' + escape(fmt) + '</span>' : '') + dtmViaBadge(p) + '</div></div>';
   });
   box.innerHTML = h;
   box.style.display = '';
@@ -12866,10 +13484,10 @@ var CRS_ORDER_KEY = 'itm_crs_order_v1';
 var CRS_UNITS = ['kg', 'pièce', 'L', 'colis', 'barquette'];
 
 function crsLoadList(key) {
-  try { var v = JSON.parse(localStorage.getItem(key) || 'null'); if (v && Array.isArray(v.items)) return v; } catch (e) {}
+  try { var v = JSON.parse(localStorage.getItem(crsKey(key)) || 'null'); if (v && Array.isArray(v.items)) return v; } catch (e) {}
   return { cid: null, items: [] };
 }
-function crsSaveList(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
+function crsSaveList(key, v) { try { localStorage.setItem(crsKey(key), JSON.stringify(v)); } catch (e) {} }
 function crsQtyStr(q, u) {
   var n = String(q).replace('.', ',');
   var plural = { 'pièce': 'pièces', 'barquette': 'barquettes' };   // kg, L, colis : invariables
@@ -12882,7 +13500,7 @@ function crsDicoCoerce(x) {
 async function crsDicoLoad(force) {
   if (dtmCrsDico && !force) return dtmCrsDico;
   var local = [];
-  try { local = JSON.parse(localStorage.getItem('itm_crs_dico_v1') || '[]'); } catch (e) {}
+  try { local = JSON.parse(localStorage.getItem(crsKey('itm_crs_dico_v1')) || '[]'); } catch (e) {}
   if (!Array.isArray(local)) local = [];
   var remote = null;
   try {
@@ -12901,13 +13519,13 @@ async function crsDicoLoad(force) {
     merged.push(x);
   });
   dtmCrsDico = merged;
-  try { localStorage.setItem('itm_crs_dico_v1', JSON.stringify(dtmCrsDico)); } catch (e) {}
+  try { localStorage.setItem(crsKey('itm_crs_dico_v1'), JSON.stringify(dtmCrsDico)); } catch (e) {}
   // le local avait des entrées inconnues du serveur → on les repousse (resync)
   if (remote && merged.length > remote.length) crsDicoPersist();
   return dtmCrsDico;
 }
 function crsDicoPersist() {
-  try { localStorage.setItem('itm_crs_dico_v1', JSON.stringify(dtmCrsDico || [])); } catch (e) {}
+  try { localStorage.setItem(crsKey('itm_crs_dico_v1'), JSON.stringify(dtmCrsDico || [])); } catch (e) {}
   fetch(BACKEND_URL + '/batches/dtm-crs-dico', {
     method: 'PUT', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ batches: dtmCrsDico || [] }), signal: AbortSignal.timeout(15000)
@@ -12961,6 +13579,7 @@ function dtmRenderCourses(root) {
   h += isTake
     ? '<div class="ttm-label">Fruits & prépa pris dans la réserve Pablo — note au fil de l\'eau, enregistre quand tu as fini.</div>'
     : '<div class="ttm-label">Commande Cream → Pablo : fais ta liste, puis copie le message dans la discussion WhatsApp.</div>';
+  h += '<div id="crsEntry">';
   h += '<div style="position:relative;">';
   h += '<input class="search" id="crsIn" type="text" placeholder="Désignation libre (ex. Orange à jus)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="font-size:17px; padding:14px;">';
   h += '<div class="ttm-results" id="crsSug" style="display:none; max-height:34vh; position:absolute; left:0; right:0; z-index:30;"></div>';
@@ -12974,6 +13593,7 @@ function dtmRenderCourses(root) {
   // v194 : commentaire d'article facultatif (« bien mûres », « si dispo »…)
   h += '<input class="search" id="crsNote" type="text" placeholder="💬 Commentaire article (facultatif)…" autocomplete="off" style="font-size:16px; padding:11px 14px; margin-top:10px;">';
   h += '<button type="button" class="ttm-cta" id="crsAdd" style="margin-top:12px;">➕ Ajouter à la liste</button>';
+  h += '</div>';   // fin #crsEntry (zone de saisie encadrée par le guide)
   if (list.items.length) {
     h += '<div class="ttm-label" style="margin-top:16px;">' + (isTake ? 'À enregistrer' : 'La commande') + ' (' + list.items.length + ')</div>';
     list.items.forEach(function (it, i) {
@@ -13048,6 +13668,13 @@ function crsBind(isTake, list) {
   if (qm) qm.addEventListener('click', function () { bumpQ(-1); });
   if (qp) qp.addEventListener('click', function () { bumpQ(1); });
   var key = isTake ? CRS_PEND_KEY : CRS_ORDER_KEY;
+  // v199 : la touche Entrée ajoute l'article (désignation, quantité ou commentaire)
+  ['crsIn', 'crsQty', 'crsNote'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter') { ev.preventDefault(); var ab = document.getElementById('crsAdd'); if (ab) ab.click(); }
+    });
+  });
   var add = document.getElementById('crsAdd');
   if (add) add.addEventListener('click', function () {
     var d = (inp.value || '').trim();
@@ -13226,6 +13853,35 @@ function crsLoadDay() {
 }
 
 /* ---- Admin : récap mensuel des courses → facture globale (prix via Yanis) ---- */
+/* Pause de la relance du matin (v199/v7.10) : tant que le module n'est pas en service,
+   Victor coupe les mails quotidiens d'un tap — sans toucher au cron Cloudflare. */
+function dtmRemindBind() {
+  var body = document.getElementById('dtmRemindBody');
+  if (!body) return;
+  function render(paused) {
+    body.style.color = '';
+    body.innerHTML = (paused
+      ? '<div style="margin-bottom:8px;">⏸ <b>En pause</b> — aucun mail de relance n\'est envoyé.</div><button type="button" class="ttm-cta" id="dtmRemindTgl" style="background:#1D9E75;">▶️ Réactiver la relance</button>'
+      : '<div style="margin-bottom:8px;">✅ <b>Active</b> — mail à Victor chaque matin si la veille n\'est pas passée en caisse.</div><button type="button" class="sess-logout-btn" id="dtmRemindTgl" style="min-height:44px; color:var(--danger);">⏸ Mettre en pause</button>');
+    var b = document.getElementById('dtmRemindTgl');
+    if (b) b.addEventListener('click', function () {
+      b.disabled = true;
+      fetch(BACKEND_URL + '/dtm/remind-pause', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Admin-Token': loadAdminToken() },
+        body: JSON.stringify({ paused: !paused }), signal: AbortSignal.timeout(15000)
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
+        toast(d.paused ? 'Relance en pause ⏸' : 'Relance réactivée ▶️');
+        render(d.paused);
+      }).catch(function (e) { toast('Erreur : ' + e.message); b.disabled = false; });
+    });
+  }
+  fetch(BACKEND_URL + '/dtm/remind-state', { headers: { 'X-Admin-Token': loadAdminToken() }, signal: AbortSignal.timeout(15000) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) { if (d && d.ok) render(!!d.paused); else throw new Error((d && d.error) || 'HTTP'); })
+    .catch(function (e) { body.innerHTML = '<div style="color:var(--ink-3);">État indisponible (' + escape(e.message) + ')</div>'; });
+}
+
 function crsAdmBind() {
   var btn = document.getElementById('crsAdmLoad');
   if (!btn) return;
@@ -13389,14 +14045,17 @@ function dtmRenderAdmin(root) {
     });
     return;
   }
+  var remindCard = '<div class="ttm-card"><div class="ttm-label">⏰ Relance du matin (mail si la veille n\'est pas passée en caisse)</div>'
+    + '<div id="dtmRemindBody" style="color:var(--ink-3); font-size:13px;">Chargement…</div></div>';
   var crsCard = '<div class="ttm-card"><div class="ttm-label">🍊 Courses du mois (fruits & prépa) → facture globale</div>'
     + '<div style="display:flex; gap:8px; align-items:center;">'
     + '<input class="search" id="crsAdmMonth" type="month" value="' + new Date().toISOString().slice(0, 7) + '" style="flex:1; font-size:16px; padding:12px;">'
     + '<button type="button" class="sess-logout-btn" id="crsAdmLoad" style="min-height:44px;">Charger</button></div>'
     + '<div id="crsAdmOut" style="margin-top:10px;"></div></div>';
-  root.innerHTML = head + '<div class="ttm-card" id="dtmAdmBody" style="color:var(--ink-3);">Chargement…</div>' + crsCard + '</div>';
+  root.innerHTML = head + '<div class="ttm-card" id="dtmAdmBody" style="color:var(--ink-3);">Chargement…</div>' + remindCard + crsCard + '</div>';
   dtmBindHead(root);
   crsAdmBind();
+  dtmRemindBind();
 
   fetch(BACKEND_URL + '/dtm/admin', { headers: { 'X-Admin-Token': token }, signal: AbortSignal.timeout(20000) })
     .then(function (r) {
