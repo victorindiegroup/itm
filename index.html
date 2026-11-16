@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
+    color-scheme: light;   /* v191 : l'app a sa propre DA claire — empêche le mode sombre du téléphone de noircir les champs */
     --bg: #F7F6F2;
     --surface: #FFFFFF;
     --surface-2: #FBFAF5;
@@ -422,6 +423,22 @@
     font-size: 13px;
   }
   .mode-logout-btn:active { background: var(--accent-soft); }
+  /* Courses CRS (v189) : segments, articles, tableau admin */
+  .crs-seg { display:flex; gap:0; border:1px solid var(--border-strong); border-radius:12px; overflow:hidden; margin-bottom:12px; }
+  .crs-seg button { flex:1; min-height:46px; border:none; background:var(--surface-2); color:var(--ink-2); font-size:15px; font-weight:600; }
+  .crs-seg button.on { background:var(--ink); color:#fff; }
+  .crs-item { display:flex; align-items:center; gap:8px; padding:9px 2px; border-bottom:1px dashed var(--border); }
+  .crs-item-d { flex:1; min-width:0; font-size:15px; font-weight:600; overflow-wrap:anywhere; }
+  .crs-save { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:8px 10px; margin-bottom:10px; }
+  .crs-save-head { display:flex; align-items:center; justify-content:space-between; font-size:13px; color:var(--ink-2); margin-bottom:2px; }
+  .crs-note { font-size:12px; color:var(--ink-2); font-style:italic; margin:-4px 0 5px 2px; overflow-wrap:anywhere; }
+  /* Menu d'entrée ETM (v193) */
+  .dtm-menu-card .m-title { font-size:21px; letter-spacing:-.4px; }
+  .dtm-menu-card .m-ico { font-size:30px; }
+  .crs-adm-sec { font-size:15px; font-weight:800; border-bottom:2px solid var(--border-strong); padding-bottom:4px; margin:10px 0 8px; }
+  .crs-adm-table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  .crs-adm-table th { text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-3); padding:4px 2px; border-bottom:1px solid var(--border-strong); }
+  .crs-adm-table td { padding:6px 2px; border-bottom:1px dashed var(--border); }
   /* Alerte cohérence contenant photo ↔ réf liée (caisse ETM, v187) */
   .dtm-fmt-warn {
     margin-top: 6px;
@@ -1484,6 +1501,11 @@
   .ttm-tabs { display: flex; gap: 8px; margin: 0 0 12px; }
   .ttm-tabs button { flex: 1; padding: 10px; border-radius: 100px; border: 1px solid var(--border-strong); background: var(--surface-2); font-size: 14px; color: var(--ink-2); }
   .ttm-tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); font-weight: 600; }
+  /* v192 : sous-onglets Capture/Caisse à l'intérieur de « Bouteilles » — plus discrets que les onglets principaux */
+  .dtm-subtabs { margin: -4px 0 12px; }
+  .dtm-subtabs button { padding: 8px 10px !important; font-size: 13.5px !important; background: var(--surface); border-style: dashed; }
+  .dtm-subtabs button.on { background: var(--accent); border-color: var(--accent); border-style: solid; color: #fff; }
+  .dtm-tabbadge { background:#C08A14; color:#fff; border-radius:100px; padding:1px 7px; font-size:11px; }
   /* Robe des vins sur les lignes TTM (mêmes teintes que les cartes catalogue v144) */
   .ttm-result.prod-wine-rouge,  .ttm-line.prod-wine-rouge  { background: #F6E3E6; border-left: 6px solid #7B1826; }
   .ttm-result.prod-wine-blanc,  .ttm-line.prod-wine-blanc  { background: #F8F3DC; border-left: 6px solid #C9B45E; }
@@ -1561,7 +1583,9 @@
   .ttm-line .l-unit { font-size:11px; color:var(--ink-3); }
   .ttm-qty { display:flex; align-items:center; gap:4px; }
   .ttm-qty button { width:34px; height:34px; border-radius:50%; border:1px solid var(--border-strong); background:var(--surface-2); font-size:18px; line-height:1; }
-  .ttm-qty input { width:56px; text-align:center; font-size:15px; font-weight:600; border:1px solid var(--border); border-radius:8px; padding:6px 2px; }
+  /* v191 : fond VERT CLAIR explicite (retour Victor — le mode sombre du téléphone
+     rendait ces champs noirs faute de background déclaré) */
+  .ttm-qty input { width:56px; text-align:center; font-size:15px; font-weight:700; border:1.5px solid #9FD9C4; border-radius:8px; padding:6px 2px; background:var(--accent-soft, #E1F5EE); color:var(--ink); }
   .ttm-del { color: var(--danger); background:none; border:none; font-size:18px; padding:6px; }
   .ttm-photo-btn { width:100%; padding:14px; border:2px dashed var(--border-strong); border-radius: var(--radius); background:var(--surface-2); color:var(--ink-2); font-size:15px; }
   .ttm-photo-thumb { position:relative; margin-top:8px; }
@@ -2147,7 +2171,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v188';
+const APP_VERSION = 'v195';
 
 /* === ITM APP === */
 (function(){
@@ -11751,7 +11775,7 @@ var DTM_MAX_PHOTO_PX = 1400;   // mêmes réglages que TTM
 var DTM_JPEG_Q = 0.72;
 var DTM_FORMATS = ['75cl', '50cl', 'Magnum', 'Jéroboam', 'Autre'];
 
-var dtmView = 'cap';            // 'cap' | 'rev' | 'adm'
+var dtmView = 'menu';           // 'menu' | 'cap' | 'rev' | 'hist' | 'crs' | 'adm' | 'who' (v193 : menu d'entrée)
 var dtmDir = 'PC';              // 'PC' = Pablo → Cream (défaut) | 'CP'
 var dtmCap = { photo: null, prod: null, format: null, qty: 1, thumb: null };
 var dtmSearchTermD = '';
@@ -11760,6 +11784,7 @@ var dtmStateCache = null;
 var dtmStateAt = 0;
 var dtmLinesCache = null;       // dernières lignes ouvertes (serveur)
 /* (v187) la liaison passe par une pop-up — plus d'état inline dtmLinkTarget/dtmLinkTerm */
+var dtmBtlView = 'cap';         // dernier sous-onglet Bouteilles (Capture/Caisse) — v192
 var dtmDone = null;             // résultat de la dernière clôture (écran done)
 var dtmMemQueue = [];           // fallback si IndexedDB indisponible
 var dtmFlushing = false;
@@ -12174,22 +12199,33 @@ function renderDtm() {
   // Choix du profil obligatoire pour les chefs (admin : Victor par défaut, changeable via 👤)
   if (dtmView === 'who' || (!dtmProfile && (!currentAuth || currentAuth.role !== 'admin'))) { dtmRenderWho(root); return; }
   if (dtmView === 'rev') { dtmRenderReview(root); return; }
+  if (dtmView === 'hist') { dtmRenderHist(root); return; }
+  if (dtmView === 'crs') { dtmRenderCourses(root); return; }
   if (dtmView === 'adm') { dtmRenderAdmin(root); return; }
-  dtmRenderCapture(root);
+  if (dtmView === 'cap') { dtmRenderCapture(root); return; }
+  dtmRenderMenu(root);
 }
 
 function dtmHeadHtml() {
   var isAdmin = currentAuth && currentAuth.role === 'admin';
   var nOpen = dtmStateCache ? dtmStateCache.openCount : (dtmLinesCache ? dtmLinesCache.length : 0);
   var whoLbl = dtmProfile || ((currentAuth && currentAuth.role === 'admin') ? 'Victor' : '—');
-  var h = '<div class="ttm-head"><h2>🛒 L\'Épicerie</h2><span class="ttm-sub">Pablo ↔ Cream</span>';
+  // v193 (Victor) : MENU d'entrée (Transferts / Courses) — « ← » revient au menu depuis une section
+  var inMenu = (dtmView === 'menu' || dtmView === 'who');
+  var h = '<div class="ttm-head">';
+  if (!inMenu) h += '<button type="button" id="dtmBack" aria-label="Retour au menu" style="background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; width:38px; height:38px; font-size:17px; color:var(--ink-2); flex:0 0 auto;">←</button>';
+  h += '<h2>🛒 L\'Épicerie</h2><span class="ttm-sub">Pablo ↔ Cream</span>';
   h += '<button type="button" id="dtmWho" style="margin-left:auto; background:var(--accent-soft, var(--surface)); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; font-weight:600; color:var(--ink);">👤 ' + escape(whoLbl) + '</button>';
   h += '<button type="button" id="dtmHome" style="background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; color:var(--ink-2);">🏠 Menu</button></div>';
-  h += '<div class="ttm-tabs">';
-  h += '<button type="button" id="dtmTabCap" class="' + (dtmView === 'cap' ? 'on' : '') + '">📸 Capture</button>';
-  h += '<button type="button" id="dtmTabRev" class="' + (dtmView === 'rev' ? 'on' : '') + '">🧾 Caisse' + (nOpen ? ' <span style="background:#C08A14; color:#fff; border-radius:100px; padding:1px 7px; font-size:11px;">' + nOpen + '</span>' : '') + '</button>';
-  if (isAdmin) h += '<button type="button" id="dtmTabAdm" class="' + (dtmView === 'adm' ? 'on' : '') + '">🗂</button>';
-  h += '</div>';
+  var inBtl = (dtmView === 'cap' || dtmView === 'rev' || dtmView === 'hist');
+  var badge = nOpen ? ' <span class="dtm-tabbadge">' + nOpen + '</span>' : '';
+  if (inBtl) {
+    h += '<div class="ttm-tabs">';
+    h += '<button type="button" id="dtmTabCap" class="' + (dtmView === 'cap' ? 'on' : '') + '">📸 Capture</button>';
+    h += '<button type="button" id="dtmTabRev" class="' + (dtmView === 'rev' ? 'on' : '') + '">🧾 Caisse' + badge + '</button>';
+    h += '<button type="button" id="dtmTabHist" class="' + (dtmView === 'hist' ? 'on' : '') + '">📜 Historique</button>';
+    h += '</div>';
+  }
   return h;
 }
 function dtmBindHead(root) {
@@ -12197,10 +12233,14 @@ function dtmBindHead(root) {
   if (home) home.addEventListener('click', showModeScreen);
   var who = document.getElementById('dtmWho');
   if (who) who.addEventListener('click', function () { dtmView = 'who'; renderDtm(); });
+  var bk = document.getElementById('dtmBack');
+  if (bk) bk.addEventListener('click', function () { dtmView = 'menu'; dtmDone = null; renderDtm(); });
   var tc = document.getElementById('dtmTabCap');
-  if (tc) tc.addEventListener('click', function () { dtmView = 'cap'; renderDtm(); });
+  if (tc) tc.addEventListener('click', function () { dtmView = 'cap'; dtmBtlView = 'cap'; renderDtm(); });
   var tr = document.getElementById('dtmTabRev');
-  if (tr) tr.addEventListener('click', function () { dtmView = 'rev'; dtmDone = null; renderDtm(); });
+  if (tr) tr.addEventListener('click', function () { dtmView = 'rev'; dtmBtlView = 'rev'; dtmDone = null; renderDtm(); });
+  var th = document.getElementById('dtmTabHist');
+  if (th) th.addEventListener('click', function () { dtmView = 'hist'; dtmBtlView = 'hist'; renderDtm(); });
   var ta = document.getElementById('dtmTabAdm');
   if (ta) ta.addEventListener('click', function () { dtmView = 'adm'; renderDtm(); });
 }
@@ -12233,7 +12273,7 @@ function dtmRenderWho(root) {
       b.addEventListener('click', function () {
         dtmProfile = b.dataset.who;
         try { localStorage.setItem('itm_dtm_profile_v1', dtmProfile); } catch (e) {}
-        dtmView = 'cap';
+        dtmView = 'menu';
         renderDtm();
         toast('Salut ' + dtmProfile.replace(' (admin)', '') + ' 👋');
       });
@@ -12267,6 +12307,70 @@ function dtmRenderWho(root) {
 /* ---- Vue CAPTURE : photo d'abord, puis pop-up Format → Quantité (tac-au-tac, zéro scroll).
    La recherche produit est optionnelle (lien dans le pop-up) — sinon le lien se fait à la caisse. ---- */
 var dtmCapStep = null;   // null | 'format' | 'search' | 'qty'
+
+/* ---- Vue MENU (v193) : point d'entrée de l'Épicerie — Transferts ou Courses ---- */
+function dtmRenderMenu(root) {
+  var nOpen = dtmStateCache ? dtmStateCache.openCount : 0;
+  var isAdmin = currentAuth && currentAuth.role === 'admin';
+  var h = '<div class="ttm-wrap">' + dtmHeadHtml() + dtmBannerHtml();
+  h += '<div class="m-sub" style="margin:2px 0 12px;">Qu\'est-ce qu\'on fait ?</div>';
+  h += '<button type="button" class="mode-card dtm-menu-card" id="dtmMenuBtl">';
+  h += '<span class="m-ico">🍾</span><span><div class="m-title">Transferts' + (nOpen ? ' <span class="dtm-tabbadge">' + nOpen + '</span>' : '') + '</div>';
+  h += '<div class="m-desc"><b>Une bouteille passe entre Pablo et Cream</b> — photo en 10 s, caisse en fin de service</div></span></button>';
+  h += '<button type="button" class="mode-card dtm-menu-card" id="dtmMenuCrs">';
+  h += '<span class="m-ico">🍊</span><span><div class="m-title">Courses</div>';
+  h += '<div class="m-desc"><b>Fruits & prépa</b> — je prends dans la réserve, ou je commande à Pablo (WhatsApp)</div></span></button>';
+  if (isAdmin) {
+    h += '<button type="button" class="mode-card dtm-menu-card" id="dtmMenuAdm">';
+    h += '<span class="m-ico">🗂</span><span><div class="m-title" style="font-size:18px;">Suivi admin</div>';
+    h += '<div class="m-desc">Clôtures, transferts Yokitup, courses du mois, purges</div></span></button>';
+  }
+  h += '</div>';
+  root.innerHTML = h;
+  dtmBindHead(root);
+  var mb = document.getElementById('dtmMenuBtl');
+  if (mb) mb.addEventListener('click', function () { dtmView = (dtmBtlView === 'hist' ? 'hist' : dtmBtlView) || 'cap'; renderDtm(); });
+  var mc = document.getElementById('dtmMenuCrs');
+  if (mc) mc.addEventListener('click', function () { dtmView = 'crs'; renderDtm(); });
+  var ma = document.getElementById('dtmMenuAdm');
+  if (ma) ma.addEventListener('click', function () { dtmView = 'adm'; renderDtm(); });
+  // badge/bandeau à jour — re-render UNIQUEMENT si l'état a changé (sinon boucle infinie de rendus)
+  var snapBefore = JSON.stringify([nOpen, dtmStateCache && dtmStateCache.yesterdayClosed]);
+  dtmFetchState(true).then(function () {
+    var snapAfter = JSON.stringify([(dtmStateCache || {}).openCount || 0, dtmStateCache && dtmStateCache.yesterdayClosed]);
+    if (snapAfter === snapBefore || dtmView !== 'menu') return;
+    var r2 = document.getElementById('dtmRoot');
+    if (r2 && document.body.classList.contains('dtm-mode')) dtmRenderMenu(r2);
+  });
+}
+
+/* ---- Vue HISTORIQUE Transferts (v193) : visible par TOUS (op + admin) — clôtures passées ---- */
+function dtmRenderHist(root) {
+  root.innerHTML = '<div class="ttm-wrap">' + dtmHeadHtml() + '<div class="ttm-card" id="dtmHistBody" style="color:var(--ink-3);">Chargement…</div></div>';
+  dtmBindHead(root);
+  dtmFetchState(true).then(function () {
+    var body = document.getElementById('dtmHistBody');
+    if (!body) return;
+    var closures = (dtmStateCache && dtmStateCache.closures) || [];
+    if (!closures.length) { body.innerHTML = '<div style="color:var(--ink-3);">Aucun passage en caisse pour l\'instant.</div>'; body.style.color = ''; return; }
+    var byDay = {};
+    closures.forEach(function (c) { (byDay[c.day] = byDay[c.day] || []).push(c); });
+    var h = '<div class="ttm-label">Passages en caisse (' + closures.length + ')</div>';
+    Object.keys(byDay).sort().reverse().forEach(function (day) {
+      h += '<div style="font-size:13.5px; font-weight:800; margin-top:10px;">' + dtmFrDay(day) + '</div>';
+      byDay[day].forEach(function (c) {
+        var t = (c.closedAt || '').slice(11, 16);
+        h += '<div class="crs-save" style="margin:4px 0 6px 0;"><div class="crs-save-head"><span>' + (c.empty ? '∅ <b>Panier vide</b>' : '🧾 <b>' + escape(c.number || '—') + '</b>') + (c.from ? ' · ' + escape(c.from) + ' → ' + escape(c.to) : '') + '</span>' + (c.done ? '<span class="dtm-fmt" style="background:#DDF2E7; color:#157A5A; border-color:#9FD9C4;">✓ fait</span>' : '') + '</div>';
+        h += '<div style="font-size:12.5px; color:var(--ink-2);">' + (c.empty ? 'Rien à transférer' : c.nbLines + ' bouteille(s)') + (c.personne ? ' · 👤 ' + escape(c.personne) : '') + (t ? ' · ' + t : '') + '</div></div>';
+      });
+    });
+    body.innerHTML = h;
+    body.style.color = '';
+  }).catch(function () {
+    var body = document.getElementById('dtmHistBody');
+    if (body) body.innerHTML = '<div style="color:var(--ink-3);">Impossible de charger l\'historique (réseau ?).</div>';
+  });
+}
 
 function dtmRenderCapture(root) {
   var ft = dtmFromTo();
@@ -12736,6 +12840,529 @@ function dtmRenderDone() {
 }
 
 /* ---- Vue ADMIN « Douane » (Victor) ---- */
+/* ============ CRS « Courses » (v189) : fruits & prépa — Cream se sert dans la réserve Pablo ============
+   Saisie LIBRE (pas de catalogue) avec DICO partagé entre téléphones (/batches/dtm-crs-dico) :
+   on tape « orange » → « Orange à jus » est proposé (anti-doublons), et le dernier conditionnement
+   utilisé est retenu par produit. Unités : kg / pièce / L.
+   • « Je prends » : on note au fil de l'eau puis « Enregistrer » → POST /crs/save (idempotent par
+     clientId, liste en attente gardée en localStorage si le réseau rate). Victor récupère le mois
+     dans l'admin → facture globale Pablo → Cream (prix via Yanis).
+   • « Commande » : même saisie → message WhatsApp à copier dans la discussion (rien côté serveur). */
+var dtmCrsSeg = 'take';            // 'take' | 'order'
+var dtmCrsUnit = 'kg';
+var dtmCrsDico = null;             // [{d, u}] — désignations connues + dernier conditionnement
+var CRS_PEND_KEY = 'itm_crs_pending_v1';
+var CRS_ORDER_KEY = 'itm_crs_order_v1';
+var CRS_UNITS = ['kg', 'pièce', 'L'];
+
+function crsLoadList(key) {
+  try { var v = JSON.parse(localStorage.getItem(key) || 'null'); if (v && Array.isArray(v.items)) return v; } catch (e) {}
+  return { cid: null, items: [] };
+}
+function crsSaveList(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
+function crsQtyStr(q, u) {
+  var n = String(q).replace('.', ',');
+  return n + ' ' + (u === 'pièce' ? (Number(q) > 1 ? 'pièces' : 'pièce') : u);
+}
+function crsDicoCoerce(x) {
+  if (typeof x === 'string') return x ? { d: x, u: 'kg' } : null;
+  return (x && typeof x.d === 'string' && x.d) ? { d: x.d, u: CRS_UNITS.indexOf(x.u) >= 0 ? x.u : 'kg' } : null;
+}
+async function crsDicoLoad(force) {
+  if (dtmCrsDico && !force) return dtmCrsDico;
+  var local = [];
+  try { local = JSON.parse(localStorage.getItem('itm_crs_dico_v1') || '[]'); } catch (e) {}
+  if (!Array.isArray(local)) local = [];
+  var remote = null;
+  try {
+    var r = await fetch(BACKEND_URL + '/batches/dtm-crs-dico', { signal: AbortSignal.timeout(12000) });
+    var d = await r.json();
+    if (d && d.ok && Array.isArray(d.batches)) remote = d.batches.map(crsDicoCoerce).filter(Boolean);
+  } catch (e) { /* hors-ligne : dico local seul */ }
+  // v195 : FUSION serveur + local — le serveur n'écrase JAMAIS un ajout local pas encore
+  // synchronisé (bug « piment oiseau » : un PUT raté ou un faux serveur remis à zéro faisait
+  // disparaître des suggestions un produit pourtant déjà utilisé).
+  var seen = {}, merged = [];
+  (remote || []).concat(local.map(crsDicoCoerce).filter(Boolean)).forEach(function (x) {
+    var k = normalize(x.d);
+    if (seen[k]) return;
+    seen[k] = true;
+    merged.push(x);
+  });
+  dtmCrsDico = merged;
+  try { localStorage.setItem('itm_crs_dico_v1', JSON.stringify(dtmCrsDico)); } catch (e) {}
+  // le local avait des entrées inconnues du serveur → on les repousse (resync)
+  if (remote && merged.length > remote.length) crsDicoPersist();
+  return dtmCrsDico;
+}
+function crsDicoPersist() {
+  try { localStorage.setItem('itm_crs_dico_v1', JSON.stringify(dtmCrsDico || [])); } catch (e) {}
+  fetch(BACKEND_URL + '/batches/dtm-crs-dico', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ batches: dtmCrsDico || [] }), signal: AbortSignal.timeout(15000)
+  }).catch(function () { /* resynchronisé à la prochaine utilisation */ });
+}
+/* Canonicalise une désignation via le dico (« orange à jus » tapé → « Orange à jus » retenu),
+   l'ajoute si nouvelle, et mémorise le dernier conditionnement utilisé pour ce produit. */
+function crsDicoUse(d, u) {
+  var n = normalize(d);
+  var hit = (dtmCrsDico || []).find(function (x) { return normalize(x.d) === n; });
+  if (hit) { hit.u = u; crsDicoPersist(); return hit.d; }
+  (dtmCrsDico = dtmCrsDico || []).push({ d: d, u: u });
+  crsDicoPersist();
+  return d;
+}
+function crsSuggest(term) {
+  var t = normalize((term || '').trim());
+  if (!t) return [];
+  var starts = [], contains = [];
+  (dtmCrsDico || []).forEach(function (x) {
+    var n = normalize(x.d);
+    if (n.indexOf(t) === 0) starts.push(x);
+    else if (n.indexOf(t) >= 0) contains.push(x);
+  });
+  return starts.concat(contains).slice(0, 8);
+}
+
+function dtmRenderCourses(root) {
+  var head = '<div class="ttm-wrap">' + dtmHeadHtml();
+  var isHist = dtmCrsSeg === 'hist';
+  var isTake = dtmCrsSeg === 'take';
+  var list = crsLoadList(isTake ? CRS_PEND_KEY : CRS_ORDER_KEY);
+  var h = '<div class="ttm-card">';
+  h += '<div class="crs-seg">';
+  h += '<button type="button" id="crsSegTake" class="' + (isTake ? 'on' : '') + '">🧺 Je prends</button>';
+  h += '<button type="button" id="crsSegOrder" class="' + (dtmCrsSeg === 'order' ? 'on' : '') + '">📲 Commande</button>';
+  h += '<button type="button" id="crsSegHist" class="' + (isHist ? 'on' : '') + '">📜 Historique</button>';
+  h += '</div>';
+  // v193 : historique Courses visible par TOUS (op + admin) — 14 derniers jours
+  if (isHist) {
+    h += '<div id="crsHistBody" style="color:var(--ink-3);">Chargement…</div></div>';
+    root.innerHTML = head + h + '</div>';
+    dtmBindHead(root);
+    var hst = document.getElementById('crsSegTake');
+    if (hst) hst.addEventListener('click', function () { dtmCrsSeg = 'take'; renderDtm(); });
+    var hso = document.getElementById('crsSegOrder');
+    if (hso) hso.addEventListener('click', function () { dtmCrsSeg = 'order'; renderDtm(); });
+    crsLoadHistory();
+    return;
+  }
+  h += isTake
+    ? '<div class="ttm-label">Fruits & prépa pris dans la réserve Pablo — note au fil de l\'eau, enregistre quand tu as fini.</div>'
+    : '<div class="ttm-label">Commande Cream → Pablo : fais ta liste, puis copie le message dans la discussion WhatsApp.</div>';
+  h += '<div style="position:relative;">';
+  h += '<input class="search" id="crsIn" type="text" placeholder="Désignation libre (ex. Orange à jus)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="font-size:17px; padding:14px;">';
+  h += '<div class="ttm-results" id="crsSug" style="display:none; max-height:34vh; position:absolute; left:0; right:0; z-index:30;"></div>';
+  h += '</div>';
+  h += '<div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">';
+  h += '<div class="ttm-qty" style="margin:0;"><button type="button" id="crsQm">−</button><input type="text" inputmode="decimal" id="crsQty" value="1" style="width:60px; text-align:center; font-size:17px;"><button type="button" id="crsQp">+</button></div>';
+  CRS_UNITS.forEach(function (u) {
+    h += '<button type="button" class="dtm-chip crs-unit' + (dtmCrsUnit === u ? ' on' : '') + '" data-cu="' + u + '">' + u + '</button>';
+  });
+  h += '</div>';
+  // v194 : commentaire d'article facultatif (« bien mûres », « si dispo »…)
+  h += '<input class="search" id="crsNote" type="text" placeholder="💬 Commentaire article (facultatif)…" autocomplete="off" style="font-size:16px; padding:11px 14px; margin-top:10px;">';
+  h += '<button type="button" class="ttm-cta" id="crsAdd" style="margin-top:12px;">➕ Ajouter à la liste</button>';
+  if (list.items.length) {
+    h += '<div class="ttm-label" style="margin-top:16px;">' + (isTake ? 'À enregistrer' : 'La commande') + ' (' + list.items.length + ')</div>';
+    list.items.forEach(function (it, i) {
+      h += '<div class="crs-item"><span class="crs-item-d">' + escape(it.d) + '</span><span class="dtm-fmt">' + escape(crsQtyStr(it.q, it.u)) + '</span><button type="button" class="ttm-del" data-crdel="' + i + '">✕</button></div>';
+      if (it.n) h += '<div class="crs-note">💬 ' + escape(it.n) + '</div>';
+    });
+    if (isTake) {
+      h += '<button type="button" class="ttm-cta" id="crsSave" style="margin-top:12px;">💾 Enregistrer (' + list.items.length + ')</button>';
+    } else {
+      // v194 : commentaire GLOBAL de la commande, repris dans le message WhatsApp
+      h += '<input class="search" id="crsOrderNote" type="text" placeholder="📝 Commentaire global (facultatif, ex. pour vendredi)…" autocomplete="off" value="' + escape(list.note || '') + '" style="font-size:16px; padding:11px 14px; margin-top:12px;">';
+      h += '<button type="button" class="ttm-cta" id="crsWa" style="margin-top:12px;">📲 Copier le message WhatsApp</button>';
+      h += '<button type="button" class="dtm-pop-link" id="crsClear">🗑 Vider la liste</button>';
+    }
+  }
+  h += '</div>';
+  if (isTake) h += '<div class="ttm-card" id="crsDayBody" style="color:var(--ink-3);">Chargement du jour…</div>';
+  root.innerHTML = head + h + '</div>';
+  dtmBindHead(root);
+  crsBind(isTake, list);
+  crsDicoLoad();
+  if (isTake) crsLoadDay();
+}
+
+function crsBind(isTake, list) {
+  var st = document.getElementById('crsSegTake');
+  if (st) st.addEventListener('click', function () { dtmCrsSeg = 'take'; renderDtm(); });
+  var so = document.getElementById('crsSegOrder');
+  if (so) so.addEventListener('click', function () { dtmCrsSeg = 'order'; renderDtm(); });
+  var sh = document.getElementById('crsSegHist');
+  if (sh) sh.addEventListener('click', function () { dtmCrsSeg = 'hist'; renderDtm(); });
+  var inp = document.getElementById('crsIn');
+  var sug = document.getElementById('crsSug');
+  function renderSug() {
+    if (!sug || !inp) return;
+    var res = crsSuggest(inp.value);
+    if (!res.length) { sug.style.display = 'none'; sug.innerHTML = ''; return; }
+    var h = '';
+    res.forEach(function (x, i) {
+      h += '<div class="ttm-result" data-cpick="' + i + '"><div class="r-name">' + escape(x.d) + ' <span class="dtm-fmt">' + escape(x.u) + '</span></div></div>';
+    });
+    sug.innerHTML = h;
+    sug.style.display = '';
+    sug.querySelectorAll('[data-cpick]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var x = res[+el.dataset.cpick];
+        if (!x) return;
+        inp.value = x.d;
+        crsSetUnit(x.u);
+        sug.style.display = 'none'; sug.innerHTML = '';
+        var q = document.getElementById('crsQty');
+        if (q) { try { q.focus(); q.select(); } catch (e) {} }
+      });
+    });
+  }
+  if (inp) inp.addEventListener('input', renderSug);
+  function crsSetUnit(u) {
+    dtmCrsUnit = u;
+    document.querySelectorAll('.crs-unit').forEach(function (b) { b.classList.toggle('on', b.dataset.cu === u); });
+  }
+  document.querySelectorAll('.crs-unit').forEach(function (b) {
+    b.addEventListener('click', function () { crsSetUnit(b.dataset.cu); });
+  });
+  var qm = document.getElementById('crsQm'), qp = document.getElementById('crsQp'), qi = document.getElementById('crsQty');
+  function bumpQ(delta) {
+    var v = parseFloat(String(qi.value).replace(',', '.'));
+    if (isNaN(v)) v = 1;
+    v = Number.isInteger(v) ? v + delta : (delta > 0 ? Math.ceil(v) : Math.floor(v));
+    if (v < 1) v = 1;
+    qi.value = String(v);
+  }
+  if (qm) qm.addEventListener('click', function () { bumpQ(-1); });
+  if (qp) qp.addEventListener('click', function () { bumpQ(1); });
+  var key = isTake ? CRS_PEND_KEY : CRS_ORDER_KEY;
+  var add = document.getElementById('crsAdd');
+  if (add) add.addEventListener('click', function () {
+    var d = (inp.value || '').trim();
+    if (!d) { toast('Écris une désignation (ex. Orange à jus)'); try { inp.focus(); } catch (e) {} return; }
+    var q = parseFloat(String(qi.value).replace(',', '.'));
+    if (isNaN(q) || q <= 0) { toast('Quantité invalide'); return; }
+    d = crsDicoUse(d, dtmCrsUnit);
+    var it = { d: d, q: q, u: dtmCrsUnit };
+    var noteEl = document.getElementById('crsNote');
+    var n = noteEl ? noteEl.value.trim().slice(0, 200) : '';
+    if (n) it.n = n;
+    list.items.push(it);
+    crsSaveList(key, list);
+    renderDtm();
+    setTimeout(function () { var i2 = document.getElementById('crsIn'); if (i2) { try { i2.focus(); } catch (e) {} } }, 80);
+  });
+  document.querySelectorAll('[data-crdel]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      list.items.splice(+b.dataset.crdel, 1);
+      crsSaveList(key, list);
+      renderDtm();
+    });
+  });
+  var sv = document.getElementById('crsSave');
+  if (sv) sv.addEventListener('click', function () {
+    if (!list.items.length) return;
+    if (!list.cid) { list.cid = 'crs-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8); crsSaveList(key, list); }
+    sv.disabled = true; sv.textContent = 'Enregistrement…';
+    fetch(BACKEND_URL + '/crs/save', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ day: dtmServiceDay(), personne: dtmPersonne(), items: list.items, clientId: list.cid }),
+      signal: AbortSignal.timeout(20000)
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
+      crsSaveList(key, { cid: null, items: [] });
+      toast('Enregistré ✓ (' + list.items.length + ' article' + (list.items.length > 1 ? 's' : '') + ')');
+      renderDtm();
+    }).catch(function (e) {
+      // la liste reste en localStorage avec le même clientId → re-taper Enregistrer est sans doublon
+      toast('Pas de réseau ? La liste est gardée — réessaie « Enregistrer ». (' + e.message + ')');
+      renderDtm();
+    });
+  });
+  var onote = document.getElementById('crsOrderNote');
+  if (onote) onote.addEventListener('input', function () {
+    list.note = onote.value.trim().slice(0, 300);
+    crsSaveList(key, list);
+  });
+  var wa = document.getElementById('crsWa');
+  if (wa) wa.addEventListener('click', function () {
+    var msg = crsWaMessage(list.items, list.note);
+    (async function () {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(msg);
+        } else {
+          var tmp = document.createElement('textarea');
+          tmp.value = msg;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand('copy');
+          document.body.removeChild(tmp);
+        }
+        toast('Message copié 📲 — colle-le dans WhatsApp');
+        wa.textContent = '📲 Copié ✓ — recopier';
+      } catch (e) { toast('Copie impossible : ' + e.message); }
+      // v190 : journaliser la commande pour l'historique admin — UPSERT par clientId :
+      // recopier après correction remplace la commande, pas de doublon.
+      if (!list.cid) { list.cid = 'ord-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8); crsSaveList(key, list); }
+      fetch(BACKEND_URL + '/crs/order', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ day: dtmServiceDay(), personne: dtmPersonne(), items: list.items, note: list.note || null, clientId: list.cid }),
+        signal: AbortSignal.timeout(15000)
+      }).catch(function () { /* hors-ligne : l'historique admin rattrapera à la prochaine copie */ });
+    })();
+  });
+  var cl = document.getElementById('crsClear');
+  if (cl) cl.addEventListener('click', function () {
+    if (!confirm('Vider la liste de commande ?')) return;
+    crsSaveList(key, { cid: null, items: [] });
+    renderDtm();
+  });
+}
+
+/* Historique Courses opérateur (v193) : prises + commandes des 14 derniers jours (GET /crs/recent, public) */
+function crsLoadHistory() {
+  fetch(BACKEND_URL + '/crs/recent', { signal: AbortSignal.timeout(15000) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      var body = document.getElementById('crsHistBody');
+      if (!body || !d || !d.ok) return;
+      var h = '';
+      function section(title, recs, emptyTxt) {
+        h += '<div class="crs-adm-sec">' + title + ' <span style="font-weight:400; color:var(--ink-3);">(' + recs.length + ')</span></div>';
+        if (!recs.length) { h += '<div style="color:var(--ink-3); font-size:13px;">' + emptyTxt + '</div>'; return; }
+        var byDay = {};
+        recs.forEach(function (x) { (byDay[x.day] = byDay[x.day] || []).push(x); });
+        Object.keys(byDay).sort().reverse().forEach(function (day) {
+          h += '<div style="font-size:13px; font-weight:700; margin-top:8px;">' + dtmFrDay(day) + '</div>';
+          byDay[day].forEach(function (s) {
+            var t = (s.at || '').slice(11, 16);
+            h += '<div class="crs-save" style="margin:4px 0 6px 0;"><div class="crs-save-head"><span>👤 <b>' + escape(s.personne || '?') + '</b>' + (t ? ' · ' + t : '') + '</span><span class="dtm-fmt">' + (s.items || []).length + ' art.</span></div>';
+            if (s.note) h += '<div class="crs-note" style="margin-left:0;">📝 ' + escape(s.note) + '</div>';
+            (s.items || []).forEach(function (it) {
+              h += '<div class="crs-item"><span class="crs-item-d">' + escape(it.d) + '</span><span class="dtm-fmt">' + escape(crsQtyStr(it.q, it.u)) + '</span></div>';
+          if (it.n) h += '<div class="crs-note">💬 ' + escape(it.n) + '</div>';
+            });
+            h += '</div>';
+          });
+        });
+      }
+      section('🧺 Prises dans la réserve', d.saves || [], 'Aucune prise ces 14 derniers jours.');
+      section('📲 Commandes envoyées', d.orders || [], 'Aucune commande ces 14 derniers jours.');
+      h += '<div style="color:var(--ink-3); font-size:11.5px; margin-top:10px;">14 derniers jours — l\'historique complet du mois est côté admin.</div>';
+      body.innerHTML = h;
+      body.style.color = '';
+    })
+    .catch(function () {
+      var body = document.getElementById('crsHistBody');
+      if (body) body.innerHTML = '<div style="color:var(--ink-3);">Impossible de charger l\'historique (réseau ?).</div>';
+    });
+}
+
+function crsWaMessage(items, note) {
+  var day = dtmServiceDay();
+  var lines = ['🛒 Commande Cream SBH → Pablo SBH — ' + dtmFrDay(day)];
+  items.forEach(function (it) { lines.push('• ' + it.d + ' — ' + crsQtyStr(it.q, it.u) + (it.n ? ' (' + it.n + ')' : '')); });
+  if (note) lines.push('📝 ' + note);
+  lines.push('👤 ' + dtmPersonne());
+  return lines.join('\n');
+}
+
+function crsLoadDay() {
+  var body = document.getElementById('crsDayBody');
+  if (!body) return;
+  fetch(BACKEND_URL + '/crs/lines?day=' + encodeURIComponent(dtmServiceDay()), { signal: AbortSignal.timeout(15000) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      var b2 = document.getElementById('crsDayBody');
+      if (!b2 || !d || !d.ok) return;
+      var saves = d.saves || [];
+      var total = saves.reduce(function (n, s) { return n + (s.items || []).length; }, 0);
+      var h = '<div class="ttm-label">Déjà pris aujourd\'hui' + (total ? ' (' + total + ' article' + (total > 1 ? 's' : '') + ')' : '') + '</div>';
+      if (!saves.length) {
+        h += '<div style="color:var(--ink-3); font-size:13.5px;">Rien pour l\'instant.</div>';
+      }
+      saves.forEach(function (s) {
+        var t = (s.at || '').slice(11, 16);
+        h += '<div class="crs-save"><div class="crs-save-head"><span>👤 <b>' + escape(s.personne || '?') + '</b>' + (t ? ' · ' + t : '') + '</span><button type="button" class="ttm-del" data-crsdel="' + escape(s.id) + '">✕</button></div>';
+        (s.items || []).forEach(function (it) {
+          h += '<div class="crs-item"><span class="crs-item-d">' + escape(it.d) + '</span><span class="dtm-fmt">' + escape(crsQtyStr(it.q, it.u)) + '</span></div>';
+          if (it.n) h += '<div class="crs-note">💬 ' + escape(it.n) + '</div>';
+        });
+        h += '</div>';
+      });
+      b2.innerHTML = h;
+      b2.style.color = '';
+      b2.querySelectorAll('[data-crsdel]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (!confirm('Effacer cette prise (erreur de saisie) ?')) return;
+          fetch(BACKEND_URL + '/crs/' + encodeURIComponent(btn.dataset.crsdel), { method: 'DELETE', signal: AbortSignal.timeout(15000) })
+            .then(function (r) { return r.json(); })
+            .then(function (dd) {
+              if (!dd || !dd.ok) throw new Error((dd && dd.error) || 'HTTP');
+              toast('Prise effacée');
+              crsLoadDay();
+            })
+            .catch(function (e) { toast('Erreur : ' + e.message); });
+        });
+      });
+    })
+    .catch(function () {
+      var b2 = document.getElementById('crsDayBody');
+      if (b2) b2.innerHTML = '<div style="color:var(--ink-3); font-size:13.5px;">Impossible de charger les prises du jour (réseau ?).</div>';
+    });
+}
+
+/* ---- Admin : récap mensuel des courses → facture globale (prix via Yanis) ---- */
+function crsAdmBind() {
+  var btn = document.getElementById('crsAdmLoad');
+  if (!btn) return;
+  btn.addEventListener('click', function () { crsAdmLoadMonth(); });
+}
+function crsAdmMonth() {
+  var inp = document.getElementById('crsAdmMonth');
+  var v = (inp && inp.value) || '';
+  return /^\d{4}-\d{2}$/.test(v) ? v : new Date().toISOString().slice(0, 7);
+}
+function crsAdmLoadMonth() {
+  var out = document.getElementById('crsAdmOut');
+  if (!out) return;
+  var month = crsAdmMonth();
+  out.innerHTML = '<div style="color:var(--ink-3);">Chargement…</div>';
+  fetch(BACKEND_URL + '/crs/month/' + month, { headers: { 'X-Admin-Token': loadAdminToken() }, signal: AbortSignal.timeout(20000) })
+    .then(function (r) {
+      if (r.status === 401) throw new Error('Token admin invalide');
+      return r.json();
+    })
+    .then(function (d) {
+      if (!d || !d.ok) throw new Error((d && d.error) || 'réponse invalide');
+      crsAdmRender(month, d.saves || [], d.orders || []);
+    })
+    .catch(function (e) { out.innerHTML = '<div style="color:var(--danger);">Erreur : ' + escape(e.message) + '</div>'; });
+}
+function crsAdmRender(month, saves, orders) {
+  orders = orders || [];
+  var out = document.getElementById('crsAdmOut');
+  if (!out) return;
+  if (!saves.length && !orders.length) { out.innerHTML = '<div style="color:var(--ink-3);">Rien en ' + escape(month) + ' (ni prise, ni commande).</div>'; return; }
+  // Agrégat par désignation (normalisée) × unité
+  var agg = {};
+  saves.forEach(function (s) {
+    (s.items || []).forEach(function (it) {
+      var k = normalize(it.d) + '|' + it.u;
+      if (!agg[k]) agg[k] = { d: it.d, u: it.u, q: 0 };
+      agg[k].q = Math.round((agg[k].q + Number(it.q)) * 1000) / 1000;
+    });
+  });
+  var rows = Object.keys(agg).map(function (k) { return agg[k]; })
+    .sort(function (a, b) { return a.d.localeCompare(b.d, 'fr'); });
+  // ---- Volet 1 : 🧺 Prises (réserve) → facture ----
+  var h = '<div class="crs-adm-sec">🧺 Prises dans la réserve <span style="font-weight:400; color:var(--ink-3);">(' + saves.length + ')</span></div>';
+  if (!saves.length) {
+    h += '<div style="color:var(--ink-3); font-size:13px;">Aucune prise ce mois-ci.</div>';
+  } else {
+    h += '<div style="font-size:13.5px; margin:8px 0;"><b>' + rows.length + '</b> produit(s), <b>' + saves.length + '</b> prise(s) en ' + escape(month) + '</div>';
+    h += '<table class="crs-adm-table"><thead><tr><th>Désignation</th><th style="text-align:right;">Total</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      h += '<tr><td>' + escape(r.d) + '</td><td style="text-align:right; white-space:nowrap;"><b>' + escape(crsQtyStr(r.q, r.u)) + '</b></td></tr>';
+    });
+    h += '</tbody></table>';
+    // Détail par jour (déplié simple)
+    h += '<div class="ttm-label" style="margin-top:12px;">Détail des prises</div>';
+    var byDay = {};
+    saves.forEach(function (s) { (byDay[s.day] = byDay[s.day] || []).push(s); });
+    Object.keys(byDay).sort().forEach(function (day) {
+      h += '<div style="font-size:13px; font-weight:700; margin-top:8px;">' + dtmFrDay(day) + '</div>';
+      byDay[day].forEach(function (s) {
+        var t = (s.at || '').slice(11, 16);
+        h += '<div style="font-size:12.5px; color:var(--ink-2); margin:2px 0 2px 8px;">👤 ' + escape(s.personne || '?') + (t ? ' · ' + t : '') + ' — ' + (s.items || []).map(function (it) { return escape(it.d) + ' (' + escape(crsQtyStr(it.q, it.u)) + (it.n ? ' — 💬 ' + escape(it.n) : '') + ')'; }).join(', ') + '</div>';
+      });
+    });
+  }
+  // ---- Volet 2 : 📲 Commandes envoyées (journalisées à la copie WhatsApp, v190) ----
+  h += '<div class="crs-adm-sec" style="margin-top:16px;">📲 Commandes envoyées <span style="font-weight:400; color:var(--ink-3);">(' + orders.length + ')</span></div>';
+  if (!orders.length) {
+    h += '<div style="color:var(--ink-3); font-size:13px;">Aucune commande copiée ce mois-ci.</div>';
+  } else {
+    var byDayO = {};
+    orders.forEach(function (o) { (byDayO[o.day] = byDayO[o.day] || []).push(o); });
+    Object.keys(byDayO).sort().forEach(function (day) {
+      h += '<div style="font-size:13px; font-weight:700; margin-top:8px;">' + dtmFrDay(day) + '</div>';
+      byDayO[day].forEach(function (o) {
+        var t = (o.at || '').slice(11, 16);
+        h += '<div class="crs-save" style="margin:4px 0 6px 0;"><div class="crs-save-head"><span>👤 <b>' + escape(o.personne || '?') + '</b>' + (t ? ' · ' + t : '') + (o.updatedAt ? ' · <span style="color:var(--ink-3);">corrigée</span>' : '') + '</span><span class="dtm-fmt">' + (o.items || []).length + ' art.</span></div>';
+        if (o.note) h += '<div class="crs-note" style="margin-left:0;">📝 ' + escape(o.note) + '</div>';
+        (o.items || []).forEach(function (it) {
+          h += '<div class="crs-item"><span class="crs-item-d">' + escape(it.d) + '</span><span class="dtm-fmt">' + escape(crsQtyStr(it.q, it.u)) + '</span></div>';
+          if (it.n) h += '<div class="crs-note">💬 ' + escape(it.n) + '</div>';
+        });
+        h += '</div>';
+      });
+    });
+  }
+  h += '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">';
+  h += '<button type="button" class="sess-logout-btn" id="crsAdmCopy">📋 Copier le récap</button>';
+  h += '<button type="button" class="sess-logout-btn" id="crsAdmXlsx">⬇ Excel</button>';
+  var cur = new Date().toISOString().slice(0, 7);
+  if (month < cur) h += '<button type="button" class="sess-logout-btn" id="crsAdmPurge" style="color:var(--danger);">🗑 Purger ' + escape(month) + '</button>';
+  h += '</div>';
+  out.innerHTML = h;
+  var cp = document.getElementById('crsAdmCopy');
+  if (cp) cp.addEventListener('click', function () {
+    var txt = ['🍊 Courses Cream — ' + month].concat(rows.map(function (r) { return '• ' + r.d + ' — ' + crsQtyStr(r.q, r.u); })).join('\n');
+    (async function () {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(txt);
+        else {
+          var tmp = document.createElement('textarea'); tmp.value = txt; document.body.appendChild(tmp);
+          tmp.select(); document.execCommand('copy'); document.body.removeChild(tmp);
+        }
+        toast('Récap copié 📋');
+      } catch (e) { toast('Copie impossible : ' + e.message); }
+    })();
+  });
+  var xb = document.getElementById('crsAdmXlsx');
+  if (xb) xb.addEventListener('click', function () {
+    try {
+      if (typeof XLSX === 'undefined') throw new Error('SheetJS non chargé. Recharge l\'app.');
+      var wb = XLSX.utils.book_new();
+      var tot = [['Désignation', 'Quantité', 'Unité', 'Prix unitaire', 'Total']];
+      rows.forEach(function (r) { tot.push([r.d, r.q, r.u, '', '']); });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tot), 'Totaux');
+      var det = [['Jour', 'Heure', 'Personne', 'Désignation', 'Quantité', 'Unité', 'Commentaire']];
+      saves.forEach(function (s) {
+        (s.items || []).forEach(function (it) { det.push([s.day, (s.at || '').slice(11, 16), s.personne || '?', it.d, it.q, it.u, it.n || '']); });
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(det), 'Détail');
+      var ord = [['Jour', 'Heure', 'Personne', 'Désignation', 'Quantité', 'Unité', 'Commentaire', 'Note globale']];
+      (orders || []).forEach(function (o) {
+        (o.items || []).forEach(function (it) { ord.push([o.day, (o.at || '').slice(11, 16), o.personne || '?', it.d, it.q, it.u, it.n || '', o.note || '']); });
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ord), 'Commandes');
+      var buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      var blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      var u2 = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = u2; a.download = 'courses_cream_' + month + '.xlsx';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(u2); }, 1000);
+    } catch (e) { toast('Erreur Excel : ' + e.message); }
+  });
+  var pg = document.getElementById('crsAdmPurge');
+  if (pg) pg.addEventListener('click', function () {
+    if (!confirm('Purger TOUTES les courses de ' + month + ' ? (à faire après facturation)')) return;
+    fetch(BACKEND_URL + '/crs/month/' + month, { method: 'DELETE', headers: { 'X-Admin-Token': loadAdminToken() }, signal: AbortSignal.timeout(20000) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
+        toast('Mois purgé (' + d.deleted + ' prise(s))');
+        crsAdmLoadMonth();
+      })
+      .catch(function (e) { toast('Erreur : ' + e.message); });
+  });
+}
+
 function dtmRenderAdmin(root) {
   var token = loadAdminToken();
   var head = '<div class="ttm-wrap">' + dtmHeadHtml();
@@ -12751,8 +13378,14 @@ function dtmRenderAdmin(root) {
     });
     return;
   }
-  root.innerHTML = head + '<div class="ttm-card" id="dtmAdmBody" style="color:var(--ink-3);">Chargement…</div></div>';
+  var crsCard = '<div class="ttm-card"><div class="ttm-label">🍊 Courses du mois (fruits & prépa) → facture globale</div>'
+    + '<div style="display:flex; gap:8px; align-items:center;">'
+    + '<input class="search" id="crsAdmMonth" type="month" value="' + new Date().toISOString().slice(0, 7) + '" style="flex:1; font-size:16px; padding:12px;">'
+    + '<button type="button" class="sess-logout-btn" id="crsAdmLoad" style="min-height:44px;">Charger</button></div>'
+    + '<div id="crsAdmOut" style="margin-top:10px;"></div></div>';
+  root.innerHTML = head + '<div class="ttm-card" id="dtmAdmBody" style="color:var(--ink-3);">Chargement…</div>' + crsCard + '</div>';
   dtmBindHead(root);
+  crsAdmBind();
 
   fetch(BACKEND_URL + '/dtm/admin', { headers: { 'X-Admin-Token': token }, signal: AbortSignal.timeout(20000) })
     .then(function (r) {
