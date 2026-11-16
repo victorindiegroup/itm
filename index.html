@@ -432,6 +432,9 @@
   .crs-save { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:8px 10px; margin-bottom:10px; }
   .crs-save-head { display:flex; align-items:center; justify-content:space-between; font-size:13px; color:var(--ink-2); margin-bottom:2px; }
   .crs-note { font-size:12px; color:var(--ink-2); font-style:italic; margin:-4px 0 5px 2px; overflow-wrap:anywhere; }
+  /* Unités Courses en grille uniforme (v196) : 3 colonnes, pastilles de même taille */
+  .crs-units { display:grid; grid-template-columns:repeat(3, 1fr); gap:7px; margin-top:10px; }
+  .crs-units .dtm-chip { margin:0; width:100%; min-height:42px; font-size:14.5px; text-align:center; white-space:nowrap; }
   /* Menu d'entrée ETM (v193) */
   .dtm-menu-card .m-title { font-size:21px; letter-spacing:-.4px; }
   .dtm-menu-card .m-ico { font-size:30px; }
@@ -2171,7 +2174,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v195';
+const APP_VERSION = 'v197';
 
 /* === ITM APP === */
 (function(){
@@ -12216,7 +12219,7 @@ function dtmHeadHtml() {
   if (!inMenu) h += '<button type="button" id="dtmBack" aria-label="Retour au menu" style="background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; width:38px; height:38px; font-size:17px; color:var(--ink-2); flex:0 0 auto;">←</button>';
   h += '<h2>🛒 L\'Épicerie</h2><span class="ttm-sub">Pablo ↔ Cream</span>';
   h += '<button type="button" id="dtmWho" style="margin-left:auto; background:var(--accent-soft, var(--surface)); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; font-weight:600; color:var(--ink);">👤 ' + escape(whoLbl) + '</button>';
-  h += '<button type="button" id="dtmHome" style="background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; color:var(--ink-2);">🏠 Menu</button></div>';
+  h += '<button type="button" id="dtmHome" style="background:var(--surface); border:1px solid var(--border-strong); border-radius:100px; padding:6px 12px; font-size:12.5px; color:var(--ink-2);">' + (inMenu ? '🏠 Menu' : '🛒 Menu') + '</button></div>';
   var inBtl = (dtmView === 'cap' || dtmView === 'rev' || dtmView === 'hist');
   var badge = nOpen ? ' <span class="dtm-tabbadge">' + nOpen + '</span>' : '';
   if (inBtl) {
@@ -12230,7 +12233,14 @@ function dtmHeadHtml() {
 }
 function dtmBindHead(root) {
   var home = document.getElementById('dtmHome');
-  if (home) home.addEventListener('click', showModeScreen);
+  // v197 (Victor) : « Menu » est HIÉRARCHIQUE — dans une section (Transferts/Courses/admin) il
+  // ramène d'abord au choix des deux ; sur ce choix, il ramène à l'accueil OTM (ITM/ETM).
+  if (home) home.addEventListener('click', function () {
+    if (dtmView === 'menu' || dtmView === 'who') { showModeScreen(); return; }
+    dtmView = 'menu';
+    dtmDone = null;
+    renderDtm();
+  });
   var who = document.getElementById('dtmWho');
   if (who) who.addEventListener('click', function () { dtmView = 'who'; renderDtm(); });
   var bk = document.getElementById('dtmBack');
@@ -12853,7 +12863,7 @@ var dtmCrsUnit = 'kg';
 var dtmCrsDico = null;             // [{d, u}] — désignations connues + dernier conditionnement
 var CRS_PEND_KEY = 'itm_crs_pending_v1';
 var CRS_ORDER_KEY = 'itm_crs_order_v1';
-var CRS_UNITS = ['kg', 'pièce', 'L'];
+var CRS_UNITS = ['kg', 'pièce', 'L', 'colis', 'barquette'];
 
 function crsLoadList(key) {
   try { var v = JSON.parse(localStorage.getItem(key) || 'null'); if (v && Array.isArray(v.items)) return v; } catch (e) {}
@@ -12862,7 +12872,8 @@ function crsLoadList(key) {
 function crsSaveList(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
 function crsQtyStr(q, u) {
   var n = String(q).replace('.', ',');
-  return n + ' ' + (u === 'pièce' ? (Number(q) > 1 ? 'pièces' : 'pièce') : u);
+  var plural = { 'pièce': 'pièces', 'barquette': 'barquettes' };   // kg, L, colis : invariables
+  return n + ' ' + (Number(q) > 1 && plural[u] ? plural[u] : u);
 }
 function crsDicoCoerce(x) {
   if (typeof x === 'string') return x ? { d: x, u: 'kg' } : null;
@@ -12954,8 +12965,8 @@ function dtmRenderCourses(root) {
   h += '<input class="search" id="crsIn" type="text" placeholder="Désignation libre (ex. Orange à jus)…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="font-size:17px; padding:14px;">';
   h += '<div class="ttm-results" id="crsSug" style="display:none; max-height:34vh; position:absolute; left:0; right:0; z-index:30;"></div>';
   h += '</div>';
-  h += '<div style="display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap;">';
-  h += '<div class="ttm-qty" style="margin:0;"><button type="button" id="crsQm">−</button><input type="text" inputmode="decimal" id="crsQty" value="1" style="width:60px; text-align:center; font-size:17px;"><button type="button" id="crsQp">+</button></div>';
+  h += '<div class="ttm-qty" style="margin:10px 0 0; justify-content:center;"><button type="button" id="crsQm">−</button><input type="text" inputmode="decimal" id="crsQty" value="1" style="width:72px; text-align:center; font-size:17px;"><button type="button" id="crsQp">+</button></div>';
+  h += '<div class="crs-units">';
   CRS_UNITS.forEach(function (u) {
     h += '<button type="button" class="dtm-chip crs-unit' + (dtmCrsUnit === u ? ' on' : '') + '" data-cu="' + u + '">' + u + '</button>';
   });
