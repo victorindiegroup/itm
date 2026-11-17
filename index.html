@@ -492,7 +492,7 @@
   [data-pv] { cursor:zoom-in; }
   #dtmPhotoOv { position:fixed; inset:0; z-index:1200; background:rgba(12,12,9,.93); display:grid; overflow:auto; }
   #dtmPhotoOv img { margin:auto; max-width:96vw; max-height:90vh; border-radius:10px; cursor:zoom-in; }
-  #dtmPhotoOv img.zoomed { max-width:none; max-height:none; width:210vw; cursor:zoom-out; }
+  #dtmPhotoOv img.zoomed { max-width:none; max-height:none; cursor:zoom-out; }
   #dtmPhotoOv .pv-x { position:fixed; top:calc(10px + env(safe-area-inset-top)); right:14px; background:#fff; color:#1b1b18; border:none; border-radius:100px; width:42px; height:42px; font-size:18px; z-index:1201; }
   #dtmPhotoOv .pv-hint { position:fixed; bottom:calc(14px + env(safe-area-inset-bottom)); left:0; right:0; text-align:center; color:rgba(255,255,255,.65); font-size:12.5px; pointer-events:none; }
   .dtm-hist-lines { margin-top:6px; border-top:1px dashed var(--border); padding-top:4px; }
@@ -2232,7 +2232,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v204';
+const APP_VERSION = 'v205';
 
 /* === ITM APP === */
 (function(){
@@ -11832,8 +11832,8 @@ function init(){
 
 var DTM_PABLO = 'Pablo (Saint-Barthélemy)';
 var DTM_CREAM = 'Cream (Saint-Barthélemy)';
-var DTM_MAX_PHOTO_PX = 1280;   // v204 : compromis netteté/poids (étiquettes lisibles, ~35-40 % plus léger que 1400/0.72)
-var DTM_JPEG_Q = 0.70;
+var DTM_MAX_PHOTO_PX = 2048;   // v205 : photo « normale » — zoom net 1:1 dans la visionneuse (limite Worker ~2 Mo : OK)
+var DTM_JPEG_Q = 0.72;
 var DTM_FORMATS = ['75cl', '50cl', 'Magnum', 'Jéroboam', 'Autre'];
 
 var dtmView = 'menu';           // 'menu' | 'cap' | 'rev' | 'hist' | 'crs' | 'adm' | 'who' (v193 : menu d'entrée)
@@ -12165,7 +12165,15 @@ function dtmPhotoView(url) {
   ov.id = 'dtmPhotoOv';
   ov.innerHTML = '<img src="' + escape(url) + '" alt=""><button type="button" class="pv-x" aria-label="Fermer">✕</button><div class="pv-hint">Tape la photo pour zoomer · à côté pour fermer</div>';
   document.body.appendChild(ov);
-  ov.querySelector('img').addEventListener('click', function (e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); });
+  var pvImg = ov.querySelector('img');
+  pvImg.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (pvImg.classList.toggle('zoomed')) {
+      // zoom à la résolution NATIVE de la photo (1:1 pixel écran) — le plus net possible
+      var dpr = window.devicePixelRatio || 1;
+      pvImg.style.width = Math.max(Math.round(pvImg.naturalWidth / dpr), Math.round(window.innerWidth * 1.6)) + 'px';
+    } else pvImg.style.width = '';
+  });
   ov.addEventListener('click', function () { ov.remove(); });
 }
 // délégation en phase capture : le tap sur une miniature ne replie plus la carte du jour
