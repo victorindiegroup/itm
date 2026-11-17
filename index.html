@@ -2232,7 +2232,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v206';
+const APP_VERSION = 'v207';
 
 /* === ITM APP === */
 (function(){
@@ -13648,6 +13648,7 @@ function dtmRenderDone() {
      dans l'admin → facture globale Pablo → Cream (prix via Yanis).
    • « Commande » : même saisie → message WhatsApp à copier dans la discussion (rien côté serveur). */
 var dtmCrsSeg = 'take';            // 'take' | 'order'
+var dtmCrsHistSeg = 'take';        // sous-onglet de l'historique Courses : 'take' (prises) | 'order' (commandes)
 var dtmCrsUnit = 'kg';
 var dtmCrsDico = null;             // [{d, u}] — désignations connues + dernier conditionnement
 var CRS_PEND_KEY = 'itm_crs_pending_v1';
@@ -13939,34 +13940,46 @@ function crsBind(isTake, list) {
 /* Historique Courses opérateur (v193) : prises + commandes des 14 derniers jours (GET /crs/recent, public) */
 function crsLoadHistory() {
   // v206 : instantané depuis le snapshot, rafraîchi en arrière-plan
+  // v207 : sous-onglets 🧺 Prises / 📲 Commandes — plus besoin de scroller toutes les
+  // prises du mois pour consulter une simple info de commande
   dtmSWR('crsrecent', BACKEND_URL + '/crs/recent', function (d) {
       var body = document.getElementById('crsHistBody');
       if (!body || !d || !d.ok) return;
-      var h = '';
-      function section(title, recs, emptyTxt) {
-        h += '<div class="crs-adm-sec">' + title + ' <span style="font-weight:400; color:var(--ink-3);">(' + recs.length + ')</span></div>';
-        if (!recs.length) { h += '<div style="color:var(--ink-3); font-size:13px;">' + emptyTxt + '</div>'; return; }
-        var byDay = {};
-        recs.forEach(function (x) { (byDay[x.day] = byDay[x.day] || []).push(x); });
-        Object.keys(byDay).sort().reverse().forEach(function (day) {
-          h += '<div style="font-size:13px; font-weight:700; margin-top:8px;">' + dtmFrDay(day) + '</div>';
-          byDay[day].forEach(function (s) {
-            var t = (s.at || '').slice(11, 16);
-            h += '<div class="crs-save" style="margin:4px 0 6px 0;"><div class="crs-save-head"><span>👤 <b>' + escape(s.personne || '?') + '</b>' + (t ? ' · ' + t : '') + '</span><span class="dtm-fmt">' + (s.items || []).length + ' art.</span></div>';
-            if (s.note) h += '<div class="crs-note" style="margin-left:0;">📝 ' + escape(s.note) + '</div>';
-            (s.items || []).forEach(function (it) {
-              h += '<div class="crs-item"><span class="crs-item-d">' + escape(it.d) + '</span><span class="dtm-fmt">' + escape(crsQtyStr(it.q, it.u)) + '</span></div>';
-          if (it.n) h += '<div class="crs-note">💬 ' + escape(it.n) + '</div>';
+      var render = function () {
+        var h = '';
+        var saves = d.saves || [], orders = d.orders || [];
+        h += '<div class="crs-seg" style="margin-bottom:10px;">';
+        h += '<button type="button" data-chseg="take" class="' + (dtmCrsHistSeg === 'take' ? 'on' : '') + '">🧺 Prises <span style="font-weight:400;">(' + saves.length + ')</span></button>';
+        h += '<button type="button" data-chseg="order" class="' + (dtmCrsHistSeg === 'order' ? 'on' : '') + '">📲 Commandes <span style="font-weight:400;">(' + orders.length + ')</span></button>';
+        h += '</div>';
+        function section(recs, emptyTxt) {
+          if (!recs.length) { h += '<div style="color:var(--ink-3); font-size:13px;">' + emptyTxt + '</div>'; return; }
+          var byDay = {};
+          recs.forEach(function (x) { (byDay[x.day] = byDay[x.day] || []).push(x); });
+          Object.keys(byDay).sort().reverse().forEach(function (day) {
+            h += '<div style="font-size:13px; font-weight:700; margin-top:8px;">' + dtmFrDay(day) + '</div>';
+            byDay[day].forEach(function (s) {
+              var t = (s.at || '').slice(11, 16);
+              h += '<div class="crs-save" style="margin:4px 0 6px 0;"><div class="crs-save-head"><span>👤 <b>' + escape(s.personne || '?') + '</b>' + (t ? ' · ' + t : '') + '</span><span class="dtm-fmt">' + (s.items || []).length + ' art.</span></div>';
+              if (s.note) h += '<div class="crs-note" style="margin-left:0;">📝 ' + escape(s.note) + '</div>';
+              (s.items || []).forEach(function (it) {
+                h += '<div class="crs-item"><span class="crs-item-d">' + escape(it.d) + '</span><span class="dtm-fmt">' + escape(crsQtyStr(it.q, it.u)) + '</span></div>';
+                if (it.n) h += '<div class="crs-note">💬 ' + escape(it.n) + '</div>';
+              });
+              h += '</div>';
             });
-            h += '</div>';
           });
+        }
+        if (dtmCrsHistSeg === 'order') section(orders, 'Aucune commande ces 14 derniers jours.');
+        else section(saves, 'Aucune prise ces 14 derniers jours.');
+        h += '<div style="color:var(--ink-3); font-size:11.5px; margin-top:10px;">14 derniers jours — l\'historique complet du mois est côté admin.</div>';
+        body.innerHTML = h;
+        body.style.color = '';
+        body.querySelectorAll('[data-chseg]').forEach(function (b) {
+          b.addEventListener('click', function () { dtmCrsHistSeg = b.dataset.chseg; render(); });
         });
-      }
-      section('🧺 Prises dans la réserve', d.saves || [], 'Aucune prise ces 14 derniers jours.');
-      section('📲 Commandes envoyées', d.orders || [], 'Aucune commande ces 14 derniers jours.');
-      h += '<div style="color:var(--ink-3); font-size:11.5px; margin-top:10px;">14 derniers jours — l\'historique complet du mois est côté admin.</div>';
-      body.innerHTML = h;
-      body.style.color = '';
+      };
+      render();
     })
     .catch(function () {
       var body = document.getElementById('crsHistBody');
@@ -14062,34 +14075,63 @@ function dtmRemindBind() {
 function crsAdmBind() {
   var btn = document.getElementById('crsAdmLoad');
   if (!btn) return;
-  btn.addEventListener('click', function () { crsAdmLoadMonth(); });
+  btn.addEventListener('click', function () { crsAdmLoadRange(); });
 }
-function crsAdmMonth() {
-  var inp = document.getElementById('crsAdmMonth');
-  var v = (inp && inp.value) || '';
-  return /^\d{4}-\d{2}$/.test(v) ? v : new Date().toISOString().slice(0, 7);
+/* v207 : période libre — bornes lues, remises dans l'ordre, défaut = mois en cours */
+function crsAdmRange() {
+  var today = new Date().toISOString().slice(0, 10);
+  var f = (document.getElementById('crsAdmFrom') || {}).value || '';
+  var t = (document.getElementById('crsAdmTo') || {}).value || '';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) f = today.slice(0, 7) + '-01';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) t = today;
+  if (t < f) { var tmp = f; f = t; t = tmp; }
+  return { from: f, to: t };
 }
-function crsAdmLoadMonth() {
+function crsAdmLoadRange() {
   var out = document.getElementById('crsAdmOut');
   if (!out) return;
-  var month = crsAdmMonth();
+  var rg = crsAdmRange();
+  // mois calendaires couverts par la période (le Worker sert par mois ; filtrage au jour ensuite)
+  var months = [];
+  var m = rg.from.slice(0, 7), end = rg.to.slice(0, 7);
+  while (m <= end && months.length < 14) {
+    months.push(m);
+    var y = +m.slice(0, 4), mo = +m.slice(5, 7) + 1;
+    if (mo > 12) { mo = 1; y++; }
+    m = y + '-' + String(mo).padStart(2, '0');
+  }
   out.innerHTML = '<div style="color:var(--ink-3);">Chargement…</div>';
-  fetch(BACKEND_URL + '/crs/month/' + month, { headers: { 'X-Admin-Token': loadAdminToken() }, signal: AbortSignal.timeout(20000) })
-    .then(function (r) {
-      if (r.status === 401) throw new Error('Token admin invalide');
-      return r.json();
-    })
-    .then(function (d) {
-      if (!d || !d.ok) throw new Error((d && d.error) || 'réponse invalide');
-      crsAdmRender(month, d.saves || [], d.orders || []);
-    })
-    .catch(function (e) { out.innerHTML = '<div style="color:var(--danger);">Erreur : ' + escape(e.message) + '</div>'; });
+  Promise.all(months.map(function (mm) {
+    return fetch(BACKEND_URL + '/crs/month/' + mm, { headers: { 'X-Admin-Token': loadAdminToken() }, signal: AbortSignal.timeout(20000) })
+      .then(function (r) {
+        if (r.status === 401) throw new Error('Token admin invalide');
+        return r.json();
+      })
+      .then(function (d) {
+        if (!d || !d.ok) throw new Error((d && d.error) || 'réponse invalide');
+        return d;
+      });
+  })).then(function (ds) {
+    var saves = [], orders = [];
+    ds.forEach(function (d) { saves = saves.concat(d.saves || []); orders = orders.concat(d.orders || []); });
+    var inR = function (x) { return x.day >= rg.from && x.day <= rg.to; };
+    saves = saves.filter(inR);
+    orders = orders.filter(inR);
+    // la purge (par mois entier côté serveur) n'est proposée que si la période EST un mois calendaire entier passé
+    var purgeMonth = null;
+    var fm = rg.from.slice(0, 7);
+    var lastDay = fm + '-' + String(new Date(Date.UTC(+fm.slice(0, 4), +fm.slice(5, 7), 0)).getUTCDate()).padStart(2, '0');
+    if (rg.to.slice(0, 7) === fm && rg.from.slice(8) === '01' && rg.to === lastDay && fm < new Date().toISOString().slice(0, 7)) purgeMonth = fm;
+    var label = 'du ' + dtmFrDay(rg.from) + ' au ' + dtmFrDay(rg.to);
+    crsAdmRender(label, saves, orders, { from: rg.from, to: rg.to, purgeMonth: purgeMonth });
+  }).catch(function (e) { out.innerHTML = '<div style="color:var(--danger);">Erreur : ' + escape(e.message) + '</div>'; });
 }
-function crsAdmRender(month, saves, orders) {
+function crsAdmRender(month, saves, orders, opts) {
+  opts = opts || { from: '', to: '', purgeMonth: null };
   orders = orders || [];
   var out = document.getElementById('crsAdmOut');
   if (!out) return;
-  if (!saves.length && !orders.length) { out.innerHTML = '<div style="color:var(--ink-3);">Rien en ' + escape(month) + ' (ni prise, ni commande).</div>'; return; }
+  if (!saves.length && !orders.length) { out.innerHTML = '<div style="color:var(--ink-3);">Rien ' + escape(month) + ' (ni prise, ni commande).</div>'; return; }
   // Agrégat par désignation (normalisée) × unité
   var agg = {};
   saves.forEach(function (s) {
@@ -14104,9 +14146,9 @@ function crsAdmRender(month, saves, orders) {
   // ---- Volet 1 : 🧺 Prises (réserve) → facture ----
   var h = '<div class="crs-adm-sec">🧺 Prises dans la réserve <span style="font-weight:400; color:var(--ink-3);">(' + saves.length + ')</span></div>';
   if (!saves.length) {
-    h += '<div style="color:var(--ink-3); font-size:13px;">Aucune prise ce mois-ci.</div>';
+    h += '<div style="color:var(--ink-3); font-size:13px;">Aucune prise sur la période.</div>';
   } else {
-    h += '<div style="font-size:13.5px; margin:8px 0;"><b>' + rows.length + '</b> produit(s), <b>' + saves.length + '</b> prise(s) en ' + escape(month) + '</div>';
+    h += '<div style="font-size:13.5px; margin:8px 0;"><b>' + rows.length + '</b> produit(s), <b>' + saves.length + '</b> prise(s) ' + escape(month) + '</div>';
     h += '<table class="crs-adm-table"><thead><tr><th>Désignation</th><th style="text-align:right;">Total</th></tr></thead><tbody>';
     rows.forEach(function (r) {
       h += '<tr><td>' + escape(r.d) + '</td><td style="text-align:right; white-space:nowrap;"><b>' + escape(crsQtyStr(r.q, r.u)) + '</b></td></tr>';
@@ -14127,7 +14169,7 @@ function crsAdmRender(month, saves, orders) {
   // ---- Volet 2 : 📲 Commandes envoyées (journalisées à la copie WhatsApp, v190) ----
   h += '<div class="crs-adm-sec" style="margin-top:16px;">📲 Commandes envoyées <span style="font-weight:400; color:var(--ink-3);">(' + orders.length + ')</span></div>';
   if (!orders.length) {
-    h += '<div style="color:var(--ink-3); font-size:13px;">Aucune commande copiée ce mois-ci.</div>';
+    h += '<div style="color:var(--ink-3); font-size:13px;">Aucune commande copiée sur la période.</div>';
   } else {
     var byDayO = {};
     orders.forEach(function (o) { (byDayO[o.day] = byDayO[o.day] || []).push(o); });
@@ -14148,8 +14190,7 @@ function crsAdmRender(month, saves, orders) {
   h += '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">';
   h += '<button type="button" class="sess-logout-btn" id="crsAdmCopy">📋 Copier le récap</button>';
   h += '<button type="button" class="sess-logout-btn" id="crsAdmXlsx">⬇ Excel</button>';
-  var cur = new Date().toISOString().slice(0, 7);
-  if (month < cur) h += '<button type="button" class="sess-logout-btn" id="crsAdmPurge" style="color:var(--danger);">🗑 Purger ' + escape(month) + '</button>';
+  if (opts.purgeMonth) h += '<button type="button" class="sess-logout-btn" id="crsAdmPurge" style="color:var(--danger);">🗑 Purger ' + escape(opts.purgeMonth) + '</button>';
   h += '</div>';
   out.innerHTML = h;
   var cp = document.getElementById('crsAdmCopy');
@@ -14188,20 +14229,20 @@ function crsAdmRender(month, saves, orders) {
       var blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       var u2 = URL.createObjectURL(blob);
       var a = document.createElement('a');
-      a.href = u2; a.download = 'courses_cream_' + month + '.xlsx';
+      a.href = u2; a.download = 'courses_cream_' + (opts.from && opts.to ? opts.from + '_au_' + opts.to : 'periode') + '.xlsx';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(function () { URL.revokeObjectURL(u2); }, 1000);
     } catch (e) { toast('Erreur Excel : ' + e.message); }
   });
   var pg = document.getElementById('crsAdmPurge');
   if (pg) pg.addEventListener('click', function () {
-    if (!confirm('Purger TOUTES les courses de ' + month + ' ? (à faire après facturation)')) return;
-    fetch(BACKEND_URL + '/crs/month/' + month, { method: 'DELETE', headers: { 'X-Admin-Token': loadAdminToken() }, signal: AbortSignal.timeout(20000) })
+    if (!confirm('Purger TOUTES les courses de ' + opts.purgeMonth + ' ? (à faire après facturation)')) return;
+    fetch(BACKEND_URL + '/crs/month/' + opts.purgeMonth, { method: 'DELETE', headers: { 'X-Admin-Token': loadAdminToken() }, signal: AbortSignal.timeout(20000) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
         toast('Mois purgé (' + d.deleted + ' prise(s))');
-        crsAdmLoadMonth();
+        crsAdmLoadRange();
       })
       .catch(function (e) { toast('Erreur : ' + e.message); });
   });
@@ -14224,10 +14265,13 @@ function dtmRenderAdmin(root) {
   }
   var remindCard = '<div class="ttm-card"><div class="ttm-label">⏰ Relance du matin (mail si la veille n\'est pas passée en caisse)</div>'
     + '<div id="dtmRemindBody" style="color:var(--ink-3); font-size:13px;">Chargement…</div></div>';
-  var crsCard = '<div class="ttm-card"><div class="ttm-label">🍊 Courses du mois (fruits & prépa) → facture globale</div>'
-    + '<div style="display:flex; gap:8px; align-items:center;">'
-    + '<input class="search" id="crsAdmMonth" type="month" value="' + new Date().toISOString().slice(0, 7) + '" style="flex:1; font-size:16px; padding:12px;">'
-    + '<button type="button" class="sess-logout-btn" id="crsAdmLoad" style="min-height:44px;">Charger</button></div>'
+  // v207 : période LIBRE (du… au…) — les inventaires de Victor ne tombent pas pile sur le mois calendaire
+  var admToday = new Date().toISOString().slice(0, 10);
+  var crsCard = '<div class="ttm-card"><div class="ttm-label">🍊 Courses de la période (fruits & prépa) → facture globale</div>'
+    + '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">'
+    + '<label style="flex:1; min-width:130px; font-size:13px; color:var(--ink-2);">du<input class="search" id="crsAdmFrom" type="date" value="' + admToday.slice(0, 7) + '-01" style="width:100%; font-size:16px; padding:12px; margin-top:3px;"></label>'
+    + '<label style="flex:1; min-width:130px; font-size:13px; color:var(--ink-2);">au<input class="search" id="crsAdmTo" type="date" value="' + admToday + '" style="width:100%; font-size:16px; padding:12px; margin-top:3px;"></label>'
+    + '<button type="button" class="sess-logout-btn" id="crsAdmLoad" style="min-height:48px; align-self:flex-end;">Charger</button></div>'
     + '<div id="crsAdmOut" style="margin-top:10px;"></div></div>';
   root.innerHTML = head + '<div class="ttm-card" id="dtmAdmBody" style="color:var(--ink-3);">Chargement…</div>' + remindCard + crsCard + '</div>';
   dtmBindHead(root);
