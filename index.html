@@ -2232,7 +2232,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v208';
+const APP_VERSION = 'v209';
 
 /* === ITM APP === */
 (function(){
@@ -11848,6 +11848,7 @@ var dtmLinesCache = null;       // dernières lignes ouvertes (serveur)
 var dtmBtlView = 'cap';         // dernier sous-onglet Bouteilles (Capture/Caisse) — v192
 var dtmDone = null;             // résultat de la dernière clôture (écran done)
 var dtmMemQueue = [];           // fallback si IndexedDB indisponible
+var dtmQueueSnap = null;        // v209 : miroir MÉMOIRE de la file — rendu caisse 100 % synchrone
 var dtmFlushing = false;
 /* Profils nominatifs : qui fait la douane (historique par personne).
    Liste synchronisée entre téléphones via le KV du Worker (slug /batches/dtm-profils),
@@ -12048,6 +12049,7 @@ function dtmDb() {
 }
 function dtmQueuePut(rec) {
   if (dtmDemoOn) { dtmDemoQueue.push(rec); return Promise.resolve(); }   // démo : jamais IndexedDB
+  if (dtmQueueSnap) dtmQueueSnap.push(rec); else dtmQueueSnap = [rec];   // v209 : miroir à jour AVANT l'IDB
   return dtmDb().then(function (db) {
     return new Promise(function (resolve, reject) {
       var tx = db.transaction('queue', 'readwrite');
@@ -12062,13 +12064,14 @@ function dtmQueueAll() {
   return dtmDb().then(function (db) {
     return new Promise(function (resolve, reject) {
       var rq = db.transaction('queue', 'readonly').objectStore('queue').getAll();
-      rq.onsuccess = function () { resolve(rq.result || []); };
+      rq.onsuccess = function () { var res = rq.result || []; dtmQueueSnap = res.slice(); resolve(res); };
       rq.onerror = function () { reject(rq.error); };
     });
-  }).catch(function () { return dtmMemQueue.slice(); });
+  }).catch(function () { dtmQueueSnap = dtmMemQueue.slice(); return dtmQueueSnap.slice(); });
 }
 function dtmQueueDel(clientId) {
   if (dtmDemoOn) { dtmDemoQueue = dtmDemoQueue.filter(function (r) { return r.clientId !== clientId; }); return Promise.resolve(); }
+  if (dtmQueueSnap) dtmQueueSnap = dtmQueueSnap.filter(function (r) { return r.clientId !== clientId; });
   return dtmDb().then(function (db) {
     return new Promise(function (resolve, reject) {
       var tx = db.transaction('queue', 'readwrite');
@@ -13397,10 +13400,10 @@ function dtmRenderReview(root) {
 
   if (dtmDone) { dtmRenderDone(); return; }
 
-  // v206 : la caisse s'affiche immédiatement avec le dernier état connu, le serveur rafraîchit derrière
+  // v206/v209 : la caisse s'affiche immédiatement (état connu + miroir de la file), le serveur rafraîchit derrière
   if (!dtmStateCache) dtmStateCache = dtmSnapGet('state');
-  if (!dtmLinesCache || !dtmLinesCache.length) { var lsnap = dtmSnapGet('lines'); if (lsnap) dtmLinesCache = lsnap; }
-  var buildRev = function (lines, queue) {
+  if (!Array.isArray(dtmLinesCache)) { var lsnap = dtmSnapGet('lines'); if (lsnap) dtmLinesCache = lsnap; }
+  var buildRev = function (lines, queue, errMsg) {
     var body = document.getElementById('dtmRevBody');
     if (!body) return;
     var sig = JSON.stringify([lines, (queue || []).map(function (q) { return q.clientId; })]);
@@ -13423,7 +13426,7 @@ function dtmRenderReview(root) {
       });
     }
     if (!lines) {
-      h += '<div style="color:var(--danger); font-size:13.5px;">Impossible de charger les lignes (' + escape(r[1]._err || '') + '). Vérifie le réseau puis ré-ouvre cet onglet.</div>';
+      h += '<div style="color:var(--danger); font-size:13.5px;">Impossible de charger les lignes (' + escape(errMsg || '') + '). Vérifie le réseau puis ré-ouvre cet onglet.</div>';
       body.innerHTML = h; body.style.color = '';   // v206 : on garde le conteneur (#dtmRevBody + sig) pour le double rendu cache→réseau
       return;
     }
@@ -13539,17 +13542,21 @@ function dtmRenderReview(root) {
     });
   };
 
-  // instantané : dernier état connu + file locale…
-  dtmQueueAll().then(function (q0) {
-    if (dtmStateCache && dtmLinesCache && dtmLinesCache.length) buildRev(dtmLinesCache, q0 || []);
-  }).catch(function () {});
+  // instantané : dernier état connu + miroir mémoire de la file — AUCUNE attente, même caisse vide
+  if (dtmQueueSnap && dtmStateCache && Array.isArray(dtmLinesCache)) {
+    buildRev(dtmLinesCache, dtmQueueSnap.slice());
+  } else {
+    dtmQueueAll().then(function (q0) {
+      if (dtmStateCache && Array.isArray(dtmLinesCache)) buildRev(dtmLinesCache, q0 || []);
+    }).catch(function () {});
+  }
   // …puis le serveur (ré-affiché seulement si ça a changé)
   Promise.all([
     dtmFetchState(true),
     dtmFetchLines().catch(function (e) { return { _err: e.message }; }),
     dtmQueueAll()
   ]).then(function (r) {
-    buildRev(Array.isArray(r[1]) ? r[1] : null, r[2] || []);
+    buildRev(Array.isArray(r[1]) ? r[1] : null, r[2] || [], Array.isArray(r[1]) ? '' : (r[1] && r[1]._err));
   });
 }
 /* Changer le contenant d'une ligne depuis la caisse */
