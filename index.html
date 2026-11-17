@@ -2232,7 +2232,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v205';
+const APP_VERSION = 'v206';
 
 /* === ITM APP === */
 (function(){
@@ -11869,11 +11869,21 @@ function dtmPersonne() {
 }
 async function dtmFetchProfiles(force) {
   if (dtmProfilesList && !force) return dtmProfilesList;
+  // v206 : écran « Qui fait les courses ? » immédiat — snapshot d'abord, serveur en arrière-plan
+  if (!force && typeof dtmSnapGet === 'function') {
+    var snap = dtmSnapGet('profils');
+    if (snap && snap.length) {
+      dtmProfilesList = snap;
+      dtmFetchProfiles(true).catch(function () {});
+      return dtmProfilesList;
+    }
+  }
   try {
     var r = await fetch(BACKEND_URL + '/batches/dtm-profils', { signal: AbortSignal.timeout(12000) });
     var d = await r.json();
     if (d && d.ok && Array.isArray(d.batches) && d.batches.length) {
       dtmProfilesList = d.batches.filter(function (x) { return typeof x === 'string' && x.trim(); });
+      dtmSnapSet('profils', dtmProfilesList);
     }
   } catch (e) { /* hors-ligne : défauts */ }
   if (!dtmProfilesList || !dtmProfilesList.length) dtmProfilesList = DTM_PROFILES_DEFAULT.slice();
@@ -12111,14 +12121,51 @@ async function dtmFlushQueue() {
 setInterval(function () { if (dtmCanAccess()) dtmFlushQueue().catch(function () {}); }, 120000);
 window.addEventListener('online', function () { if (dtmCanAccess()) dtmFlushQueue().catch(function () {}); });
 
+/* ---- v206 : « CACHE D'ABORD, RÉSEAU ENSUITE » ----
+   Le réseau de SBH rend chaque aller-retour long (~1-2 s) : plutôt que d'envoyer moins,
+   chaque écran s'affiche INSTANTANÉMENT avec le dernier état connu (snapshot localStorage)
+   pendant que le serveur rafraîchit en arrière-plan (ré-affiché seulement si ça a changé).
+   Jamais utilisé en mode démo (le faux backend est déjà instantané, et on ne pollue pas
+   les snapshots réels avec des données de démo). */
+function dtmSnapGet(k) {
+  if (typeof dtmDemoOn !== 'undefined' && dtmDemoOn) return null;
+  try { return JSON.parse(localStorage.getItem('itm_snap_' + k) || 'null'); } catch (e) { return null; }
+}
+function dtmSnapSet(k, v) {
+  if (typeof dtmDemoOn !== 'undefined' && dtmDemoOn) return;
+  try { localStorage.setItem('itm_snap_' + k, JSON.stringify(v)); }
+  catch (e) {
+    // quota plein (vieux snapshots, détails de clôture avec vignettes) : on purge et on réessaie
+    try {
+      Object.keys(localStorage).filter(function (x) { return x.indexOf('itm_snap_') === 0; })
+        .forEach(function (x) { localStorage.removeItem(x); });
+      localStorage.setItem('itm_snap_' + k, JSON.stringify(v));
+    } catch (e2) {}
+  }
+}
+/* GET avec snapshot : apply(data, stale) est appelé tout de suite avec le snapshot s'il
+   existe, puis une seconde fois avec la réponse serveur si elle diffère. */
+function dtmSWR(snapKey, url, apply) {
+  var snap = dtmSnapGet(snapKey);
+  if (snap) { try { apply(snap, true); } catch (e) {} }
+  return fetch(url, { signal: AbortSignal.timeout(15000) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
+      if (JSON.stringify(d) !== JSON.stringify(snap)) { dtmSnapSet(snapKey, d); apply(d, false); }
+      return d;
+    });
+}
+
 /* ---- État (badge carte menu + bandeau « veille non clôturée ») ---- */
 async function dtmFetchState(force) {
   if (!dtmCanAccess()) return null;
+  if (!dtmStateCache) { var sn = dtmSnapGet('state'); if (sn) { dtmStateCache = sn; dtmModeBadge(); } }
   if (!force && dtmStateCache && Date.now() - dtmStateAt < 30000) return dtmStateCache;
   try {
     var r = await fetch(BACKEND_URL + '/dtm/state', { signal: AbortSignal.timeout(15000) });
     var d = await r.json();
-    if (d && d.ok) { dtmStateCache = d; dtmStateAt = Date.now(); dtmModeBadge(); }
+    if (d && d.ok) { dtmStateCache = d; dtmStateAt = Date.now(); dtmModeBadge(); dtmSnapSet('state', d); }
   } catch (e) { /* hors-ligne : on garde l'état précédent */ }
   return dtmStateCache;
 }
@@ -12154,6 +12201,7 @@ async function dtmFetchLines() {
   var d = await r.json();
   if (!d || !d.ok) throw new Error((d && d.error) || 'lignes indisponibles');
   dtmLinesCache = d.lines || [];
+  dtmSnapSet('lines', dtmLinesCache);
   return dtmLinesCache;
 }
 
@@ -13008,10 +13056,15 @@ function dtmRenderMenu(root) {
 function dtmRenderHist(root) {
   root.innerHTML = '<div class="ttm-wrap">' + dtmHeadHtml() + '<div class="ttm-card" id="dtmHistBody" style="color:var(--ink-3);">Chargement…</div></div>';
   dtmBindHead(root);
-  dtmFetchState(true).then(function () {
+  // v206 : affichage immédiat depuis l'état connu, rafraîchi en arrière-plan (sans re-render si rien n'a changé)
+  if (!dtmStateCache) dtmStateCache = dtmSnapGet('state');
+  var buildHist = function () {
     var body = document.getElementById('dtmHistBody');
     if (!body) return;
     var closures = (dtmStateCache && dtmStateCache.closures) || [];
+    var sig = JSON.stringify(closures);
+    if (body.dataset.sig === sig) return;
+    body.dataset.sig = sig;
     if (!closures.length) { body.innerHTML = '<div style="color:var(--ink-3);">Aucun passage en caisse pour l\'instant.</div>'; body.style.color = ''; return; }
     var byDay = {};
     closures.forEach(function (c) { (byDay[c.day] = byDay[c.day] || []).push(c); });
@@ -13035,28 +13088,37 @@ function dtmRenderHist(root) {
         if (det.style.display !== 'none') { det.style.display = 'none'; return; }
         det.style.display = '';
         if (det.innerHTML) return;   // déjà chargé
+        var renderDet = function (d) {
+          var hh = '<div class="dtm-hist-lines">';
+          (d.closure.lines || []).forEach(function (l) {
+            var im = l.thumb || l.photoUrl;
+            hh += '<div class="crs-item">';
+            hh += im ? '<img src="' + (l.thumb ? l.thumb : escape(im)) + '" class="dtm-hist-thumb" data-pv="' + escape(l.photoUrl || im) + '" alt="">' : '';
+            hh += '<span class="crs-item-d">' + escape(l.s || l.y || 'Produit') + '</span>';
+            hh += '<span class="dtm-fmt">' + escape(l.format || '—') + (l.qty > 1 ? ' × ' + l.qty : '') + '</span></div>';
+          });
+          hh += '</div>';
+          det.innerHTML = hh;
+        };
+        // v206 : une clôture ne change plus → son détail est servi depuis le cache, 0 réseau
+        var snap = dtmSnapGet('cl_' + card.dataset.hid);
+        if (snap) { renderDet(snap); return; }
         det.innerHTML = '<div style="color:var(--ink-3); font-size:12.5px;">Chargement…</div>';
         fetch(BACKEND_URL + '/dtm/closure/' + encodeURIComponent(card.dataset.hid), { signal: AbortSignal.timeout(15000) })
           .then(function (r) { return r.json(); })
           .then(function (d) {
             if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
-            var hh = '<div class="dtm-hist-lines">';
-            (d.closure.lines || []).forEach(function (l) {
-              var im = l.thumb || l.photoUrl;
-              hh += '<div class="crs-item">';
-              hh += im ? '<img src="' + (l.thumb ? l.thumb : escape(im)) + '" class="dtm-hist-thumb" data-pv="' + escape(l.photoUrl || im) + '" alt="">' : '';
-              hh += '<span class="crs-item-d">' + escape(l.s || l.y || 'Produit') + '</span>';
-              hh += '<span class="dtm-fmt">' + escape(l.format || '—') + (l.qty > 1 ? ' × ' + l.qty : '') + '</span></div>';
-            });
-            hh += '</div>';
-            det.innerHTML = hh;
+            dtmSnapSet('cl_' + card.dataset.hid, d);
+            renderDet(d);
           })
           .catch(function (e) { det.innerHTML = '<div style="color:var(--ink-3); font-size:12.5px;">Détail indisponible (' + escape(e.message) + ')</div>'; });
       });
     });
-  }).catch(function () {
+  };
+  if (dtmStateCache) buildHist();                 // instantané
+  dtmFetchState(true).then(buildHist).catch(function () {
     var body = document.getElementById('dtmHistBody');
-    if (body) body.innerHTML = '<div style="color:var(--ink-3);">Impossible de charger l\'historique (réseau ?).</div>';
+    if (body && body.style.color) body.innerHTML = '<div style="color:var(--ink-3);">Impossible de charger l\'historique (réseau ?).</div>';
   });
 }
 
@@ -13255,15 +13317,15 @@ function dtmRenderReview(root) {
 
   if (dtmDone) { dtmRenderDone(); return; }
 
-  Promise.all([
-    dtmFetchState(true),
-    dtmFetchLines().catch(function (e) { return { _err: e.message }; }),
-    dtmQueueAll()
-  ]).then(function (r) {
-    var lines = Array.isArray(r[1]) ? r[1] : null;
-    var queue = r[2] || [];
+  // v206 : la caisse s'affiche immédiatement avec le dernier état connu, le serveur rafraîchit derrière
+  if (!dtmStateCache) dtmStateCache = dtmSnapGet('state');
+  if (!dtmLinesCache || !dtmLinesCache.length) { var lsnap = dtmSnapGet('lines'); if (lsnap) dtmLinesCache = lsnap; }
+  var buildRev = function (lines, queue) {
     var body = document.getElementById('dtmRevBody');
     if (!body) return;
+    var sig = JSON.stringify([lines, (queue || []).map(function (q) { return q.clientId; })]);
+    if (body.dataset.sig === sig) return;
+    body.dataset.sig = sig;
     var h = '';
     h += dtmBannerHtml();
 
@@ -13282,7 +13344,7 @@ function dtmRenderReview(root) {
     }
     if (!lines) {
       h += '<div style="color:var(--danger); font-size:13.5px;">Impossible de charger les lignes (' + escape(r[1]._err || '') + '). Vérifie le réseau puis ré-ouvre cet onglet.</div>';
-      body.outerHTML = '<div class="ttm-card">' + h + '</div>';
+      body.innerHTML = h; body.style.color = '';   // v206 : on garde le conteneur (#dtmRevBody + sig) pour le double rendu cache→réseau
       return;
     }
 
@@ -13350,7 +13412,7 @@ function dtmRenderReview(root) {
       });
     }
 
-    body.outerHTML = '<div class="ttm-card">' + h + '</div>';
+    body.innerHTML = h; body.style.color = '';   // v206 : on garde le conteneur (#dtmRevBody + sig) pour le double rendu cache→réseau
     var wrap = root;
 
     var cb = document.getElementById('dtmCloseBtn');
@@ -13395,6 +13457,19 @@ function dtmRenderReview(root) {
           .catch(function (e) { toast('Erreur : ' + e.message); });
       });
     });
+  };
+
+  // instantané : dernier état connu + file locale…
+  dtmQueueAll().then(function (q0) {
+    if (dtmStateCache && dtmLinesCache && dtmLinesCache.length) buildRev(dtmLinesCache, q0 || []);
+  }).catch(function () {});
+  // …puis le serveur (ré-affiché seulement si ça a changé)
+  Promise.all([
+    dtmFetchState(true),
+    dtmFetchLines().catch(function (e) { return { _err: e.message }; }),
+    dtmQueueAll()
+  ]).then(function (r) {
+    buildRev(Array.isArray(r[1]) ? r[1] : null, r[2] || []);
   });
 }
 /* Changer le contenant d'une ligne depuis la caisse */
@@ -13598,6 +13673,12 @@ async function crsDicoLoad(force) {
   var local = [];
   try { local = JSON.parse(localStorage.getItem(crsKey('itm_crs_dico_v1')) || '[]'); } catch (e) {}
   if (!Array.isArray(local)) local = [];
+  // v206 : suggestions IMMÉDIATES depuis le dico local — la fusion serveur se fait en arrière-plan
+  if (local.length && !force) {
+    dtmCrsDico = local.map(crsDicoCoerce).filter(Boolean);
+    crsDicoLoad(true).catch(function () {});
+    return dtmCrsDico;
+  }
   var remote = null;
   try {
     var r = await fetch(BACKEND_URL + '/batches/dtm-crs-dico', { signal: AbortSignal.timeout(12000) });
@@ -13857,9 +13938,8 @@ function crsBind(isTake, list) {
 
 /* Historique Courses opérateur (v193) : prises + commandes des 14 derniers jours (GET /crs/recent, public) */
 function crsLoadHistory() {
-  fetch(BACKEND_URL + '/crs/recent', { signal: AbortSignal.timeout(15000) })
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
+  // v206 : instantané depuis le snapshot, rafraîchi en arrière-plan
+  dtmSWR('crsrecent', BACKEND_URL + '/crs/recent', function (d) {
       var body = document.getElementById('crsHistBody');
       if (!body || !d || !d.ok) return;
       var h = '';
@@ -13890,7 +13970,7 @@ function crsLoadHistory() {
     })
     .catch(function () {
       var body = document.getElementById('crsHistBody');
-      if (body) body.innerHTML = '<div style="color:var(--ink-3);">Impossible de charger l\'historique (réseau ?).</div>';
+      if (body && body.style.color) body.innerHTML = '<div style="color:var(--ink-3);">Impossible de charger l\'historique (réseau ?).</div>';
     });
 }
 
@@ -13906,9 +13986,9 @@ function crsWaMessage(items, note) {
 function crsLoadDay() {
   var body = document.getElementById('crsDayBody');
   if (!body) return;
-  fetch(BACKEND_URL + '/crs/lines?day=' + encodeURIComponent(dtmServiceDay()), { signal: AbortSignal.timeout(15000) })
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
+  var day = dtmServiceDay();
+  // v206 : « Déjà pris aujourd'hui » s'affiche instantanément (snapshot), le serveur rafraîchit derrière
+  dtmSWR('crsday_' + day, BACKEND_URL + '/crs/lines?day=' + encodeURIComponent(day), function (d) {
       var b2 = document.getElementById('crsDayBody');
       if (!b2 || !d || !d.ok) return;
       var saves = d.saves || [];
@@ -13936,6 +14016,7 @@ function crsLoadDay() {
             .then(function (dd) {
               if (!dd || !dd.ok) throw new Error((dd && dd.error) || 'HTTP');
               toast('Prise effacée');
+              try { localStorage.removeItem('itm_snap_crsday_' + day); } catch (e) {}   // sinon l'élément effacé re-flasherait
               crsLoadDay();
             })
             .catch(function (e) { toast('Erreur : ' + e.message); });
@@ -13944,7 +14025,7 @@ function crsLoadDay() {
     })
     .catch(function () {
       var b2 = document.getElementById('crsDayBody');
-      if (b2) b2.innerHTML = '<div style="color:var(--ink-3); font-size:13.5px;">Impossible de charger les prises du jour (réseau ?).</div>';
+      if (b2 && b2.style.color) b2.innerHTML = '<div style="color:var(--ink-3); font-size:13.5px;">Impossible de charger les prises du jour (réseau ?).</div>';
     });
 }
 
