@@ -1,6 +1,6 @@
 // ITM Service Worker — offline-first
 // Change la version à chaque mise à jour du code pour forcer le re-téléchargement
-const CACHE_VERSION = 'itm-v207-hist-sousonglets';
+const CACHE_VERSION = 'itm-v208-demo-clavier';
 const CACHE_NAME = `itm-cache-${CACHE_VERSION}`;
 
 // Ressources à mettre en cache dès l'installation
@@ -100,5 +100,29 @@ self.addEventListener('fetch', (event) => {
           return response;
         });
       })
+  );
+});
+
+/* ---- WEB PUSH (v208 / Worker v7.12) : notification quand une commande Cream→Pablo part.
+   Push sans payload : le texte est affiché ici même. ---- */
+self.addEventListener('push', (event) => {
+  event.waitUntil(
+    self.registration.showNotification("🛒 L'Épicerie — commande", {
+      body: '📲 Nouvelle commande de Cream pour la réserve Pablo. Ouvre l’app pour le détail.',
+      icon: './icon-192.png',
+      badge: './icon-192.png',
+      tag: 'crs-order',
+      renotify: true,
+      vibrate: [180, 80, 180],
+    })
+  );
+});
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) { if ('focus' in w) return w.focus(); }
+      return clients.openWindow('./');
+    })
   );
 });

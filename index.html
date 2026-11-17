@@ -2232,7 +2232,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v207';
+const APP_VERSION = 'v208';
 
 /* === ITM APP === */
 (function(){
@@ -13011,6 +13011,77 @@ function dtmDemoStop(silent) {
   }
 }
 
+/* ---- NOTIFICATIONS PUSH (v208 / Worker v7.12) ----
+   À la PREMIÈRE copie d'une commande Cream→Pablo, le Worker fait sonner tous les
+   téléphones abonnés (ex. celui de Julie à la réserve). Abonnement par téléphone,
+   depuis la carte 🔔 du menu. Android : direct ; iPhone : l'app doit être installée
+   sur l'écran d'accueil (iOS 16.4+). */
+var DTM_PUSH_PUBKEY = 'BGPQRwQvVAn6BILNUzHX48VSQxd3vHnBc0nWomgGGovlLFa3fnrsJ8nbqLkHnM4ueHemvXFEGwWOAputx02xqbg';
+function dtmPushKeyBytes() {
+  var b = DTM_PUSH_PUBKEY.replace(/-/g, '+').replace(/_/g, '/');
+  while (b.length % 4) b += '=';
+  var raw = atob(b), out = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+function dtmPushBind() {
+  var txt = document.getElementById('dtmPushTxt'), btn = document.getElementById('dtmPushTgl');
+  if (!txt || !btn) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    txt.textContent = 'Notifications non disponibles ici. Sur iPhone : installe d’abord l’app sur l’écran d’accueil.';
+    return;
+  }
+  var render = function (on) {
+    txt.innerHTML = on
+      ? '<b>Ce téléphone est prévenu</b> quand une commande Cream → Pablo part. 🔔'
+      : 'Être prévenu sur <b>ce téléphone</b> quand une commande Cream → Pablo part (idéal à la réserve).';
+    btn.style.display = '';
+    btn.textContent = on ? 'Désactiver' : 'Activer 🔔';
+    btn.disabled = false;
+    btn.onclick = on ? turnOff : turnOn;
+  };
+  function turnOn() {
+    btn.disabled = true;
+    Notification.requestPermission().then(function (p) {
+      if (p !== 'granted') { toast('Autorise les notifications pour ce site/app'); btn.disabled = false; return; }
+      navigator.serviceWorker.ready
+        .then(function (reg) { return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: dtmPushKeyBytes() }); })
+        .then(function (sub) {
+          return fetch(BACKEND_URL + '/push/subscribe', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sub: sub.toJSON(), personne: dtmPersonne(), kind: 'crs-order' }),
+            signal: AbortSignal.timeout(15000)
+          }).then(function (r) { return r.json(); }).then(function (d) {
+            if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
+            toast('🔔 Ce téléphone sera prévenu des commandes');
+            render(true);
+          });
+        })
+        .catch(function (e) { toast('Activation impossible : ' + e.message); btn.disabled = false; });
+    });
+  }
+  function turnOff() {
+    btn.disabled = true;
+    navigator.serviceWorker.ready
+      .then(function (reg) { return reg.pushManager.getSubscription(); })
+      .then(function (sub) {
+        if (!sub) { render(false); return; }
+        var ep = sub.endpoint;
+        return sub.unsubscribe().then(function () {
+          return fetch(BACKEND_URL + '/push/unsubscribe', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint: ep }), signal: AbortSignal.timeout(15000)
+          }).catch(function () {});
+        }).then(function () { toast('Notifications désactivées'); render(false); });
+      })
+      .catch(function (e) { toast('Erreur : ' + e.message); btn.disabled = false; });
+  }
+  navigator.serviceWorker.ready
+    .then(function (reg) { return reg.pushManager.getSubscription(); })
+    .then(function (sub) { render(!!sub); })
+    .catch(function () { txt.textContent = 'Notifications indisponibles (service worker inactif).'; });
+}
+
 /* ---- Vue MENU (v193) : point d'entrée de l'Épicerie — Transferts ou Courses ---- */
 function dtmRenderMenu(root) {
   var nOpen = dtmStateCache ? dtmStateCache.openCount : 0;
@@ -13031,9 +13102,18 @@ function dtmRenderMenu(root) {
   h += '<button type="button" class="mode-card dtm-menu-card dtm-demo-card" id="dtmMenuDemo">';
   h += '<span class="m-ico">🎓</span><span><div class="m-title" style="font-size:16px;">' + (dtmDemoOn ? 'Quitter le mode démo' : 'Mode démo') + '</div>';
   h += '<div class="m-desc">' + (dtmDemoOn ? 'Revenir en réel' : 'Pour s\'entraîner ou présenter — données fictives, rien n\'est enregistré') + '</div></span></button>';
+  // v208 : notifications de commande — chaque téléphone s'abonne ici (pas en démo)
+  if (!dtmDemoOn) {
+    h += '<div class="ttm-card" id="dtmPushCard" style="margin-top:10px; padding:12px 14px;"><div style="display:flex; align-items:center; gap:10px;">';
+    h += '<span style="font-size:20px; flex:0 0 auto;">🔔</span>';
+    h += '<div style="flex:1; font-size:13px; color:var(--ink-2); line-height:1.35;" id="dtmPushTxt">Notifications…</div>';
+    h += '<button type="button" class="sess-logout-btn" id="dtmPushTgl" style="min-height:40px; display:none; flex:0 0 auto;"></button>';
+    h += '</div></div>';
+  }
   h += '</div>';
   root.innerHTML = h;
   dtmBindHead(root);
+  if (!dtmDemoOn) dtmPushBind();
   var md = document.getElementById('dtmMenuDemo');
   if (md) md.addEventListener('click', function () { if (dtmDemoOn) dtmDemoStop(); else dtmDemoStart(); });
   var mb = document.getElementById('dtmMenuBtl');
@@ -13248,13 +13328,13 @@ function dtmOpenCaptureModal(step) {
   var bi = document.getElementById('dtmPopSearchIn');
   if (bi) {
     bi.addEventListener('input', function () { dtmSearchTermD = bi.value; dtmPopRenderResults(); });
-    setTimeout(function () { try { bi.focus(); } catch (e) {} }, 60);
+    if (!dtmDemoOn) setTimeout(function () { try { bi.focus(); } catch (e) {} }, 60);   // démo : pas d'autofocus, le clavier cacherait la bulle du V
     if (dtmSearchTermD) dtmPopRenderResults();
   }
   var bf = document.getElementById('dtmPopBackFmt');
   if (bf) bf.addEventListener('click', function () { dtmOpenCaptureModal('format'); });
   var ci = document.getElementById('dtmPopClIn');
-  if (ci) setTimeout(function () { try { ci.focus(); } catch (e) {} }, 60);
+  if (ci && !dtmDemoOn) setTimeout(function () { try { ci.focus(); } catch (e) {} }, 60);
   var co = document.getElementById('dtmPopClOk');
   if (co) co.addEventListener('click', function () {
     var f = dtmClStr((document.getElementById('dtmPopClIn') || {}).value);
@@ -13521,7 +13601,7 @@ function dtmFormatPicker(lineId, onDone) {
         + '<button type="button" class="dtm-pop-link" id="dtmFmtClNone">Sans format</button>';
       document.getElementById('dtmFmtX2').addEventListener('click', function () { m.remove(); });
       var inp = document.getElementById('dtmFmtClIn');
-      setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+      if (!dtmDemoOn) setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
       document.getElementById('dtmFmtClOk').addEventListener('click', function () {
         var f = dtmClStr(inp.value);
         if (!f) { toast('Indique un nombre de cl (ex. 70)'); return; }
@@ -13579,7 +13659,7 @@ function dtmOpenLinkModal(lineId) {
   });
   var inp = document.getElementById('dtmLinkSearch');
   inp.addEventListener('input', function () { dtmRenderLinkResults(lineId); });
-  setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
+  if (!dtmDemoOn) setTimeout(function () { try { inp.focus(); } catch (e) {} }, 60);
 }
 
 function dtmRenderLinkResults(lineId) {
@@ -13867,7 +13947,7 @@ function crsBind(isTake, list) {
     list.items.push(it);
     crsSaveList(key, list);
     renderDtm();
-    setTimeout(function () { var i2 = document.getElementById('crsIn'); if (i2) { try { i2.focus(); } catch (e) {} } }, 80);
+    if (!dtmDemoOn) setTimeout(function () { var i2 = document.getElementById('crsIn'); if (i2) { try { i2.focus(); } catch (e) {} } }, 80);
   });
   document.querySelectorAll('[data-crdel]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -14265,6 +14345,11 @@ function dtmRenderAdmin(root) {
   }
   var remindCard = '<div class="ttm-card"><div class="ttm-label">⏰ Relance du matin (mail si la veille n\'est pas passée en caisse)</div>'
     + '<div id="dtmRemindBody" style="color:var(--ink-3); font-size:13px;">Chargement…</div></div>';
+  // v208 : test des notifications de commande (abonnement par téléphone via la carte 🔔 du menu)
+  var pushAdmCard = '<div class="ttm-card"><div class="ttm-label">🔔 Notifications de commande</div>'
+    + '<div style="font-size:13px; color:var(--ink-2); margin-bottom:8px;">À la première copie d\'une commande Cream → Pablo, les téléphones abonnés sonnent. Abonnement : carte 🔔 du menu de l\'Épicerie, sur chaque téléphone.</div>'
+    + '<button type="button" class="sess-logout-btn" id="dtmPushTest" style="min-height:44px;">📳 Tester — faire sonner les abonnés</button>'
+    + '<div id="dtmPushTestOut" style="font-size:12.5px; color:var(--ink-3); margin-top:6px;"></div></div>';
   // v207 : période LIBRE (du… au…) — les inventaires de Victor ne tombent pas pile sur le mois calendaire
   var admToday = new Date().toISOString().slice(0, 10);
   var crsCard = '<div class="ttm-card"><div class="ttm-label">🍊 Courses de la période (fruits & prépa) → facture globale</div>'
@@ -14273,9 +14358,22 @@ function dtmRenderAdmin(root) {
     + '<label style="flex:1; min-width:130px; font-size:13px; color:var(--ink-2);">au<input class="search" id="crsAdmTo" type="date" value="' + admToday + '" style="width:100%; font-size:16px; padding:12px; margin-top:3px;"></label>'
     + '<button type="button" class="sess-logout-btn" id="crsAdmLoad" style="min-height:48px; align-self:flex-end;">Charger</button></div>'
     + '<div id="crsAdmOut" style="margin-top:10px;"></div></div>';
-  root.innerHTML = head + '<div class="ttm-card" id="dtmAdmBody" style="color:var(--ink-3);">Chargement…</div>' + remindCard + crsCard + '</div>';
+  root.innerHTML = head + '<div class="ttm-card" id="dtmAdmBody" style="color:var(--ink-3);">Chargement…</div>' + remindCard + pushAdmCard + crsCard + '</div>';
   dtmBindHead(root);
   crsAdmBind();
+  var ptb = document.getElementById('dtmPushTest');
+  if (ptb) ptb.addEventListener('click', function () {
+    ptb.disabled = true;
+    var po = document.getElementById('dtmPushTestOut');
+    fetch(BACKEND_URL + '/push/test', { method: 'POST', headers: { 'X-Admin-Token': loadAdminToken() }, signal: AbortSignal.timeout(20000) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.ok) throw new Error((d && d.error) || 'HTTP');
+        if (po) po.textContent = d.sent ? ('📳 ' + d.sent + ' téléphone(s) notifié(s) — vérifie qu\'ils ont sonné') : 'Aucun téléphone abonné pour l\'instant (carte 🔔 du menu).';
+      })
+      .catch(function (e) { if (po) po.textContent = 'Erreur : ' + e.message; })
+      .then(function () { ptb.disabled = false; });
+  });
   dtmRemindBind();
 
   fetch(BACKEND_URL + '/dtm/admin', { headers: { 'X-Admin-Token': token }, signal: AbortSignal.timeout(20000) })
