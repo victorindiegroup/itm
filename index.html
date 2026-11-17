@@ -488,6 +488,13 @@
   .dtm-hist-item.openable:active { background:var(--accent-soft); }
   .dtm-hist-hint { color:var(--accent); font-weight:600; }
   .dtm-hist-thumb { width:40px; height:40px; object-fit:cover; border-radius:8px; border:1px solid var(--border); display:block; }
+  /* v203 : visionneuse photo intégrée (les liens _blank sortaient de la PWA) */
+  [data-pv] { cursor:zoom-in; }
+  #dtmPhotoOv { position:fixed; inset:0; z-index:1200; background:rgba(12,12,9,.93); display:grid; overflow:auto; }
+  #dtmPhotoOv img { margin:auto; max-width:96vw; max-height:90vh; border-radius:10px; cursor:zoom-in; }
+  #dtmPhotoOv img.zoomed { max-width:none; max-height:none; width:210vw; cursor:zoom-out; }
+  #dtmPhotoOv .pv-x { position:fixed; top:calc(10px + env(safe-area-inset-top)); right:14px; background:#fff; color:#1b1b18; border:none; border-radius:100px; width:42px; height:42px; font-size:18px; z-index:1201; }
+  #dtmPhotoOv .pv-hint { position:fixed; bottom:calc(14px + env(safe-area-inset-bottom)); left:0; right:0; text-align:center; color:rgba(255,255,255,.65); font-size:12.5px; pointer-events:none; }
   .dtm-hist-lines { margin-top:6px; border-top:1px dashed var(--border); padding-top:4px; }
   .crs-adm-sec { font-size:15px; font-weight:800; border-bottom:2px solid var(--border-strong); padding-bottom:4px; margin:10px 0 8px; }
   .crs-adm-table { width:100%; border-collapse:collapse; font-size:13.5px; }
@@ -2225,7 +2232,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v202';
+const APP_VERSION = 'v203';
 
 /* === ITM APP === */
 (function(){
@@ -12150,6 +12157,25 @@ async function dtmFetchLines() {
   return dtmLinesCache;
 }
 
+/* ---- Visionneuse photo intégrée (v203) : reste DANS la PWA, tap = zoom ---- */
+function dtmPhotoView(url) {
+  var old = document.getElementById('dtmPhotoOv');
+  if (old) old.remove();
+  var ov = document.createElement('div');
+  ov.id = 'dtmPhotoOv';
+  ov.innerHTML = '<img src="' + escape(url) + '" alt=""><button type="button" class="pv-x" aria-label="Fermer">✕</button><div class="pv-hint">Tape la photo pour zoomer · à côté pour fermer</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('img').addEventListener('click', function (e) { e.stopPropagation(); e.target.classList.toggle('zoomed'); });
+  ov.addEventListener('click', function () { ov.remove(); });
+}
+// délégation en phase capture : le tap sur une miniature ne replie plus la carte du jour
+document.addEventListener('click', function (e) {
+  var t = e.target && e.target.closest ? e.target.closest('[data-pv]') : null;
+  if (!t) return;
+  e.preventDefault(); e.stopPropagation();
+  dtmPhotoView(t.getAttribute('data-pv'));
+}, true);
+
 /* ---- Photo (même compression que TTM) ---- */
 /* En mode démo, pas d'appareil photo (bloqué dans la visionneuse, et inutile en salle) :
    on dessine une bouteille de démonstration et on enchaîne comme après une vraie photo. */
@@ -12238,7 +12264,7 @@ async function dtmSaveCapture() {
   dtmCap = { photo: null, prod: null, format: null, qty: 1, thumb: null };
   dtmSearchTermD = '';
   renderDtm();
-  toast('Au panier 🛒');
+  toast('Au panier 🛒 — photo en cours d\'envoi…');
   dtmFlushQueue().catch(function () {});
 }
 
@@ -13010,7 +13036,7 @@ function dtmRenderHist(root) {
             (d.closure.lines || []).forEach(function (l) {
               var im = l.thumb || l.photoUrl;
               hh += '<div class="crs-item">';
-              hh += im ? '<a href="' + escape(l.photoUrl || im) + '" target="_blank" rel="noopener"><img src="' + (l.thumb ? l.thumb : escape(im)) + '" class="dtm-hist-thumb" alt=""></a>' : '';
+              hh += im ? '<img src="' + (l.thumb ? l.thumb : escape(im)) + '" class="dtm-hist-thumb" data-pv="' + escape(l.photoUrl || im) + '" alt="">' : '';
               hh += '<span class="crs-item-d">' + escape(l.s || l.y || 'Produit') + '</span>';
               hh += '<span class="dtm-fmt">' + escape(l.format || '—') + (l.qty > 1 ? ' × ' + l.qty : '') + '</span></div>';
             });
@@ -13264,7 +13290,7 @@ function dtmRenderReview(root) {
         var imgSrc = l.thumb || l.photoUrl;
         if (imgSrc) {
           h += l.photoUrl
-            ? '<a href="' + escape(l.photoUrl) + '" target="_blank" rel="noopener"><img src="' + (l.thumb ? l.thumb : escape(l.photoUrl)) + '" alt="" loading="lazy"></a>'
+            ? '<img src="' + (l.thumb ? l.thumb : escape(l.photoUrl)) + '" data-pv="' + escape(l.photoUrl) + '" alt="" loading="lazy">'
             : '<img src="' + imgSrc + '" alt="" loading="lazy">';
         } else h += '<div class="dtm-nophoto">📷</div>';
         var mm = (l.y && prodRef) ? dtmFmtMismatch(l.format, prodRef) : null;
@@ -14162,7 +14188,7 @@ function dtmRenderAdmin(root) {
             h += '<details style="margin-top:6px;"><summary style="font-size:12.5px; color:var(--ink-3); cursor:pointer;">Voir les lignes</summary>';
             c.lines.forEach(function (l) {
               h += '<div class="dtm-adm-line">' + fmtQty(l.qty) + '× ' + escape(l.y || ((l.s || 'non lié') + ' ⚠')) + (l.format ? ' · ' + escape(l.format) : '') + (l.personne ? ' · 👤 ' + escape(l.personne) : '');
-              if (l.photoUrl) h += ' · <a href="' + escape(l.photoUrl) + '" target="_blank" rel="noopener" style="color:var(--accent-dark, #1D9E75);">photo</a>';
+              if (l.photoUrl) h += ' · <button type="button" data-pv="' + escape(l.photoUrl) + '" style="background:none; border:none; padding:0; color:var(--accent-dark, #1D9E75); text-decoration:underline; font:inherit;">photo</button>';
               h += '</div>';
             });
             h += '</details>';
