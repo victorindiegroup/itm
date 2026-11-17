@@ -2232,7 +2232,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v203';
+const APP_VERSION = 'v204';
 
 /* === ITM APP === */
 (function(){
@@ -11832,8 +11832,8 @@ function init(){
 
 var DTM_PABLO = 'Pablo (Saint-Barthélemy)';
 var DTM_CREAM = 'Cream (Saint-Barthélemy)';
-var DTM_MAX_PHOTO_PX = 1100;   // v202 : plus léger que TTM — le réseau de SBH souffle (≈2-3× moins d'octets)
-var DTM_JPEG_Q = 0.62;
+var DTM_MAX_PHOTO_PX = 1280;   // v204 : compromis netteté/poids (étiquettes lisibles, ~35-40 % plus léger que 1400/0.72)
+var DTM_JPEG_Q = 0.70;
 var DTM_FORMATS = ['75cl', '50cl', 'Magnum', 'Jéroboam', 'Autre'];
 
 var dtmView = 'menu';           // 'menu' | 'cap' | 'rev' | 'hist' | 'crs' | 'adm' | 'who' (v193 : menu d'entrée)
