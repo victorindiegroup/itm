@@ -2225,7 +2225,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v201';
+const APP_VERSION = 'v202';
 
 /* === ITM APP === */
 (function(){
@@ -11825,8 +11825,8 @@ function init(){
 
 var DTM_PABLO = 'Pablo (Saint-Barthélemy)';
 var DTM_CREAM = 'Cream (Saint-Barthélemy)';
-var DTM_MAX_PHOTO_PX = 1400;   // mêmes réglages que TTM
-var DTM_JPEG_Q = 0.72;
+var DTM_MAX_PHOTO_PX = 1100;   // v202 : plus léger que TTM — le réseau de SBH souffle (≈2-3× moins d'octets)
+var DTM_JPEG_Q = 0.62;
 var DTM_FORMATS = ['75cl', '50cl', 'Magnum', 'Jéroboam', 'Autre'];
 
 var dtmView = 'menu';           // 'menu' | 'cap' | 'rev' | 'hist' | 'crs' | 'adm' | 'who' (v193 : menu d'entrée)
@@ -12264,6 +12264,14 @@ async function dtmClose() {
   var nonLie = lines.filter(function (l) { return !l.y; }).length;
   if (nonLie) {
     toast('🔗 Lie d\'abord ' + nonLie + ' photo(s) à un produit — obligatoire pour passer en caisse');
+    return;
+  }
+  var nbMm = lines.filter(function (l) {
+    var p = l.y && CATALOGUE_BY_Y ? CATALOGUE_BY_Y[l.y] : null;
+    return p && dtmFmtMismatch(l.format, p);
+  }).length;
+  if (nbMm) {
+    toast('⚠ ' + nbMm + ' ligne(s) avec un contenant qui ne colle pas avec la réf — corrige avant d\'encaisser');
     return;
   }
   if (!confirm('Passer en caisse ? Le récap (numéro ETM) part par mail à Victor.')) return;
@@ -13285,8 +13293,15 @@ function dtmRenderReview(root) {
         h += '</div></div>';
       });
       var nbNonLie = lines.filter(function (l) { return !l.y; }).length;
-      h += '<button type="button" class="ttm-cta" id="dtmCloseBtn"' + ((queue.length || nbNonLie) ? ' disabled' : '') + '>🧾 Passer en caisse (' + lines.length + ')</button>';
-      if (nbNonLie) h += '<div style="text-align:center; color:#C04343; font-size:13px; font-weight:600; margin-top:8px;">🔗 Lie d\'abord ' + nbNonLie + ' photo(s) à un produit — obligatoire pour la caisse</div>';
+      // v202 : une incohérence contenant/réf bloque aussi l'encaissement
+      var nbMm = lines.filter(function (l) {
+        var p = l.y && CATALOGUE_BY_Y ? CATALOGUE_BY_Y[l.y] : null;
+        return p && dtmFmtMismatch(l.format, p);
+      }).length;
+      h += '<button type="button" class="ttm-cta" id="dtmCloseBtn"' + ((queue.length || nbNonLie || nbMm) ? ' disabled' : '') + '>🧾 Passer en caisse (' + lines.length + ')</button>';
+      if (queue.length) h += '<div style="text-align:center; color:#C08A14; font-size:13px; font-weight:600; margin-top:8px;">⏳ ' + queue.length + ' photo(s) en cours d\'envoi — la ligne apparaît dans quelques secondes</div>';
+      else if (nbNonLie) h += '<div style="text-align:center; color:#C04343; font-size:13px; font-weight:600; margin-top:8px;">🔗 Lie d\'abord ' + nbNonLie + ' photo(s) à un produit — obligatoire pour la caisse</div>';
+      else if (nbMm) h += '<div style="text-align:center; color:#C04343; font-size:13px; font-weight:600; margin-top:8px;">⚠ ' + nbMm + ' ligne(s) avec contenant ≠ réf — corrige avant d\'encaisser</div>';
       else h += '<div style="text-align:center; color:var(--ink-3); font-size:12.5px; margin-top:8px;">Un numéro ETM par sens · le récap part par mail à Victor</div>';
     } else {
       h += '<div style="font-size:14px; color:var(--ink-2); padding:6px 0 12px;">Aucun prélèvement capturé pour ce service.</div>';
