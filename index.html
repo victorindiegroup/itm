@@ -271,6 +271,9 @@
   .sheet-sub { font-size: 12px; color: var(--ink-2); margin-top: 4px; display: flex; align-items: center; gap: 8px; }
   .sheet-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
   .sheet-foot { padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); display: flex; gap: 10px; flex-shrink: 0; background: var(--surface); }
+  /* v211 : la fiche inventaire a jusqu'à 6 actions — grille 2 colonnes, rien ne déborde */
+  #shInvDetail .sheet-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #shInvDetail .sheet-foot .btn-valid { grid-column: 1 / -1; }
 
   /* FORM */
   .field { margin-bottom: 18px; }
@@ -2128,12 +2131,12 @@
   </div>
   <div class="sheet-body" id="invDetailBody"></div>
   <div class="sheet-foot">
-    <button type="button" class="btn-cancel" id="invDetailClose">Fermer</button>
     <button type="button" class="btn-sec" id="invDetailYokitup">📊 Excel Yokitup</button>
     <button type="button" class="btn-sec" id="invDetailDownload">📥 Excel détaillé</button>
     <button type="button" class="btn-sec" id="invDetailPdf">📄 PDF</button>
-    <button type="button" class="btn-sec admin-only" id="invDetailDelete" style="color: var(--danger); border-color: var(--danger);">Supprimer</button>
-    <button type="button" class="btn-valid" id="invDetailResend">Renvoyer par mail</button>
+    <button type="button" class="btn-sec admin-only" id="invDetailDelete" style="color: var(--danger); border-color: var(--danger);">🗑 Supprimer</button>
+    <button type="button" class="btn-valid" id="invDetailResend">✉️ Renvoyer par mail</button>
+    <button type="button" class="btn-cancel" id="invDetailClose" style="grid-column: 1 / -1;">Fermer</button>
   </div>
 </div>
 
@@ -2232,7 +2235,7 @@
 <div id="appData" style="display:none"></div>
 <script id="CATDATA" type="application/json">[]</script>
 <script>
-const APP_VERSION = 'v209';
+const APP_VERSION = 'v213';
 
 /* === ITM APP === */
 (function(){
@@ -3794,6 +3797,10 @@ function renderInventaireCard(inv) {
   html += '    <span style="font-size:12px; color:var(--ink-2);">' + (inv.nbLines || 0) + ' produit' + ((inv.nbLines || 0) > 1 ? 's' : '') + ' saisi' + ((inv.nbLines || 0) > 1 ? 's' : '') + '</span>';
   html += '    <span style="margin-left:8px;">' + cigBadge + '</span>';
   html += '  </div>';
+  // v213 : commentaire global saisi à la création — enfin visible (le Worker ≤v7.13 le jetait)
+  if (inv.comment) {
+    html += '  <div style="margin:-4px 0 10px; padding:7px 10px; background:var(--accent-soft); border-radius:8px; font-size:12.5px; color:var(--accent-dark); font-style:italic;">💬 ' + escape(inv.comment) + '</div>';
+  }
   html += '  <div style="display:flex; gap:6px; flex-wrap:wrap;">';
   html += '    <button type="button" class="inv-view-btn" data-id="' + escape(inv.id) + '" style="flex:1; min-width:130px; padding:8px 12px; background:var(--surface); color:var(--accent-dark); border:1px solid var(--accent); border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">👁️ Visualiser</button>';
   html += '    <button type="button" class="inv-download-btn" data-id="' + escape(inv.id) + '" style="flex:1; min-width:130px; padding:8px 12px; background:var(--accent); color:white; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">📥 Télécharger Excel</button>';
@@ -5562,6 +5569,10 @@ function renderSession(){
     html += `<div class="sess-empty">Aucun inventaire pour le moment.<br>Clique sur le bouton ci-dessus pour commencer.</div>`;
   }
 
+  // v212 : inventaires clôturés de l'ÉTABLISSEMENT (tous téléphones confondus), servis par le backend
+  html += `<div class="sess-history-title" style="margin-top:18px;">☁️ Inventaires de l'établissement</div>`;
+  html += `<div id="sessCloudInvs" style="color:var(--ink-3); font-size:13px; padding:6px 0;">Chargement…</div>`;
+
   root.innerHTML = html;
 
   // Handlers
@@ -5583,6 +5594,64 @@ function renderSession(){
   // Clic sur un inventaire de l'historique → détail
   root.querySelectorAll('.sess-inv-item').forEach(el => {
     el.addEventListener('click', () => openInventoryDetail(el.dataset.inv));
+  });
+
+  renderSessionCloudInvs();
+}
+
+/* v212 : liste des inventaires clôturés de l'étab, visibles par TOUS les téléphones.
+   Même recette que l'ETM : snapshot local affiché instantanément, serveur en arrière-plan,
+   et le détail d'un inventaire déjà consulté ne refait aucun appel réseau. */
+function renderSessionCloudInvs() {
+  const box = document.getElementById('sessCloudInvs');
+  if (!box || !state.estab) return;
+  const localIds = new Set((state.inventories || []).map(i => i.id));
+  dtmSWR('cloudinv_' + state.estab, BACKEND_URL + '/inventories/etab/' + encodeURIComponent(state.estab), (d) => {
+    const b = document.getElementById('sessCloudInvs');
+    if (!b || !d || !d.ok) return;
+    // ceux déjà listés au-dessus (faits par CE téléphone) ne sont pas doublés
+    const invs = (d.inventories || []).filter(iv => !(iv.originalId && localIds.has(iv.originalId)));
+    if (!invs.length) {
+      b.innerHTML = '<div class="sess-empty" style="padding:4px 0;">Aucun autre inventaire clôturé reçu pour cet établissement.</div>';
+      b.style.color = '';
+      return;
+    }
+    let h = '';
+    invs.forEach(iv => {
+      const momentLbl = iv.moment === 'apres' ? 'Après service' : 'Avant service';
+      h += `<div class="sess-inv-item" data-cloudinv="${escape(iv.id)}">
+        <div class="sess-inv-date">${fmtDate(iv.date)} · ${momentLbl}</div>
+        <div class="sess-inv-sub">
+          <span>${iv.nbLines} saisie${iv.nbLines > 1 ? 's' : ''}${iv.personne ? ' · ' + escape(iv.personne) : ''}</span>
+          <span class="sess-inv-status exported">👁️ Visualiser</span>
+        </div>
+        ${iv.comment ? '<div style="margin-top:4px; font-size:12px; color:var(--accent-dark); font-style:italic;">💬 ' + escape(iv.comment) + '</div>' : ''}
+      </div>`;
+    });
+    b.innerHTML = h;
+    b.style.color = '';
+    b.querySelectorAll('[data-cloudinv]').forEach(el => {
+      el.addEventListener('click', async () => {
+        el.style.opacity = '.6';
+        try {
+          // un inventaire clôturé ne change plus → cache définitif
+          const snap = dtmSnapGet('cloudfull_' + el.dataset.cloudinv);
+          let full = snap && snap.inventory;
+          if (!full) {
+            const r = await fetch(BACKEND_URL + '/inventory-view/' + encodeURIComponent(el.dataset.cloudinv), { signal: AbortSignal.timeout(20000) });
+            const d2 = await r.json();
+            if (!d2 || !d2.ok) throw new Error((d2 && d2.error) || 'HTTP');
+            dtmSnapSet('cloudfull_' + el.dataset.cloudinv, d2);
+            full = d2.inventory;
+          }
+          openInventoryDetailObject(full, { source: 'backend' });
+        } catch (e) { toast('Inventaire indisponible : ' + e.message); }
+        el.style.opacity = '';
+      });
+    });
+  }).catch(() => {
+    const b = document.getElementById('sessCloudInvs');
+    if (b && b.textContent === 'Chargement…') b.innerHTML = '<div class="sess-empty" style="padding:4px 0;">Impossible de charger (réseau ?).</div>';
   });
 }
 
@@ -9215,14 +9284,24 @@ function buildStartInvParentList() {
   const list = document.getElementById('startInvParentList');
   if (!list) return;
   const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  // v211 : date de clôture OU date de l'inventaire (les anciens sans finishedAt réapparaissent)
+  const invTs = (inv) => {
+    if (inv.finishedAt) { const t = new Date(inv.finishedAt).getTime(); if (!isNaN(t)) return t; }
+    if (inv.date) { const t = new Date(inv.date).getTime(); if (!isNaN(t)) return t; }
+    return 0;
+  };
   const all = (state.inventories || []).filter(inv => {
     // Étab match (utilise inv.etab si présent, sinon état actif comme fallback pour anciens)
     const invEtab = inv.etab || state.estab;
     if (invEtab !== state.estab) return false;
+    // v211 : on ne complète pas un complément — seuls les inventaires racines sont proposés
+    if (inv.parentId) return false;
     // Date dans les 30 derniers jours
-    const finishedTs = inv.finishedAt ? new Date(inv.finishedAt).getTime() : 0;
-    return finishedTs >= cutoff;
-  });
+    return invTs(inv) >= cutoff;
+  }).sort((a, b) => invTs(b) - invTs(a));   // v211 : les plus RÉCENTS en premier
+  // compléments déjà rattachés à chaque parent (utile à voir dans la liste)
+  const nbComp = {};
+  (state.inventories || []).forEach(i => { if (i.parentId) nbComp[i.parentId] = (nbComp[i.parentId] || 0) + 1; });
   if (all.length === 0) {
     list.innerHTML = '<div style="padding:12px; text-align:center; color:var(--ink-3); font-size:13px;">Aucun inventaire récent à compléter dans cet établissement.</div>';
     return;
@@ -9232,12 +9311,12 @@ function buildStartInvParentList() {
     const momentLbl = inv.moment === 'apres' ? 'Après service' : 'Avant service';
     const typeLbl = invTypeLabel(inv.type);
     const personLbl = inv.personne ? ' · ' + escape(inv.personne) : '';
-    const isComplement = !!inv.parentId;
-    const complementBadge = isComplement ? ' <span style="font-size:10px; padding:1px 5px; border-radius:4px; background:var(--accent-soft); color:var(--accent-dark); margin-left:4px;">complément</span>' : '';
+    const nc = nbComp[inv.id] || 0;
+    const compBadge = nc ? ' <span style="font-size:10px; padding:1px 5px; border-radius:4px; background:var(--accent-soft); color:var(--accent-dark); margin-left:4px;">+' + nc + ' complément' + (nc > 1 ? 's' : '') + '</span>' : '';
     html += '<label class="start-inv-parent-opt" style="display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-radius:6px; cursor:pointer; background:var(--surface);">';
     html += '<input type="radio" name="startInvParentId" value="' + escape(inv.id) + '" style="margin-top:2px;">';
     html += '<div style="flex:1; min-width:0;">';
-    html += '  <div style="font-size:13px; font-weight:600;">' + fmtDate(inv.date) + ' · ' + momentLbl + complementBadge + '</div>';
+    html += '  <div style="font-size:13px; font-weight:600;">' + fmtDate(inv.date) + ' · ' + momentLbl + compBadge + '</div>';
     html += '  <div style="font-size:11px; color:var(--ink-3);">' + typeLbl + personLbl + ' · ' + (inv.lines||[]).length + ' lignes</div>';
     html += '</div>';
     html += '</label>';
@@ -10183,6 +10262,12 @@ function renderInventoryDetailBody() {
 
   const items = aggregateInventoryForDisplay(inv);
 
+  // v210 : les produits COMMENTÉS par les équipes remontent en tête — toutes les
+  // remarques se lisent d'un coup en ouvrant l'inventaire (tri stable : l'ordre
+  // habituel est conservé à l'intérieur de chaque groupe).
+  const invItHasCom = (it) => it.zones.some(z => z.comment);
+  items.sort((a, b) => (invItHasCom(b) ? 1 : 0) - (invItHasCom(a) ? 1 : 0));
+
   // Filtrer si recherche
   let filtered = items;
   if (currentDetailFilter.trim()) {
@@ -10209,7 +10294,19 @@ function renderInventoryDetailBody() {
       html += '<div style="padding: 12px 16px 8px; font-size: 11px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">' + filtered.length + ' produit' + (filtered.length > 1 ? 's' : '') + ' · sur ' + items.length + '</div>';
     }
     html += '<div style="padding: 0 16px 16px;">';
+    const invNbCom = filtered.filter(invItHasCom).length;
+    let invPrevCom = null;
     filtered.forEach(it => {
+      // intertitres seulement quand il y a des remarques : « 💬 … » puis « Autres produits »
+      if (invNbCom > 0 && invNbCom < filtered.length) {
+        const com = invItHasCom(it);
+        if (com && invPrevCom === null) {
+          html += '<div style="padding: 12px 0 4px; font-size: 11px; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">💬 ' + invNbCom + ' remarque' + (invNbCom > 1 ? 's' : '') + ' des équipes</div>';
+        } else if (!com && invPrevCom) {
+          html += '<div style="padding: 14px 0 4px; font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Autres produits</div>';
+        }
+        invPrevCom = com;
+      }
       const hasMultipleZones = it.zones.length > 1;
       // Pastille format + dot couleur (si on a le produit)
       let tagHtml = '';
